@@ -1,0 +1,25 @@
+https://github.com/ritikamotwani/Deception-Detection
+https://web.eecs.umich.edu/~zmohamed/PDFs/Trial.ICMI.pdf
+https://arxiv.org/pdf/2404.17662
+https://huggingface.co/datasets/spikecodes/911-call-transcripts/viewer/default/train?row=16
+Deception & Interrogation Behavior Datasets
+https://huggingface.co/datasets/theprint/homicide-investigation
+https://github.com/ApolloResearch/deception-detection
+
+Multi-Hop Detective & Mystery Deduction Benchmarks
+https://huggingface.co/datasets/TAUR-Lab/MuSR
+https://huggingface.co/datasets/kjgpta/WhoDunIt
+https://huggingface.co/datasets/CLUTRR/v1
+
+Legal Judgment & Criminal Fact Mining (For Procedural Cases)
+
+https://huggingface.co/datasets/HFforLegal/case-law/viewer/default/us?row=0
+https://huggingface.co/datasets/joelniklaus/legal_case_document_summarization
+
+
+Dataset	Game Phase	Key Utility
+Real-Life Trial Deception	Part 1 & 2	Classifies evasive speech patterns and grounds the AI suspect's lying strategy
+MuSR Murder Mysteries	Part 1 & 2	Provides multi-turn deduction paths and suspect-contradiction benchmarks
+WhoDunIt Dataset	Part 2	Evaluates how accurately an AI detective pinpoints the culprit across narratives
+CLUTRR	Part 3 (Sandbox)	Maps relational graphs between suspects, victims, and accessories
+Case-Law / Legal RAG	Part 3 (Sandbox)	Seeds authentic criminal case facts, motives, and physical clues

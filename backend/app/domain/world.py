@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.domain.enums import (
     ContradictionType,
     EvidenceCategory,
+    InteractionType,
     ProvenanceClass,
     VerificationStatus,
 )
@@ -117,3 +118,58 @@ class ContradictionFlag(BaseModel):
     conflicting_source_id: str = Field(..., description="The fact_id (CLAIM_FACT) or prior claim_id (CLAIM_CLAIM)")
     explanation: str = Field(..., min_length=1, description="Plain-language explanation of the conflict")
     is_semantic: bool = Field(default=False, description="False if caught by Layer 1 structured rules; True if Layer 2 NLI")
+
+
+class SimulationConfig(BaseModel):
+    """
+    PRD Section 7A.4 & Section 8.2: Deterministic simulation parameters and
+    noise/deception rates for tick-based case generation.
+    """
+    case_id: str = Field(..., min_length=1)
+    seed: int
+    start_min: int = Field(default=1080, description="18:00 default start")
+    end_min: int = Field(default=1440, description="24:00 default end")
+    tick_size_min: int = Field(default=10, ge=1)
+    victim_id: str = Field(..., min_length=1)
+    crime_location_id: str = Field(..., min_length=1)
+    murder_window: TimeInterval
+    forced_culprit_id: Optional[str] = Field(
+        default=None,
+        description="If None, simulation selects culprit via motive + opportunity + low composure (PRD 7A.4)",
+    )
+
+    # Noise & Deception parameters (PRD Section 8.2)
+    witness_noise_rate: float = Field(default=0.15, ge=0.0, le=1.0)
+    record_drop_rate: float = Field(default=0.20, ge=0.0, le=1.0)
+    guilty_lie_rate: float = Field(default=0.85, ge=0.0, le=1.0)
+    innocent_lie_rate: float = Field(
+        default=0.25,
+        ge=0.0,
+        le=1.0,
+        description="Innocent suspects lying about unrelated red herring secrets",
+    )
+
+
+class CanonicalEvent(BaseModel):
+    """
+    PRD Section 7A.4 & CH-02: Ground-truth event recorded in T3 during simulation.
+    Every event carries an explicit reason_string citing traits and edge values.
+    """
+    event_id: str = Field(..., min_length=1)
+    tick_min: int
+    location_id: str = Field(..., min_length=1)
+    actor_id: str = Field(..., min_length=1)
+    target_id: Optional[str] = None
+    interaction_type: Optional[InteractionType] = None
+    event_kind: str = Field(..., description="MOVEMENT, INTERACTION, or MURDER")
+    reason_string: str = Field(
+        ...,
+        min_length=1,
+        description="PRD 7A.4 & CH-02: Explicit traits and edge values that triggered this event",
+    )
+    witness_ids: list[str] = Field(default_factory=list)
+    metadata: dict[str, str | float | bool] = Field(default_factory=dict)
+
+
+from app.domain.simulation import SimulatedCaseBundle  # noqa: E402, F401
+

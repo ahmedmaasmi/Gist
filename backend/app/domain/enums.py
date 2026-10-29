@@ -71,3 +71,26 @@ class DialogueAct(StrEnum):
     PARTIAL_ADMISSION = "PARTIAL_ADMISSION"
     CONFESS = "CONFESS"
     UNKNOWN = "UNKNOWN"
+
+
+class GoalType(StrEnum):
+    """
+    PRD Section 7A.1: Structured goal categories driving character behaviour and motives.
+    """
+    MONEY = "MONEY"
+    INHERITANCE = "INHERITANCE"
+    REVENGE = "REVENGE"
+    PROTECT_SOMEONE = "PROTECT_SOMEONE"
+    HIDE_SECRET = "HIDE_SECRET"
+
+
+class RelationshipTag(StrEnum):
+    """
+    PRD Section 7A.2: Categorical tags annotating directed relationship edges.
+    """
+    FAMILY = "FAMILY"
+    BUSINESS_PARTNER = "BUSINESS_PARTNER"
+    RIVAL = "RIVAL"
+    SECRET_AFFAIR = "SECRET_AFFAIR"
+    EMPLOYER_EMPLOYEE = "EMPLOYER_EMPLOYEE"
+    NEIGHBOUR = "NEIGHBOUR"
