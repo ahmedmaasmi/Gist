@@ -171,5 +171,11 @@ class CanonicalEvent(BaseModel):
     metadata: dict[str, str | float | bool] = Field(default_factory=dict)
 
 
-from app.domain.simulation import SimulatedCaseBundle  # noqa: E402, F401
+def __getattr__(name: str):
+    if name == "SimulatedCaseBundle":
+        from app.domain.simulation import SimulatedCaseBundle
+
+        return SimulatedCaseBundle
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
