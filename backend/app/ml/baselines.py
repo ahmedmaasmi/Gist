@@ -86,10 +86,15 @@ def uniform(state: EvidenceState) -> Distribution:
 
 
 def rule_scores(state: EvidenceState) -> dict[str, float]:
+    return rule_scores_from_features(state.features)
+
+
+def rule_scores_from_features(features: dict[str, dict[str, float]]) -> dict[str, float]:
+    """The motive + opportunity rule on per-suspect features (also the ranker's fallback, MD-09)."""
     return {
         sid: sum(w * feats[name] for name, w in RULE_WEIGHTS.items())
         + RULE_LOG_ACCESS_WEIGHT * math.log1p(feats["access_evidence"])
-        for sid, feats in state.features.items()
+        for sid, feats in features.items()
     }
 
 

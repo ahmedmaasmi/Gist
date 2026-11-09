@@ -44,6 +44,7 @@ d. When a step (or sub-step) is done: run tests, update `docs/STATUS.md`, append
 - `make dataset`: builds the versioned dataset → `data/generated/v<version>/` (gitignored; checksums in `manifest.json`).
 - `make baselines`: baseline table with 95% CIs → `reports/baselines.{json,md}` (needs `make dataset`).
 - `make models`: tune (grouped CV on train), calibrate (val), select the ranker → `reports/models_val.{json,md}`, artefacts in `ml/artifacts/` (gitignored). **Test splits stay sealed until the step 8 leakage audit passes.**
+- Play-time ranking: `app/ml/ranker.Ranker` (`load()`, `rank(t0, t1, setting)`, `counterfactual(...)`); falls back to the rule if no model loads.
 - Art: style reference and portrait prompts in `docs/art/`.
 - `make up` / `make down`: Postgres + backend in Docker Compose; API on http://localhost:8000/health.
 - Storage is **PostgreSQL in Docker** (user decision D-005, deviates from PRD's JSON/SQLite):

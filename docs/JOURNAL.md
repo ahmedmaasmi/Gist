@@ -178,3 +178,27 @@ case generator (simulation)  ->  hidden truth (T3) + evidence the player can fin
   - **Three layers of data use.** CV folds choose hyperparameters, val chooses the family and the calibration, and the test sets are touched once at the end. Using the test set earlier would make the final number optimistic.
   - **Interpretable models are a debugging tool.** The logistic regression coefficients exposed a shortcut that the more accurate LightGBM was silently exploiting just as much.
   - **Temperature scaling.** One parameter that makes "70% sure" mean right about 70% of the time, without changing which suspect ranks first.
+
+## Step 7b: explanations, "what if", fallback and "I'm not sure"
+
+- **What:**
+  - `app/ml/ranker.py` (the `Ranker` the game will call) and `app/ml/abstention.py`.
+  - Evidence links on every feature row.
+  - Abstention thresholds and a risk–coverage table in `make models`.
+- **Why:** PRD MD-08 (explain each score, linked to evidence, with a "remove this evidence" counterfactual), MD-09 (fall back to the rule if the model is missing, visibly), MD-06 (abstain when the evidence is too thin, and say why), and MD-01/MD-02 (only T1 data; record model and feature versions).
+- **How:**
+  1. **Evidence links.** Each feature now *collects* the facts and claims it uses before computing its value, so value and evidence can't drift apart. Values were verified identical on 120 cases.
+  2. **Explanations.** A model's score for a suspect is a log-odds number. For logistic regression it splits exactly into intercept + Σ (coefficient × standardised value). For LightGBM, **TreeSHAP** (built in via `pred_contrib=True`) gives an exact split too. A test checks both add up to the model's score.
+  3. **Counterfactual.** Re-run the ranker with one fact or claim removed and report how each suspect's probability changes.
+  4. **Fallback.** If the model file is missing, or was trained on a different feature spec, use the rule and show a notice.
+  5. **Abstention.** Name nobody if the top probability < τ₁ or its lead < τ₂. The thresholds are chosen on val to answer as many states as possible while staying ≥ 80% accurate on those it answers.
+- **A real example** (a val case, full evidence):
+  - The model gives suspect_02 **70%** (correct).
+  - The biggest push is "seen at the scene during the window" (+2.4), citing one badge record, `move_051`, which also refutes their alibi.
+  - **Removing that single record** drops them by 48 points, and suspect_05 rises by 34.
+- **Numbers (val):** abstention answers **96%** of states at **80%** accuracy. When the model says ≥ 90%, it is right **97.8%** of the time (the risk–coverage curve rises steadily, so the calibration is honest).
+- **Also fixed:** an import cycle hidden by the order the tests happened to import things.
+- **Concepts:**
+  - **Additive explanations (SHAP or linear terms) are exact on the score, not on the final probability.** The probability depends on everyone else in the case. In the UI, say "pushes towards / away from".
+  - **Counterfactuals** are the most intuitive explanation for a player ("without this record…"), and they test whether the model really relies on what it claims to.
+  - **Selective prediction.** Abstaining trades coverage for accuracy. The risk–coverage curve shows the whole trade-off, and the threshold is a product choice (80%), stated up front rather than tuned after the fact.

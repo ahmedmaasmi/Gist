@@ -45,7 +45,12 @@ class Table:
 
 def state_matrix(state: EvidenceState) -> np.ndarray:
     """(suspects, model features) for one evidence state, suspects in `state.suspect_ids` order."""
-    base = np.array([[state.features[s][n] for n in FEATURE_NAMES] for s in state.suspect_ids], dtype=float)
+    return matrix_from_features(state.suspect_ids, state.features)
+
+
+def matrix_from_features(suspect_ids: Sequence[str], features: dict[str, dict[str, float]]) -> np.ndarray:
+    """Model inputs from per-suspect T1 features; used in training and at play time (no label needed)."""
+    base = np.array([[features[s][n] for n in FEATURE_NAMES] for s in suspect_ids], dtype=float)
     per_suspect = base[:, [FEATURE_NAMES.index(n) for n in RELATIVE_FEATURE_NAMES]]
     # Rounded so that "equal to the average" is exactly 0, not 1e-17 that a scaler would amplify.
     relative = np.round(per_suspect - per_suspect.mean(axis=0, keepdims=True), 9)

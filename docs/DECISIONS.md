@@ -229,3 +229,24 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 
   Both beat the rule, with paired CIs excluding 0 for top-1 and for log loss. LightGBM's top-1 by stage: 0.67 at 35% of evidence, 0.82 at 65%, 0.95 with all evidence.
 - **What I should learn from this:** Model selection, calibration and reporting each need their own data. Train folds choose the hyperparameters, val chooses the family and the temperature, and the test sets stay sealed until the audit. That's the only way the final test number is an honest estimate.
+
+## D-025 (2026-11-09): Explanations, counterfactuals, fallback and abstention (the `Ranker`)
+
+- **Decision:** `app/ml/ranker.py` is the single play-time entry point.
+  - **Inputs.** `Ranker.rank(t0, t1, setting)` takes only public and session data (a signature test checks this).
+  - **Outputs.** Probabilities labelled as a model estimate (PRD 11), and per-suspect explanations:
+    - feature contributions in log-odds. Logistic regression: coefficient × standardised value. LightGBM: TreeSHAP via `pred_contrib`.
+    - each base feature and its relative twin are merged into one entry;
+    - the T1 evidence IDs behind each feature.
+  - **Counterfactual (MD-08).** `counterfactual(...)` re-ranks with one fact or claim removed.
+  - **Fallback (MD-09).** If no model loads, or a model was trained on a different feature spec, it uses the motive+opportunity rule and sets `fallback_used=True` with a visible notice.
+  - **Abstention (MD-06).** Abstain if the top probability < τ₁ or the lead over the runner-up < τ₂. The thresholds are chosen on val as the pair answering the most states at ≥ 80% accuracy, and are stored in the model card. The result says which condition triggered.
+- **Alternatives considered:**
+  - The `shap` package: unnecessary, because LightGBM computes TreeSHAP natively.
+  - Explaining the *normalised* probability rather than the per-suspect score: probabilities depend on the other suspects, so additive contributions are only exact on the score.
+  - Abstention on entropy alone: harder to explain to a player than "top probability" and "lead".
+- **Results** (val, selected LightGBM): thresholds top ≥ 0.35, margin ≥ 0. It answers **96%** of evidence states with **80%** accuracy. The risk–coverage curve is monotonic (at ≥ 0.9 confidence: 32% coverage, 97.8% accuracy), which shows the calibrated probabilities mean what they say. Contributions sum to the model score (test).
+- **Also fixed:** an import cycle (`app/engine/__init__.py` re-exported every module) that the tests had masked; it is the source of the earlier `runpy` warning.
+- **What I should learn from this:**
+  - **Additive explanations are exact on the model's score, not on the normalised probability.** Say so in the UI: "pushes towards / away", not "adds 12% probability".
+  - **A counterfactual is a simpler and more honest explanation** for a player than a SHAP value: "without this badge record, Reed drops from 70% to 21%".

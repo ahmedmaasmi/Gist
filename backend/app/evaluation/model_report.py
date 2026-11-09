@@ -24,6 +24,7 @@ import joblib
 from app.engine.dataset_generator import DATASET_VERSION
 from app.evaluation.baseline_report import HONEST_FRAMING, STAGE_NAMES
 from app.features import FEATURE_SPEC_VERSION
+from app.ml.abstention import choose_thresholds, risk_coverage_curve
 from app.ml.baselines import fit_rule_temperature, load_states, rule_predictor, uniform
 from app.ml.data import MODEL_FEATURE_NAMES, build_table
 from app.ml.metrics import METRICS, evaluate, paired_difference
@@ -74,12 +75,16 @@ def train_and_report(dataset_dir: Path, artifacts_dir: Path = ARTIFACTS_DIR, n_b
         temperature = fit_temperature(val, val_scores)
         predictions[family] = distributions(val, val_scores, temperature)
         fitted[family] = (model, temperature)
+        culprits = [s.culprit_id for s in val.states]
         families[family] = {
             "best_params": tuning.best_params,
             "cv_log_loss_best": tuning.cv_log_loss[str(tuning.best_params)],
             "cv_log_loss_all": tuning.cv_log_loss,
             "val_temperature": temperature,
             "version": model_version(family, tuning.best_params, checksum),
+            # MD-06: thresholds chosen on val for the stated selective-accuracy target
+            "abstention": choose_thresholds(predictions[family], culprits),
+            "risk_coverage_val": risk_coverage_curve(predictions[family], culprits),
         }
         if family == "logistic_regression":
             families[family]["coefficients_standardised"] = lr_coefficients(model, MODEL_FEATURE_NAMES)
@@ -116,6 +121,7 @@ def train_and_report(dataset_dir: Path, artifacts_dir: Path = ARTIFACTS_DIR, n_b
             "git_commit": git_commit(),
             "trained_on": "train split (all folds)",
             "calibrated_on": "val split",
+            "abstention": families[family]["abstention"],
             "selected": family == selected,
         }
         (out / "model_card.json").write_text(json.dumps(card, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -173,7 +179,26 @@ def to_markdown(r: dict) -> str:
     for fam, info in r["families"].items():
         lines.append(f"- **{fam}**: best {info['best_params']} (CV log loss {info['cv_log_loss_best']}), "
                      f"val temperature {info['val_temperature']}, version `{info['version']}`")
-    lines += ["", f"**Selected (best val log loss): {r['selected']}**", "",
+    sel = r["families"][r["selected"]]
+    ab = sel["abstention"]
+    lines += [
+        "",
+        f"**Selected (best val log loss): {r['selected']}**",
+        "",
+        "## Abstention (MD-06, chosen on val)",
+        "",
+        f"The selected model names a suspect only if the top probability is at least {ab['min_top_probability']} "
+        f"and its lead over the runner-up is at least {ab['min_margin']}. On val it then answers "
+        f"{ab['coverage']:.0%} of evidence states with {ab['accuracy']:.0%} accuracy "
+        f"(target: at least {ab['target_accuracy']:.0%}).",
+        "",
+        "Risk-coverage (selected model; sweep of the top-probability threshold):",
+        "",
+        "| min top probability | coverage | accuracy on answered |",
+        "|---|---|---|",
+        *(f"| {p['min_top_probability']} | {p['coverage']:.3f} | {p['accuracy']:.3f} |"
+          for p in sel["risk_coverage_val"][::2]),
+        "",
               "## Logistic Regression coefficients (log-odds per standard deviation)", ""]
     coefs = r["families"]["logistic_regression"]["coefficients_standardised"]
     for name, c in sorted(coefs.items(), key=lambda kv: -abs(kv[1])):

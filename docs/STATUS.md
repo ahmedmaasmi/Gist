@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 7. Models (7a done: training, tuning and selection; 7b next: explanations, fallback, abstention, `Ranker`)
+- **Current step:** 8. Leakage audit and E1 (not started; waiting for the user's OK)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -14,7 +14,7 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - [x] **4. Feature spec v1.** 12 features in E1 groups A/B/C plus context; `docs/FEATURES.md` kept in sync with `app/features/spec.py`; T1-only signature guarantee; hand-computed test. *(Done 2026-11-09, spec v1.0.0.)*
 - [x] **5. Dataset and splits.** 12 floor-plan maps, per-case variables, famous names; `make dataset` → v0.2.0 (1,650 cases; train/val/test_in_dist by case, 3 held-out maps, shifted OOD set, grouped-CV folds; checksums reproduce). *(Done 2026-11-09.)*
 - [x] **6. Baselines and evaluation harness.** `app/ml/metrics.py` (case-level metrics, case bootstrap, paired differences); uniform, motive+opportunity rule and timeline solver; `make baselines` → `reports/baselines.{json,md}`, reproducible. *(Done 2026-11-09.)*
-- [ ] **7. Models.** Logistic Regression and LightGBM, within-case normalisation, calibration on validation, per-suspect explanations linked to evidence IDs (MD-08), heuristic fallback (MD-09), simple abstention rule (MD-06).
+- [x] **7. Models.** LR and LightGBM (grouped-CV tuning, val calibration, LightGBM selected, 0.78 val top-1, +0.19 over the rule); the `Ranker` with evidence-linked explanations, a counterfactual, the rule fallback and abstention (96% coverage at 80% accuracy on val). *(Done 2026-11-09; test splits still sealed.)*
 - [ ] **8. Leakage audit and E1.** Feature-name audit, shuffled-label control, single-feature models, permutation importance, reveal-artefact check; E1 ablation A/B/C plus leave-one-group-out.
 - [ ] **9. Question policy and E3.** Slot-based question bank, scripted player simulator (honest innocent, lying guilty, evasive innocent, mixed), entropy policy vs random, fixed-order and top-two; budgets 3, 5 and 8.
 - [ ] **10. API and minimal web UI.** FastAPI endpoints (reading through the `casemind_gameplay` role only); case page, claim builder, live ranking with explanations, verdict, results; contract and canary tests on every response.
@@ -57,10 +57,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09, **step 6 done:** evaluation harness and three baselines. The rule reaches about 0.6 top-1 and the solver barely beats chance (D-022). Tests 151 → 161.
 - 2026-11-09: **learning journal** `docs/JOURNAL.md` is now a project rule.
 - 2026-11-09, **step 7a done:** the first models exposed a scripted tell (culprits never claimed a witness; D-023), so the dataset went to v0.3.0. LR and LightGBM were tuned by grouped CV and calibrated on val; LightGBM is selected at 0.78 val top-1, +0.19 over the rule (D-024). Tests 161 → 166.
+- 2026-11-09, **step 7b done:** `Ranker` with evidence-linked explanations (LR coefficients, LightGBM TreeSHAP), a 'remove this evidence' counterfactual, the rule fallback and val-chosen abstention (D-025); import cycle fixed. Tests 166 → 174.
 
 ## Next action
 
-Step 7b: link features to evidence IDs, a `Ranker` with explanations and a 'remove this evidence' counterfactual, the rule fallback (MD-09), and abstention thresholds chosen on val (MD-06).
+Run the leakage audit (step 8): feature-name audit, shuffled-label control, single-feature models and permutation importance, a reveal-artefact check (including the stage-0 briefing fact) and the E1 ablation A/B/C plus leave-one-group-out. Then unseal the test splits once.
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 
@@ -105,6 +106,8 @@ Scores measure recovery of the generator's logic, not real-world skill.
 | **LightGBM (selected)** | **0.779** | **+0.19 [0.15, 0.24]** |
 
 **LightGBM top-1 by stage:** 0.67 at 35% of evidence, 0.82 at 65%, 0.95 with all evidence. The tests stay sealed until step 8.
+
+**Abstention (val):** names someone when top ≥ 0.35. It answers 96% of states at 80% accuracy; at ≥ 0.9 confidence it is right 97.8% of the time.
 
 ## Baselines (`make baselines`; top-1 with 95% CI over cases)
 

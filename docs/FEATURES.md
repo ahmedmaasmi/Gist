@@ -64,3 +64,7 @@ The models do not see a different spec. They see the 12 features above **plus 11
 - **Scope:** relative features use only the same state's T1 values, which PRD 5.3 allows.
 - **Not for context features:** `evidence_coverage` gets no relative version, because it is identical for everyone in a state.
 - **Where:** they are built in `backend/app/ml/data.py` and do not change `FEATURE_SPEC_VERSION`.
+
+## Evidence links (MD-08, step 7b)
+
+Every feature row also carries `evidence`: for each feature, the IDs of the T1 facts and claims it was computed from. For example, `scene_presence_in_window → [fact_…_move_051]`, or `claim_fact_conflicts → [the refuted claim, the record that refutes it]`. The feature *values* are unchanged; this was verified as identical on 120 cases before and after. The ranker uses these links to cite evidence in explanations, and to run the "remove this evidence" counterfactual.
