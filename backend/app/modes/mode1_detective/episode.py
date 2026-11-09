@@ -111,7 +111,9 @@ def run_episode(
     seed: int = 0,
     start_fraction: float = START_FRACTION,
 ) -> EpisodeResult:
-    rng = random.Random(seed)
+    # Separate random streams: the players' (evasion) and the policy's (random choices), so that comparing
+    # policies on the same case and seed is as paired as possible.
+    player_rng, policy_rng = random.Random(seed), random.Random(seed + 1_000_003)
     who = behaviours(bundle, population)
     t0, t1 = bundle.t0_public, initial_state(bundle, start_fraction)
     remaining = build_question_bank(t0)
@@ -124,9 +126,9 @@ def run_episode(
     probs = ranker.rank(t0, t1, bundle.setting).probabilities
     result = EpisodeResult(bundle.config.case_id, culprit, [leader_correct(probs)])
     for turn in range(1, budget + 1):
-        action, considered = policy.choose(t0, t1, probs, remaining, rng)
+        action, considered = policy.choose(t0, t1, probs, remaining, policy_rng)
         remaining = [a for a in remaining if a != action]
-        t1, outcome = apply_action(bundle, t1, action, who, rng, turn)
+        t1, outcome = apply_action(bundle, t1, action, who, player_rng, turn)
         probs = ranker.rank(t0, t1, bundle.setting).probabilities
         result.actions.append(action.label())
         result.outcomes.append(outcome)
