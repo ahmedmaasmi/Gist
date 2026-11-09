@@ -15,6 +15,8 @@ dependencies = [
     "sqlalchemy>=2.0.36",
     "psycopg[binary]>=3.2.3",
     "numpy>=2.0",
+    "scikit-learn>=1.5",
+    "lightgbm>=4.5",
 ]
 
 # Dev-only tools, installed by `uv sync` but never by the production image.

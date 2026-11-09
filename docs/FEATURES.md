@@ -55,3 +55,12 @@ Groups follow the E1 ablation (PRD 9.1):
 - `claimed_corroboration_share`: lying culprits never claim corroboration in the generator. This is plausible behaviour, but possibly a near-shortcut.
 - `claim_claim_conflicts` is always 0 in generated cases, because each suspect makes one initial claim. It only varies during play.
 - `access_evidence` counts every tick spent in a restricted crime room, so its scale is large. Models must scale features (step 7).
+
+## Model inputs (step 7)
+
+The models do not see a different spec. They see the 12 features above **plus 11 within-state relative versions** (`<name>_rel`). Each relative version is the feature minus its mean over the suspects of the same evidence state.
+
+- **Why:** a per-suspect (pointwise) model otherwise only knows "how much motive", not "more motive than the others".
+- **Scope:** relative features use only the same state's T1 values, which PRD 5.3 allows.
+- **Not for context features:** `evidence_coverage` gets no relative version, because it is identical for everyone in a state.
+- **Where:** they are built in `backend/app/ml/data.py` and do not change `FEATURE_SPEC_VERSION`.

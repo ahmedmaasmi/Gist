@@ -142,3 +142,39 @@ case generator (simulation)  ->  hidden truth (T3) + evidence the player can fin
 - **Concepts:**
   - **Bootstrap over cases, not rows.** The 5 evidence states of one case are not independent, and resampling rows would make the intervals falsely narrow.
   - **The bar.** The ML model must beat the *rule*, with a paired confidence interval that excludes zero, or we report that it doesn't.
+
+## Step 7a: the first models, and the shortcut they exposed
+
+- **What:**
+  - `app/ml/data.py`: evidence states become a matrix, one row per suspect.
+  - `app/ml/models.py`: logistic regression, LightGBM and grouped-CV tuning.
+  - `app/evaluation/model_report.py` and `make models`: the command that trains, tunes, selects and reports.
+  - A generator fix: culprits may now name false witnesses. Dataset v0.3.0.
+- **Why:** PRD 6.4.A and 8.5. We need a learned ranker that beats the baselines, chosen and calibrated without touching the test sets (PRD 8.4 and 8.8: the leakage audit comes first).
+- **How:**
+  1. **Pointwise model, then normalise.** Each suspect row gets a score P(culprit | features). Within an evidence state the scores are rescaled to sum to 1, giving a probability distribution over the suspects.
+  2. **Relative features.** Each per-suspect feature also gets a "minus the average of this state" version, so the model can see "more motive *than the others*".
+  3. **Grouped cross-validation on train only.** The 3 folds are groups of 3 maps. Each candidate setting is trained on 2 groups and scored on the 3rd, so the tuning score always comes from *unseen maps*. A test makes tuning refuse any non-train data.
+  4. **Calibration on val.** One temperature, q ∝ p^(1/T), makes the probabilities honest. It doesn't change the ranking.
+  5. **Selection on val.** The best val log loss wins (LightGBM). Test sets: not touched.
+- **What went wrong, and why it matters:**
+  - **Too good to be true.** The first run gave **0.86** val top-1 and **0.99** with all evidence.
+  - **The coefficients gave it away.** Logistic regression's biggest weight was "claims a witness" (−5.5). The generator *never* let a culprit claim a witness: 0 of 855 claims, against about half of innocents.
+  - **A hand rule did nearly as well.** Three terms ("no witness + statement refuted + seen at the scene") reached 0.92.
+  - **So the model had learned the generator's script, not investigation.**
+  - **Fix:** a lying culprit now names a false witness 70% of the time, chosen so culprits and innocents claim witnesses equally often (0.69 vs 0.69). False witnesses can be caught when the named person's records or statement disagree. A test keeps the rates matched.
+- **Numbers (val, top-1, after the fix):**
+
+  | Method | Top-1 | vs rule (paired, 95% CI) |
+  |---|---|---|
+  | Uniform | 0.24 | |
+  | Rule | 0.585 | |
+  | Logistic regression | 0.702 | +0.12 [0.08, 0.16] |
+  | LightGBM | 0.779 | +0.19 [0.15, 0.24] |
+
+  LightGBM improves as evidence arrives: 0.67 → 0.82 → 0.95. The strongest signals are now "a record refutes their statement", "seen at the scene during the window" and "motive", which is what a detective would use. The corroboration weight is about 0.
+- **Concepts:**
+  - **Why a pointwise model needs relative features.** It scores one suspect at a time. Without "compared to the others", it cannot know that 2 motive records is a lot in one case and little in another.
+  - **Three layers of data use.** CV folds choose hyperparameters, val chooses the family and the calibration, and the test sets are touched once at the end. Using the test set earlier would make the final number optimistic.
+  - **Interpretable models are a debugging tool.** The logistic regression coefficients exposed a shortcut that the more accurate LightGBM was silently exploiting just as much.
+  - **Temperature scaling.** One parameter that makes "70% sure" mean right about 70% of the time, without changing which suspect ranks first.

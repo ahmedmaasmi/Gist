@@ -28,6 +28,7 @@ class EvidenceState:
     suspect_ids: tuple[str, ...]
     culprit_id: str
     features: dict[str, dict[str, float]]  # suspect_id -> feature name -> value (T1-derived only)
+    cv_fold: int | None = None  # grouped-CV fold (group = template) for train states
 
     @property
     def key(self) -> tuple[str, int, int]:

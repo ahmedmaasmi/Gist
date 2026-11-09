@@ -147,3 +147,20 @@ def test_t1_observations_are_points_in_time():
         for fact in bundle.t1_session.discovered_facts:
             if fact.time_interval is not None:
                 assert fact.time_interval.duration == 0, fact.description
+
+
+def test_claiming_a_witness_is_not_a_tell():
+    """
+    D-023: culprits used to NEVER claim corroboration (0/855 val claims), a scripted tell the ranker
+    exploited. Culprits and innocents must now claim a witness at about the same rate.
+    """
+    counts = {"culprit": [0, 0], "innocent": [0, 0]}
+    for template_id in TEMPLATE_IDS:
+        for seed in range(25):
+            bundle = _bundle(template_id, seed)
+            for claim in bundle.t1_session.recorded_claims:
+                role = "culprit" if claim.speaker_id == bundle.t3_canonical.culprit_id else "innocent"
+                counts[role][0] += claim.has_corroboration_claim
+                counts[role][1] += 1
+    rate = {role: hits / n for role, (hits, n) in counts.items()}
+    assert abs(rate["culprit"] - rate["innocent"]) < 0.08, rate

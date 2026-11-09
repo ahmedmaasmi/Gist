@@ -35,7 +35,7 @@ from app.engine.templates import (
 )
 from app.features import FEATURE_SPEC_VERSION, FEATURES, compute_suspect_features
 
-DATASET_VERSION = "0.2.0"
+DATASET_VERSION = "0.3.0"  # 0.3.0: culprits may name false witnesses (D-023)
 # Share of each dev template's cases per split (PRD 8.4); the rest is train.
 DEV_SPLIT_FRACTIONS = {"val": 0.15, "test_in_dist": 0.15}
 NUM_CV_FOLDS = 3

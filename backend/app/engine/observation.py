@@ -14,6 +14,11 @@ from app.domain.setting import SettingTemplate
 from app.domain.tiers import T1Session, T2CharacterKnowledge, T3Canonical
 from app.domain.world import CanonicalEvent, Claim, Fact, LieAnnotation, SimulationConfig, TimeInterval
 
+# Share of lying culprits who name a (false) witness to back up their alibi. Chosen so that culprits and
+# innocents claim corroboration about equally often (0.69 vs 0.69 per claim over 480 cases), so the claim
+# itself carries no information about guilt; only checking it against records and other statements does.
+FALSE_WITNESS_RATE = 0.70
+
 ALIBI_PHRASES_ALONE = (
     "I was at {loc} from {start} to {end}.",
     "I stayed in {loc} between {start} and {end}.",
@@ -480,16 +485,26 @@ class ObservationModel:
                 lie_kind: LieKind | None = None
 
                 if cid == culprit_id:
-                    # Culprit alibi generation
+                    # Culprit alibi generation. Whether the culprit claims a witness must not be a tell
+                    # (D-023): a lying culprit sometimes names a false witness, an honest one reports whoever
+                    # they really saw, so "claims corroboration" is about as common as for innocents.
                     if local_rng.random() < config.guilty_lie_rate:
                         claimed_loc = safe_alibi_loc
                         lie_kind = LieKind.CULPRIT_COVER_STORY
-                        observed_ids: list[str] = []
-                        corroborated = False
+                        others = sorted(
+                            c.character_id
+                            for c in characters
+                            if c.character_id not in (cid, config.victim_id)
+                        )
+                        if others and local_rng.random() < FALSE_WITNESS_RATE:
+                            observed_ids: list[str] = [local_rng.choice(others)]
+                        else:
+                            observed_ids = []
+                        corroborated = bool(observed_ids)
                     else:
                         claimed_loc = config.crime_location_id
-                        observed_ids = []
-                        corroborated = False
+                        observed_ids = sorted(set(true_murder_window_observed.get(cid, [])))
+                        corroborated = bool(observed_ids)
                 else:
                     # Innocent suspect alibi generation
                     covered_partner = cover_pledges.get(cid)

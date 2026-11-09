@@ -202,3 +202,30 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **What I should learn from this:**
   - **The model has a real bar to clear.** A two-line human heuristic already reaches about 60% top-1, so in step 7 the ranker must beat *that*, with a paired CI excluding zero, or the report says it doesn't.
   - **Logic alone is weak in this world.** Records are point sightings (D-012), so pure elimination rarely closes a 20–40 minute window. That is a property of the task, not a bug, and is worth stating in the report.
+
+## D-023 (2026-11-09): Culprits may name false witnesses (removes a scripted tell)
+
+- **Decision:** A lying culprit names a (false) witness with probability `FALSE_WITNESS_RATE = 0.70`. An honest culprit reports whoever they actually saw. Both tune the culprit's corroboration-claim rate to match innocents' (0.69 vs 0.69 per claim on two independent seed sets), and a test keeps the gap below 0.08. The dataset version goes from 0.2.0 to **0.3.0**.
+- **Alternatives considered:** Dropping `claimed_corroboration_share` from the features (it would hide the flaw instead of fixing the world); leaving it and calling it "behaviour".
+- **Reason:** The first models reached 0.86 val top-1, and 0.99 with full evidence. Logistic regression's largest coefficient was `claimed_corroboration_share` (−5.5): culprits claimed corroboration in **0 of 855** val claims against 47% of innocent rows. A three-term hand rule reached 0.92. The model was learning the generator's script, not investigation. After the fix the coefficient is about 0. Contradiction recall (flags or disagreements) rose from 85% to 88%, because false witnesses can be exposed, and the false-positive rate stays at 0%.
+- **What I should learn from this:** When a model looks too good, read its coefficients before celebrating. A huge weight on a "behavioural" feature that is *deterministic* in the generator is a tell, not a skill. Fix the world, not the feature list.
+
+## D-024 (2026-11-09): Ranker v1 (pointwise LR and LightGBM, within-state normalisation, val-only reporting)
+
+- **Decision:**
+  - **Models.** Pointwise classifiers (logistic regression on standardised inputs; LightGBM, deterministic, one thread) on the 12 features plus 11 within-state relative features. Scores are normalised within each evidence state, with temperature scaling fitted on val.
+  - **Tuning.** Hyperparameters come from grouped CV over the 3 template folds of the train split. A test checks that tuning refuses non-train data.
+  - **Selection.** The family with the best val log loss is selected: **LightGBM** (`lightgbm-6d50342630`).
+  - **One command.** `make models` → `reports/models_val.{json,md}`, with artefacts and model cards in `ml/artifacts/` (gitignored). Rebuilding gives an identical report.
+  - **Val only.** Test splits are untouched until the leakage audit passes (PRD 8.8).
+- **Alternatives considered:** A conditional-logit or LambdaRank objective (a case-level softmax). These were deferred: the PRD describes pointwise scoring plus within-case normalisation, and the relative features give the case context. Also considered: isotonic calibration (temperature keeps the ranking unchanged and has a single parameter).
+- **Results** (val, top-1 with 95% CI):
+
+  | Method | Top-1 | Paired difference vs rule |
+  |---|---|---|
+  | Rule | 0.585 | — |
+  | Logistic regression | 0.702 | +0.12 [0.08, 0.16] |
+  | LightGBM | 0.779 | +0.19 [0.15, 0.24] |
+
+  Both beat the rule, with paired CIs excluding 0 for top-1 and for log loss. LightGBM's top-1 by stage: 0.67 at 35% of evidence, 0.82 at 65%, 0.95 with all evidence.
+- **What I should learn from this:** Model selection, calibration and reporting each need their own data. Train folds choose the hyperparameters, val chooses the family and the temperature, and the test sets stay sealed until the audit. That's the only way the final test number is an honest estimate.

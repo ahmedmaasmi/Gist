@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 7. Models (not started; waiting for the user's OK)
+- **Current step:** 7. Models (7a done: training, tuning and selection; 7b next: explanations, fallback, abstention, `Ranker`)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -55,10 +55,12 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09: **art.** Style reference and the 31-portrait prompt list (`docs/art/`).
 - 2026-11-09, **step 5 done:** `make dataset` builds v0.2.0. Splits follow PRD 8.4, with grouped-CV folds, a shifted OOD set, a feature table and a checksummed manifest. Artificial hard cases removed. Tests 148 → 151.
 - 2026-11-09, **step 6 done:** evaluation harness and three baselines. The rule reaches about 0.6 top-1 and the solver barely beats chance (D-022). Tests 151 → 161.
+- 2026-11-09: **learning journal** `docs/JOURNAL.md` is now a project rule.
+- 2026-11-09, **step 7a done:** the first models exposed a scripted tell (culprits never claimed a witness; D-023), so the dataset went to v0.3.0. LR and LightGBM were tuned by grouped CV and calibrated on val; LightGBM is selected at 0.78 val top-1, +0.19 over the rule (D-024). Tests 161 → 166.
 
 ## Next action
 
-Build the models (step 7): Logistic Regression and LightGBM with within-case normalisation, tuned by grouped CV on train only, calibrated on val; per-suspect explanations (MD-08), heuristic fallback (MD-09) and a simple abstention rule (MD-06).
+Step 7b: link features to evidence IDs, a `Ranker` with explanations and a 'remove this evidence' counterfactual, the rule fallback (MD-09), and abstention thresholds chosen on val (MD-06).
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 
@@ -94,6 +96,16 @@ Scores measure recovery of the generator's logic, not real-world skill.
 
 **Disagreements (D-016):** 1.25 per case; 100% involve a false claim. False claims caught by a flag *or* a disagreement: **85%**. 37% of accurate innocents are involved in a disagreement (the honest counterpart), so it is never treated as blame.
 
+## Models (`make models`, val only; top-1 with 95% CI)
+
+| Method | Top-1 | Paired difference vs rule |
+|---|---|---|
+| Rule | 0.585 | — |
+| Logistic regression | 0.702 | +0.12 [0.08, 0.16] |
+| **LightGBM (selected)** | **0.779** | **+0.19 [0.15, 0.24]** |
+
+**LightGBM top-1 by stage:** 0.67 at 35% of evidence, 0.82 at 65%, 0.95 with all evidence. The tests stay sealed until step 8.
+
 ## Baselines (`make baselines`; top-1 with 95% CI over cases)
 
 | Split | Uniform | Motive + opportunity rule | Timeline solver |
@@ -105,7 +117,7 @@ Scores measure recovery of the generator's logic, not real-world skill.
 
 **The bar for step 7:** beat the rule, with a paired CI that excludes 0.
 
-## Dataset v0.2.0 (`make dataset`, about 15 s)
+## Dataset v0.3.0 (`make dataset`, about 15 s; 0.3.0 adds false witnesses, D-023)
 
 - **Cases:** 1,650 on 12 maps.
 
@@ -123,7 +135,8 @@ Scores measure recovery of the generator's logic, not real-world skill.
 ## Step 8 watch-list (leakage audit)
 
 - **Briefing fact at stage 0.** `EvidenceRevealSampler` always reveals one "briefing" fact first: the earliest record at the crime scene. Check whether it favours the culprit (a reveal artefact, PRD 8.8).
-- **Corroboration share.** `claimed_corroboration_share` is a possible near-shortcut. Lying culprits never claim corroboration.
+- **Corroboration share.** Was a real shortcut (culprits never claimed a witness); fixed in D-023. Re-check that it is now uninformative.
+- **Strong legitimate signals.** The strongest model signals are now refuted statements and presence at the scene in the window. The audit must confirm they aren't artefacts. For example, does the culprit's scene record survive more often than others'?
 - **Constant feature.** `claim_claim_conflicts` is always 0 in generated data.
 - **Lie rate.** The culprit lie rate is 0.820 observed against 0.806 sampled (z = 1.75, not significant); re-check.
 
