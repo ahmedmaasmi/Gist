@@ -2,7 +2,7 @@
 
 > Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020). Test splits are not evaluated until the leakage audit (step 8) passes.
 
-Dataset v0.3.0 (`44ceeea3223b…`), feature spec 1.0.0, commit `f891111`. Trained on 783 train cases; evaluated on 171 val cases from 9 templates. 95% CIs: 2000 bootstrap resamples over cases.
+Dataset v0.3.0 (`44ceeea3223b…`), feature spec 1.0.0, commit `7b9acdc`. Trained on 783 train cases; evaluated on 171 val cases from 9 templates. 95% CIs: 2000 bootstrap resamples over cases.
 
 | Method | top1 | top2 | mrr | log_loss | brier |
 |---|---|---|---|---|---|
@@ -31,6 +31,25 @@ Dataset v0.3.0 (`44ceeea3223b…`), feature spec 1.0.0, commit `f891111`. Traine
 - **lightgbm**: best {'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 20} (CV log loss 0.704979), val temperature 0.85, version `lightgbm-6d50342630`
 
 **Selected (best val log loss): lightgbm**
+
+## Abstention (MD-06, chosen on val)
+
+The selected model names a suspect only if the top probability is at least 0.35 and its lead over the runner-up is at least 0.0. On val it then answers 96% of evidence states with 80% accuracy (target: at least 80%).
+
+Risk-coverage (selected model; sweep of the top-probability threshold):
+
+| min top probability | coverage | accuracy on answered |
+|---|---|---|
+| 0.0 | 1.000 | 0.779 |
+| 0.1 | 1.000 | 0.779 |
+| 0.2 | 1.000 | 0.779 |
+| 0.3 | 0.981 | 0.787 |
+| 0.4 | 0.933 | 0.817 |
+| 0.5 | 0.854 | 0.852 |
+| 0.6 | 0.743 | 0.877 |
+| 0.7 | 0.639 | 0.907 |
+| 0.8 | 0.515 | 0.939 |
+| 0.9 | 0.321 | 0.978 |
 
 ## Logistic Regression coefficients (log-odds per standard deviation)
 
