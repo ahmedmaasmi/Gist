@@ -5,8 +5,8 @@
   "rule_top1": {
     "motive evidence": 0.414,
     "motive evidence [valid only]": 0.414,
-    "crime-scene presence in window": 0.626,
-    "crime-scene presence in window [valid only]": 0.625,
+    "crime-scene presence in window": 0.625,
+    "crime-scene presence in window [valid only]": 0.623,
     "has forensic trace": 0.448,
     "has forensic trace [valid only]": 0.446,
     "validator support score": 0.373,
@@ -22,7 +22,7 @@
       "crime-scene presence in window"
     ],
     "college": [
-      0.531,
+      0.511,
       "crime-scene presence in window"
     ],
     "gallery": [
@@ -63,7 +63,7 @@
     ]
   },
   "culprit_lie_rate": 0.848,
-  "honest_confusion_rate": 0.168,
+  "honest_confusion_rate": 0.159,
   "mean_culprit_selection_probability": 0.524,
   "share_single_eligible_suspect": 0.053,
   "counts": {
@@ -77,12 +77,12 @@
     "cover_for_lies=5": 7,
     "culprit_lied": 509,
     "difficulty=EASY": 20,
-    "difficulty=HARD": 357,
+    "difficulty=HARD": 356,
     "difficulty=INVALID": 2,
-    "difficulty=MEDIUM": 221,
-    "honest_confusion": 154,
-    "honest_innocent_claims": 919,
-    "red_herring_lies": 212
+    "difficulty=MEDIUM": 222,
+    "honest_confusion": 146,
+    "honest_innocent_claims": 918,
+    "red_herring_lies": 213
   },
   "note": "Synthetic-data scores measure recovery of the generator's logic."
 }

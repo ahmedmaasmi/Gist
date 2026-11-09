@@ -5,14 +5,14 @@
     "seed": 0,
     "unit": "case"
   },
-  "dataset_checksum_features_csv": "1e9d6a320c45817906f662898048d7f0af30f77f0325136cea9a9dde7a0408ef",
-  "dataset_version": "0.2.0",
+  "dataset_checksum_features_csv": "44ceeea3223b82a2ff6ca1e9a164bbe7003e747923c67279b9987163e565aa29",
+  "dataset_version": "0.3.0",
   "feature_spec_version": "1.0.0",
   "fitted_on_val": {
     "rule_softmax_temperature": 1.5,
     "solver_uniform_epsilon": 0.001
   },
-  "git_commit": "da4fbd7",
+  "git_commit": "b1d565a-dirty",
   "note": "Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020).",
   "results": {
     "test_held_out_template": {

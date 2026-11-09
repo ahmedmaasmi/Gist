@@ -2,7 +2,7 @@
 
 > Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020).
 
-Dataset v0.2.0 (features.csv sha256 `1e9d6a320c45…`), feature spec 1.0.0, commit `da4fbd7`. 95% CIs from 2000 bootstrap resamples over cases (seed 0). Calibration fitted on val: rule temperature 1.5, solver epsilon 0.001.
+Dataset v0.3.0 (features.csv sha256 `44ceeea3223b…`), feature spec 1.0.0, commit `b1d565a-dirty`. 95% CIs from 2000 bootstrap resamples over cases (seed 0). Calibration fitted on val: rule temperature 1.5, solver epsilon 0.001.
 
 Higher is better for top-1, top-2 and MRR; lower is better for log loss and Brier.
 
