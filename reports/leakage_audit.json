@@ -1,0 +1,163 @@
+{
+  "checks": {
+    "briefing_fact": {
+      "briefing_names_culprit": 0.3576,
+      "passed": true,
+      "random_scene_record_names_culprit": 0.3003,
+      "stage0_states": 1566
+    },
+    "features_from_visible_state_only": {
+      "mismatches": 0,
+      "passed": true,
+      "states_recomputed": 200
+    },
+    "names": {
+      "excluded_names": [],
+      "keys_used_as_inputs": [],
+      "passed": true
+    },
+    "permutation_importance": {
+      "chance": 0.2379,
+      "dominant": [],
+      "passed": true,
+      "top1": 0.7795,
+      "top1_drop_when_permuted": {
+        "access_evidence": 0.0748,
+        "alibi_strength": 0.0076,
+        "claim_claim_conflicts": 0.0,
+        "claim_fact_conflicts": 0.0099,
+        "claimed_corroboration_share": 0.0128,
+        "disagreement_count": 0.0134,
+        "evidence_coverage": 0.0,
+        "motive_evidence": 0.0356,
+        "opportunity_overlap": 0.0082,
+        "scene_presence_in_window": 0.4263,
+        "unverified_claim_share": 0.0,
+        "victim_relationship_records": -0.003
+      }
+    },
+    "shuffled_labels": {
+      "passed": true,
+      "top1_minus_uniform": {
+        "high": -0.0244,
+        "low": -0.0893,
+        "mean": -0.056
+      },
+      "val_top1": {
+        "high": 0.2146,
+        "low": 0.1491,
+        "mean": 0.1819
+      }
+    },
+    "single_features": {
+      "full_model_top1": 0.7795,
+      "near_shortcuts": [],
+      "passed": true,
+      "top1_by_feature": {
+        "access_evidence": {
+          "high": 0.5871,
+          "low": 0.4924,
+          "mean": 0.5374
+        },
+        "alibi_strength": {
+          "high": 0.3211,
+          "low": 0.258,
+          "mean": 0.2888
+        },
+        "claim_claim_conflicts": {
+          "high": 0.2477,
+          "low": 0.2282,
+          "mean": 0.2379
+        },
+        "claim_fact_conflicts": {
+          "high": 0.5414,
+          "low": 0.4632,
+          "mean": 0.5042
+        },
+        "claimed_corroboration_share": {
+          "high": 0.2658,
+          "low": 0.2016,
+          "mean": 0.2353
+        },
+        "disagreement_count": {
+          "high": 0.3149,
+          "low": 0.2641,
+          "mean": 0.2888
+        },
+        "evidence_coverage": {
+          "high": 0.2477,
+          "low": 0.2282,
+          "mean": 0.2379
+        },
+        "motive_evidence": {
+          "high": 0.4242,
+          "low": 0.3407,
+          "mean": 0.3829
+        },
+        "opportunity_overlap": {
+          "high": 0.2667,
+          "low": 0.2204,
+          "mean": 0.2428
+        },
+        "scene_presence_in_window": {
+          "high": 0.7266,
+          "low": 0.6419,
+          "mean": 0.6843
+        },
+        "unverified_claim_share": {
+          "high": 0.2694,
+          "low": 0.2234,
+          "mean": 0.2449
+        },
+        "victim_relationship_records": {
+          "high": 0.3122,
+          "low": 0.2438,
+          "mean": 0.276
+        }
+      }
+    },
+    "suspect_order_invariance": {
+      "changed": 0,
+      "passed": true,
+      "states_checked": 100
+    }
+  },
+  "dataset_version": "0.3.0",
+  "full_model_val": {
+    "brier": {
+      "high": 0.3739,
+      "low": 0.2709,
+      "mean": 0.3212
+    },
+    "log_loss": {
+      "high": 0.7317,
+      "low": 0.5516,
+      "mean": 0.6382
+    },
+    "mrr": {
+      "high": 0.891,
+      "low": 0.8405,
+      "mean": 0.866
+    },
+    "top1": {
+      "high": 0.8193,
+      "low": 0.738,
+      "mean": 0.7795
+    },
+    "top2": {
+      "high": 0.9123,
+      "low": 0.8631,
+      "mean": 0.8889
+    }
+  },
+  "git_commit": "92564b7",
+  "model_family": "lightgbm",
+  "model_params": {
+    "learning_rate": 0.1,
+    "min_child_samples": 20,
+    "n_estimators": 100,
+    "num_leaves": 15
+  },
+  "note": "Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020).",
+  "passed": true
+}
