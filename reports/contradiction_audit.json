@@ -1,0 +1,63 @@
+{
+  "claims": 1600,
+  "cases": 400,
+  "false_positive_rate": [
+    0.0,
+    0.0,
+    0.009
+  ],
+  "recall_inaccurate_claims": [
+    0.522,
+    0.493,
+    0.55
+  ],
+  "precision": [
+    1.0,
+    0.994,
+    1.0
+  ],
+  "confusion": {
+    "TP": 610,
+    "FP": 0,
+    "FN": 559,
+    "TN": 431
+  },
+  "flag_rate_by_category": {
+    "culprit: accurate": [
+      0.0,
+      0.0,
+      0.562
+    ],
+    "culprit: honest but inaccurate": [
+      0.333,
+      0.217,
+      0.475
+    ],
+    "culprit: lie CULPRIT_COVER_STORY": [
+      0.954,
+      0.927,
+      0.972
+    ],
+    "innocent: accurate": [
+      0.0,
+      0.0,
+      0.009
+    ],
+    "innocent: honest but inaccurate": [
+      0.521,
+      0.422,
+      0.618
+    ],
+    "innocent: lie COVER_FOR": [
+      0.285,
+      0.249,
+      0.324
+    ],
+    "innocent: lie RED_HERRING_EVASION": [
+      0.424,
+      0.343,
+      0.51
+    ]
+  },
+  "note": "Intervals are (estimate, low, high), 95% Wilson over claims. Synthetic-data scores measure recovery of the generator's logic."
+}

@@ -182,12 +182,13 @@ class ObservationModel:
                             case_id=config.case_id,
                             description=(
                                 f"Physical trace of {event.actor_id} recovered at "
-                                f"{event.location_id} from window "
-                                f"[{event_interval.start_min}, {event_interval.end_min}]."
+                                f"{event.location_id}, dated to around minute {event.tick_min}."
                             ),
                             subject_id=event.actor_id,
                             location_id=event.location_id,
-                            time_interval=event_interval,
+                            # Point in time, like movement records (D-012): a trace dated [t, t + 10]
+                            # would claim presence until the next tick and accuse honest people.
+                            time_interval=TimeInterval(start_min=event.tick_min, end_min=event.tick_min),
                             category=EvidenceCategory.FORENSIC,
                             provenance=ProvenanceClass.PHYSICAL,
                             reliability=0.90,
@@ -361,11 +362,9 @@ class ObservationModel:
         }
         for event in canonical_events:
             if event.event_kind == "MOVEMENT":
-                ev_interval = TimeInterval(
-                    start_min=event.tick_min,
-                    end_min=event.tick_min + config.tick_size_min,
-                )
-                if config.murder_window.overlaps(ev_interval):
+                # A tick is a point in time: it belongs to the window iff its minute is inside it
+                # (the tick before the window, whose 10 minutes merely touch it, does not).
+                if config.murder_window.contains(event.tick_min):
                     true_murder_window_loc[event.actor_id] = event.location_id
                     visits = murder_window_visits.setdefault(event.actor_id, [])
                     if event.location_id not in visits:

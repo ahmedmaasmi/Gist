@@ -102,6 +102,7 @@ class StructuredConsistencyEngine:
                             contradiction_type=ContradictionType.CLAIM_FACT,
                             primary_claim_id=claim.claim_id,
                             conflicting_source_id=fact.fact_id,
+                            linked_source_ids=[fact.fact_id],
                             explanation=(
                                 f"Claim '{claim.claim_id}' about '{claim.subject_id}' conflicts "
                                 f"with fact '{fact.fact_id}': {reason}"
@@ -110,37 +111,79 @@ class StructuredConsistencyEngine:
                         )
                     )
 
-            # Check 2: Observed Character vs Fact
-            for observed_id in claim.observed_character_ids:
-                if observed_id == claim.subject_id:
-                    continue
-                if fact.subject_id == observed_id:
-                    reason = cls._check_spatiotemporal_conflict(
-                        claim.claimed_location_id,
-                        claim.claimed_time_interval,
-                        fact.location_id,
-                        fact.time_interval,
-                        setting,
+        # Check 2: Observed Characters vs Facts.
+        # "I saw Y at L during [a, b]" means Y was at L at *some* moment in [a, b], not throughout.
+        # It is contradicted only if Y's records make every minute of [a, b] impossible.
+        located = [
+            f
+            for f in facts
+            if f.status in valid_statuses and f.location_id is not None and f.time_interval is not None
+        ]
+        for observed_id in claim.observed_character_ids:
+            if observed_id == claim.subject_id:
+                continue
+            blocking = cls._facts_ruling_out_presence(
+                observed_id,
+                claim.claimed_location_id,
+                claim.claimed_time_interval,
+                located,
+                setting,
+            )
+            if blocking:
+                record_list = ", ".join(
+                    f"'{f.fact_id}' ({f.location_id} at {f.time_interval.start_min})" for f in blocking
+                )
+                flags.append(
+                    ContradictionFlag(
+                        flag_id=f"flag_{claim.claim_id}_obs_{observed_id}",
+                        case_id=claim.case_id,
+                        suspect_id=claim.speaker_id,
+                        contradiction_type=ContradictionType.CLAIM_FACT,
+                        primary_claim_id=claim.claim_id,
+                        conflicting_source_id=blocking[0].fact_id,
+                        linked_source_ids=[f.fact_id for f in blocking],
+                        explanation=(
+                            f"Speaker '{claim.speaker_id}' claimed to observe '{observed_id}' at "
+                            f"'{claim.claimed_location_id}' during [{claim.claimed_time_interval.start_min}, "
+                            f"{claim.claimed_time_interval.end_min}], but records {record_list} place "
+                            f"'{observed_id}' too far away at every minute of that interval."
+                        ),
+                        is_semantic=False,
                     )
-                    if reason is not None:
-                        flags.append(
-                            ContradictionFlag(
-                                flag_id=f"flag_{claim.claim_id}_{fact.fact_id}_obs_{observed_id}",
-                                case_id=claim.case_id,
-                                suspect_id=claim.speaker_id,
-                                contradiction_type=ContradictionType.CLAIM_FACT,
-                                primary_claim_id=claim.claim_id,
-                                conflicting_source_id=fact.fact_id,
-                                explanation=(
-                                    f"Speaker '{claim.speaker_id}' claimed to observe "
-                                    f"'{observed_id}' at '{claim.claimed_location_id}', "
-                                    f"conflicting with fact '{fact.fact_id}': {reason}"
-                                ),
-                                is_semantic=False,
-                            )
-                        )
+                )
 
         return flags
+
+    @staticmethod
+    def _facts_ruling_out_presence(
+        subject_id: str,
+        location_id: str,
+        interval: TimeInterval,
+        facts: list[Fact],
+        setting: SettingTemplate,
+    ) -> list[Fact]:
+        """
+        Returns the records that together make it impossible for `subject_id` to be at `location_id`
+        at ANY minute of `interval` (empty list if some minute remains possible). A record at another
+        location at minute t rules out [t - travel + 1, t + travel - 1], as in the timeline solver.
+        """
+        blocks: list[tuple[int, int, Fact]] = []
+        for fact in facts:
+            if fact.subject_id != subject_id or fact.location_id == location_id:
+                continue
+            travel = setting.get_travel_time(fact.location_id, location_id)
+            reach = max(travel - 1, 0)
+            b_start = fact.time_interval.start_min - reach
+            b_end = fact.time_interval.end_min + reach
+            if b_end >= interval.start_min and b_start <= interval.end_min:
+                blocks.append((b_start, b_end, fact))
+        if not blocks:
+            return []
+        every_minute_blocked = all(
+            any(b_start <= m <= b_end for b_start, b_end, _ in blocks)
+            for m in range(interval.start_min, interval.end_min + 1)
+        )
+        return [fact for _, _, fact in blocks] if every_minute_blocked else []
 
     @classmethod
     def check_claim_against_claims(
@@ -181,6 +224,7 @@ class StructuredConsistencyEngine:
                         contradiction_type=ContradictionType.CLAIM_CLAIM,
                         primary_claim_id=new_claim.claim_id,
                         conflicting_source_id=prior.claim_id,
+                        linked_source_ids=[prior.claim_id],
                         explanation=(
                             f"Speaker '{new_claim.speaker_id}' contradicted earlier claim "
                             f"'{prior.claim_id}' with new claim '{new_claim.claim_id}': {reason}"

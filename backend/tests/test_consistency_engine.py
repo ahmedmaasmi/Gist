@@ -147,8 +147,9 @@ def test_travel_feasibility_claim_fact(blackwood_setting: SettingTemplate):
 def test_false_witness_observed_character_claim_fact(blackwood_setting: SettingTemplate):
     """
     3. False Witness / Observed Character (CLAIM_FACT):
-    Suspect A claims they were in loc_library at 21:52 and saw suspect_reed there,
-    while the study door log proves suspect_reed was in loc_study at 21:52.
+    Suspect A claims they were at loc_gatehouse 21:50-21:55 and saw suspect_reed there,
+    while the study door log proves suspect_reed was in loc_study at 21:52. The study is
+    17 minutes from the gatehouse, so Reed cannot have been there at any minute of the claim.
     """
     door_log_fact = Fact(
         fact_id="fact_door_log_2152",
@@ -168,7 +169,7 @@ def test_false_witness_observed_character_claim_fact(blackwood_setting: SettingT
         speaker_id="suspect_a",
         subject_id="suspect_a",
         turn_index=3,
-        claimed_location_id="loc_library",
+        claimed_location_id="loc_gatehouse",
         claimed_time_interval=TimeInterval(start_min=1310, end_min=1315),
         observed_character_ids=["suspect_reed"],
     )
@@ -185,7 +186,62 @@ def test_false_witness_observed_character_claim_fact(blackwood_setting: SettingT
     assert flag.suspect_id == "suspect_a"
     assert flag.primary_claim_id == "claim_suspect_a_alibi"
     assert flag.conflicting_source_id == "fact_door_log_2152"
+    assert flag.linked_source_ids == ["fact_door_log_2152"]
     assert flag.is_semantic is False
+
+
+def test_seeing_someone_needs_only_one_possible_moment(blackwood_setting: SettingTemplate):
+    """
+    "I saw Reed in the library 21:50-21:55" is compatible with a study swipe at 21:52: the study is
+    2 minutes away, so Reed could have been in the library at 21:50. Flagging it would accuse an
+    honest witness (a false positive, the headline safety metric in PRD 10.1).
+    """
+    door_log_fact = Fact(
+        fact_id="fact_door_log_2152",
+        case_id="case_blackwood",
+        description="Study door badge swipe by Daniel Reed at 21:52",
+        subject_id="suspect_reed",
+        location_id="loc_study",
+        time_interval=TimeInterval(start_min=1312, end_min=1312),
+        category=EvidenceCategory.TIMELINE,
+        provenance=ProvenanceClass.RECORD,
+        reliability=0.98,
+        status=VerificationStatus.ESTABLISHED,
+    )
+    witness_claim = Claim(
+        claim_id="claim_suspect_a_alibi",
+        case_id="case_blackwood",
+        speaker_id="suspect_a",
+        subject_id="suspect_a",
+        turn_index=3,
+        claimed_location_id="loc_library",
+        claimed_time_interval=TimeInterval(start_min=1310, end_min=1315),
+        observed_character_ids=["suspect_reed"],
+    )
+    assert StructuredConsistencyEngine.check_claim_against_facts(
+        claim=witness_claim, facts=[door_log_fact], setting=blackwood_setting
+    ) == []
+
+    # Two gatehouse swipes that together rule out every minute DO contradict it (both linked)
+    early_swipe = door_log_fact.model_copy(
+        update={
+            "fact_id": "fact_gate_2146",
+            "location_id": "loc_gatehouse",
+            "time_interval": TimeInterval(start_min=1306, end_min=1306),
+        }
+    )
+    late_swipe = door_log_fact.model_copy(
+        update={
+            "fact_id": "fact_gate_2158",
+            "location_id": "loc_gatehouse",
+            "time_interval": TimeInterval(start_min=1318, end_min=1318),
+        }
+    )
+    flags = StructuredConsistencyEngine.check_claim_against_facts(
+        claim=witness_claim, facts=[early_swipe, late_swipe], setting=blackwood_setting
+    )
+    assert len(flags) == 1
+    assert set(flags[0].linked_source_ids) == {"fact_gate_2146", "fact_gate_2158"}
 
 
 def test_self_contradiction_claim_claim_and_evaluate_session(blackwood_setting: SettingTemplate):
@@ -285,3 +341,16 @@ def test_unestablished_or_disputed_fact_ignored(blackwood_setting: SettingTempla
 
     assert flags == []
 
+
+
+def test_no_false_positives_on_accurate_generated_claims():
+    """
+    PRD 10.1 headline safety metric on generated cases: a claim that is exactly true must never be
+    flagged. (Before step 3 this was 24%: 'I saw Y' was read as 'Y was there the whole time', and
+    10-minute record intervals placed people at the next tick.)
+    """
+    from app.evaluation.contradiction_audit import run
+
+    result = run(seeds=6)
+    assert result["confusion"]["FP"] == 0, result["flag_rate_by_category"]
+    assert result["recall_inaccurate_claims"][0] > 0.5

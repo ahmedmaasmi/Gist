@@ -246,24 +246,35 @@ def _sample_traits(rng: random.Random) -> CharacterTraits:
 
 def _sample_schedule(
     rng: random.Random,
+    setting: SettingTemplate,
     locations: list[str],
     crime_location_id: str,
     start_min: int = 1080,
     end_min: int = 1440,
+    tick_size_min: int = 10,
 ) -> list[ScheduleSlot]:
-    """3 to 5 consecutive slots at random 10-minute boundaries; occasionally at the crime scene."""
+    """
+    3 to 5 consecutive slots at random 10-minute boundaries; occasionally at the crime scene.
+    Each slot's location is reachable from the previous one within one tick, so nobody "teleports"
+    across the map between ticks (which would create travel-time contradictions nobody caused).
+    """
     n_slots = rng.randint(3, 5)
     cuts = sorted(rng.sample(range(start_min + 30, end_min - 30, 10), n_slots - 1))
     bounds = [start_min, *cuts, end_min]
-    return [
-        ScheduleSlot(
-            time_interval=TimeInterval(start_min=a, end_min=b),
-            planned_location_id=(
-                crime_location_id if rng.random() < P_SCENE_SLOT else rng.choice(locations)
-            ),
-        )
-        for a, b in zip(bounds, bounds[1:], strict=False)
-    ]
+    slots: list[ScheduleSlot] = []
+    prev: str | None = None
+    for a, b in zip(bounds, bounds[1:], strict=False):
+        def reachable(loc: str, prev: str | None = prev) -> bool:
+            return prev is None or setting.get_travel_time(prev, loc) <= tick_size_min
+
+        options = [loc for loc in locations if reachable(loc)] or [prev or locations[0]]
+        if reachable(crime_location_id) and rng.random() < P_SCENE_SLOT:
+            loc = crime_location_id
+        else:
+            loc = rng.choice(options)
+        slots.append(ScheduleSlot(time_interval=TimeInterval(start_min=a, end_min=b), planned_location_id=loc))
+        prev = loc
+    return slots
 
 
 def sample_case_setup_from_template(
@@ -422,7 +433,7 @@ def sample_case_setup_from_template(
                 traits=_sample_traits(rng),
                 goals=goals,
                 secrets=secrets,
-                schedule=_sample_schedule(rng, non_crime_locs, crime_location_id),
+                schedule=_sample_schedule(rng, tpl, non_crime_locs, crime_location_id),
             )
         )
 

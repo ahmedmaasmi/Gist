@@ -106,3 +106,17 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **Alternatives considered:** Keep role-specific phrasings; drop free text entirely.
 - **Reason:** Lying culprits always said "I remained at X … per my schedule", which is a perfect text shortcut for any NLP feature and an easy tell for a player.
 - **What I should learn from this:** Leakage isn't only in numeric columns. Generated *text* carries the generator's branch structure unless you deliberately decouple wording from the hidden state.
+
+## D-014 (2026-11-09): "I saw Y there" means Y was there at some moment, not throughout
+
+- **Decision:** For people a speaker claims to have seen, the consistency engine flags a contradiction only if Y's records, combined with travel times, make **every** minute of the claimed interval impossible (the same logic as the timeline solver). The speaker's **own** whereabouts are still checked as "throughout the interval". Flags gained `linked_source_ids`, because a conclusion can rest on several records together (MD-05).
+- **Alternatives considered:** Keep the per-record "Y was there the whole time" check; drop observed-person checks.
+- **Reason:** 24% of exactly-true innocent claims were flagged. The usual pattern: an honest witness truthfully saw the culprit, who then left to commit the murder. False positives are the PRD's headline safety metric (10.1). After the fix: false-positive rate 0% (95% CI 0–0.9%), precision 100%, recall 52% (`make audit-contradictions`). One existing test asserted a false positive (the library is 2 minutes from the study) and was corrected.
+- **What I should learn from this:** Translating natural language into logic is where false positives come from. "I saw X" is existential (some moment), while "I was at X" is universal (all moments). Choosing the wrong quantifier makes a precise-looking rule systematically wrong.
+
+## D-015 (2026-11-09): Forensic traces are point-in-time; sampled schedules respect travel time
+
+- **Decision:** Forensic traces are dated to a single tick, like movement records (D-012). Each sampled schedule slot must be reachable from the previous slot within one tick.
+- **Alternatives considered:** Add a time tolerance to the consistency engine; let the simulator delay arrivals.
+- **Reason:** The last 2% of false positives came from 10-minute trace intervals reaching into the next tick. There were also 28 record pairs in which innocents "teleported" between schedule slots. Both are now 0. A tolerance would have hidden the problem and weakened true detections.
+- **What I should learn from this:** Fix inconsistencies where they are created (the generator) rather than where they are noticed (the checker). Otherwise the checker learns to excuse a broken world.

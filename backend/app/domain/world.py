@@ -36,8 +36,15 @@ class TimeInterval(BaseModel):
         """Returns the length of the interval in minutes."""
         return self.end_min - self.start_min
 
+    def contains(self, minute: int) -> bool:
+        """True if `minute` lies inside this closed interval (used for point-in-time ticks)."""
+        return self.start_min <= minute <= self.end_min
+
     def overlaps(self, other: "TimeInterval") -> bool:
-        """Returns True if this time interval overlaps with another interval."""
+        """
+        Returns True if this closed interval shares at least one minute with another.
+        Intervals that only touch (e.g. [1250, 1260] and [1260, 1280]) do share minute 1260.
+        """
         return max(self.start_min, other.start_min) <= min(self.end_min, other.end_min)
 
     def overlap_duration(self, other: "TimeInterval") -> int:
@@ -117,6 +124,10 @@ class ContradictionFlag(BaseModel):
     contradiction_type: ContradictionType
     primary_claim_id: str = Field(..., description="The claim being contradicted")
     conflicting_source_id: str = Field(..., description="The fact_id (CLAIM_FACT) or prior claim_id (CLAIM_CLAIM)")
+    linked_source_ids: list[str] = Field(
+        default_factory=list,
+        description="MD-05: every record the conflict rests on (several when it needs a combination of records)",
+    )
     explanation: str = Field(..., min_length=1, description="Plain-language explanation of the conflict")
     is_semantic: bool = Field(default=False, description="False if caught by Layer 1 structured rules; True if Layer 2 NLI")
 
