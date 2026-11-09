@@ -2,7 +2,7 @@
 description: Plain-English summary of where the CaseMind project stands (read-only, no code)
 ---
 
-Read `docs/STATUS.md` and `docs/DECISIONS.md`. Do not write or change any files, and do not write code.
+Read `docs/STATUS.md`, `docs/DECISIONS.md` and the latest sections of `docs/JOURNAL.md`. Do not write or change any files, and do not write code.
 
 Then give the user a short plain-English summary covering:
 

@@ -13,7 +13,9 @@ is backed by a reproducible measurement. Full spec: `docs/CaseMind PRD v2.0.pdf`
 a. Read `docs/STATUS.md` first (and `docs/DECISIONS.md` when context is needed).
 b. Tell the user in plain English where we are and what the next step is, then **wait for their OK**.
 c. Work on **one** checklist step at a time. Within a step, work in small sub-steps and explain each one.
-d. When a step is done: run tests, update `docs/STATUS.md`, append decisions to `docs/DECISIONS.md`, make **one** git commit.
+d. When a step (or sub-step) is done: run tests, update `docs/STATUS.md`, append decisions to `docs/DECISIONS.md`,
+   **append a section to `docs/JOURNAL.md`** explaining in plain language what changed, why, how, the concepts
+   behind it and the numbers it produced, then make **one** git commit.
 
 ## Hard rules (from the PRD)
 
