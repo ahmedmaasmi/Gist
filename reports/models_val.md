@@ -2,7 +2,7 @@
 
 > Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020). Test splits are not evaluated until the leakage audit (step 8) passes.
 
-Dataset v0.3.0 (`44ceeea3223b…`), feature spec 1.0.0, commit `b1d565a-dirty`. Trained on 783 train cases; evaluated on 171 val cases from 9 templates. 95% CIs: 2000 bootstrap resamples over cases.
+Dataset v0.3.0 (`44ceeea3223b…`), feature spec 1.0.0, commit `f891111`. Trained on 783 train cases; evaluated on 171 val cases from 9 templates. 95% CIs: 2000 bootstrap resamples over cases.
 
 | Method | top1 | top2 | mrr | log_loss | brier |
 |---|---|---|---|---|---|

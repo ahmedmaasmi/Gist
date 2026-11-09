@@ -85,7 +85,7 @@
     }
   },
   "feature_spec_version": "1.0.0",
-  "git_commit": "b1d565a-dirty",
+  "git_commit": "f891111",
   "note": "Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020). Test splits are not evaluated until the leakage audit (step 8) passes.",
   "selected": "lightgbm",
   "split_evaluated": "val",

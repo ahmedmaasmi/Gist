@@ -12,7 +12,7 @@
     "rule_softmax_temperature": 1.5,
     "solver_uniform_epsilon": 0.001
   },
-  "git_commit": "b1d565a-dirty",
+  "git_commit": "f891111",
   "note": "Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020).",
   "results": {
     "test_held_out_template": {
