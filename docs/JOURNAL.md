@@ -230,3 +230,43 @@ case generator (simulation)  ->  hidden truth (T3) + evidence the player can fin
   - **Why "below chance" is fine.** A model fitted to noise learns "typical = positive", and real culprits are atypical. The PRD question is "does it find signal that isn't there?", so only *above-chance* results would be alarming. That makes the test one-sided.
   - **Dominance is not leakage, but it is a limitation.** The model's skill comes mostly from one plausible clue (opportunity: a door log in the murder room). That's honest detective evidence, but the report must say so, and E1 will show how much the other groups add.
   - **Audits must be able to fail.** A check that can never fail tells you nothing, which is why the planted-name test exists.
+
+## Step 8b: E1, the feature ablation (pre-registered)
+
+- **What:** `app/evaluation/e1_ablation.py` and `make e1` → `reports/e1.md`. Hypotheses and results are in `docs/EXPERIMENTS.md`.
+- **Why:** PRD 9.1. Which kinds of evidence actually help? And does the model beat pure logic (the solver) on maps it never saw?
+- **How:**
+  1. **Pre-register.** Hypotheses H1–H6 were written and *committed* before running. The commit timestamp proves the predictions came first.
+  2. **Variants.** Train the model on feature group A only, A+B, A+B+C, and A+B+C minus each group. Each variant is **re-tuned** by grouped CV, so none is disadvantaged.
+  3. **Evaluate once** on held-out maps and the shifted set, with **paired** bootstrap differences. The same cases are resampled for both variants, which removes case-to-case noise from the comparison.
+- **Numbers (held-out maps, top-1):** A 0.644 → A+B **0.794** → A+B+C 0.791. Rule 0.627, solver 0.250.
+- **What we learned:**
+  - **H1 confirmed.** Timeline and alibi evidence (B) is worth +15 points.
+  - **H2 refuted.** Contradictions (C) add nothing once B is known, because 90% of culprits' refuted statements are refuted by the *same* murder-room records B already counts.
+  - **Everything beats pure logic** (the solver) by 40–54 points.
+- **Concepts:**
+  - **Ablation.** Remove one ingredient and measure the drop, to find out what a model really relies on.
+  - **Redundancy vs. usefulness.** A feature can be informative alone (contradictions: 0.50) yet add nothing next to a correlated one. Single-feature scores can't show this; ablations can.
+  - **Pre-registration** protects against the forking-paths problem: trying many analyses and reporting the one that looks good.
+
+## Step 8c: the one-time final test evaluation
+
+- **What:** `app/evaluation/final_eval.py` and `make final-eval` → `reports/final_test.md`. Run once, after the audit passed.
+- **Why:** PRD 8.4 and 15. Test sets are touched once, for the final model, so the reported number is an honest estimate rather than a tuned one.
+- **How:**
+  - It goes through the *deployed* path: `Ranker.load()` on the saved model, then `rank(t0, t1, map)` on every test evidence state.
+  - It compares against the rule, the solver and uniform with paired CIs.
+  - It reports abstention coverage and accuracy with Wilson intervals.
+- **Numbers (top-1):**
+
+  | Split | Model | vs rule |
+  |---|---|---|
+  | Same maps | 0.796 | +0.21 |
+  | Unseen maps | 0.791 | +0.16 |
+  | Shifted conditions | 0.689 | +0.10 |
+
+  All CIs exclude 0. The held-out result matches E1 exactly (0.791) through an independent code path.
+  - **Abstention:** 80% accuracy when answering, met on familiar and unseen maps, but only **72%** under shifted conditions.
+- **Concepts:**
+  - **Why "once".** Every look at test data that influences a decision leaks information into the model choice. That's why E1's lesson (use A+B, which is simpler) waits for the next version, decided on val.
+  - **Distribution shift breaks calibration before it breaks ranking.** Under shift the model still beats the baselines, but its confidence is too high. This motivates OOD warnings (PRD CL-05) and E4.

@@ -269,3 +269,26 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
   - **The briefing fact is slightly biased.** It names the culprit 35.8% of the time vs 30.0% for a random scene record (within tolerance).
   - **The D-023 fix holds.** `claimed_corroboration_share` alone is at chance (0.235).
 - **What I should learn from this:** A leakage audit is a set of *falsifiable* checks written before looking. Each check must be able to fail (a test plants a forbidden input name). And the criteria must match the question: "no evidence of beating chance" is not "equal to chance".
+
+## D-027 (2026-11-09): E1 and the one-time final test evaluation
+
+- **Decision:**
+  - **E1 pre-registered first.** Hypotheses were committed in `d7ae556` before `make e1` ran. Results are recorded under them in `docs/EXPERIMENTS.md`, unedited.
+  - **Final test evaluation run once** (`make final-eval`), through the deployed `Ranker` and the saved artefact, after the leakage audit passed. The selected model was **not** changed after seeing E1 or the test results.
+- **Alternatives considered:**
+  - Re-selecting a feature set after E1: A+B is as good as A+B+C and simpler. Switching now would be selecting on test data, so it is deferred to the next model version and decided on val.
+  - Evaluating on test with a retrained copy instead of the artefact: this would not test what ships.
+- **Results** (top-1, 95% CI; model `lightgbm-6d50342630`):
+
+  | Split | Cases | Model | Rule | Paired difference |
+  |---|---|---|---|---|
+  | test_in_dist | 171 | **0.796** [0.757, 0.832] | 0.583 | **+0.213** [0.163, 0.264] |
+  | Held-out maps | 375 | **0.791** [0.764, 0.817] | 0.627 | **+0.164** [0.131, 0.194] |
+  | Shifted OOD | 150 | **0.689** [0.631, 0.748] | 0.594 | **+0.095** [0.052, 0.140] |
+
+  The model beats the rule, the solver and uniform on every split, with paired CIs excluding 0 for top-1 and log loss.
+  - **Abstention (target 80% accuracy when answering):** met on in-dist (82.6%) and held-out maps (81.5%); **not met on shifted OOD (71.9% [68.5, 75.1])**.
+  - **E1:** B adds +0.15 over A; C adds **nothing** beyond A+B (refuted H2), because culprits' refutations come 90% from the same scene records.
+- **What I should learn from this:**
+  - **Pre-registering turns "the model works" into falsifiable claims,** and the refuted one (H2) taught the most.
+  - **Calibration is a property of a data distribution, not of a model.** Thresholds set on val held on unseen maps but not under shifted noise. That is the case for OOD warnings (CL-05) and for E4.

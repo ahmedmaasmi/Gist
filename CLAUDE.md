@@ -45,6 +45,7 @@ d. When a step (or sub-step) is done: run tests, update `docs/STATUS.md`, append
 - `make baselines`: baseline table with 95% CIs → `reports/baselines.{json,md}` (needs `make dataset`).
 - `make models`: tune (grouped CV on train), calibrate (val), select the ranker → `reports/models_val.{json,md}`, artefacts in `ml/artifacts/` (gitignored). **Test splits stay sealed until the step 8 leakage audit passes.**
 - `make audit-leakage`: PRD 8.8 audit on train/val → `reports/leakage_audit.{json,md}` (must pass before any test evaluation).
+- `make e1`: E1 ablation (hypotheses pre-registered in `docs/EXPERIMENTS.md`). `make final-eval`: **one-time** test evaluation, already run for `lightgbm-6d50342630`; do not re-run to tune anything.
 - Play-time ranking: `app/ml/ranker.Ranker` (`load()`, `rank(t0, t1, setting)`, `counterfactual(...)`); falls back to the rule if no model loads.
 - Art: style reference and portrait prompts in `docs/art/`.
 - `make up` / `make down`: Postgres + backend in Docker Compose; API on http://localhost:8000/health.

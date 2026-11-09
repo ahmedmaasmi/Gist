@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 8. Leakage audit and E1 (8a audit PASSED; next: write the E1 hypotheses, run E1, then the one-time test evaluation)
+- **Current step:** 9. Question policy and E3 (not started; waiting for the user's OK)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -15,7 +15,7 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - [x] **5. Dataset and splits.** 12 floor-plan maps, per-case variables, famous names; `make dataset` → v0.2.0 (1,650 cases; train/val/test_in_dist by case, 3 held-out maps, shifted OOD set, grouped-CV folds; checksums reproduce). *(Done 2026-11-09.)*
 - [x] **6. Baselines and evaluation harness.** `app/ml/metrics.py` (case-level metrics, case bootstrap, paired differences); uniform, motive+opportunity rule and timeline solver; `make baselines` → `reports/baselines.{json,md}`, reproducible. *(Done 2026-11-09.)*
 - [x] **7. Models.** LR and LightGBM (grouped-CV tuning, val calibration, LightGBM selected, 0.78 val top-1, +0.19 over the rule); the `Ranker` with evidence-linked explanations, a counterfactual, the rule fallback and abstention (96% coverage at 80% accuracy on val). *(Done 2026-11-09; test splits still sealed.)*
-- [ ] **8. Leakage audit and E1.** Feature-name audit, shuffled-label control, single-feature models, permutation importance, reveal-artefact check; E1 ablation A/B/C plus leave-one-group-out.
+- [x] **8. Leakage audit and E1.** Audit passed (7 checks); E1 pre-registered and run (B +0.15; C adds nothing); one-time test evaluation: model 0.79 top-1 on held-out maps (+0.16 vs rule), 0.69 on shifted OOD (+0.10). *(Done 2026-11-09.)*
 - [ ] **9. Question policy and E3.** Slot-based question bank, scripted player simulator (honest innocent, lying guilty, evasive innocent, mixed), entropy policy vs random, fixed-order and top-two; budgets 3, 5 and 8.
 - [ ] **10. API and minimal web UI.** FastAPI endpoints (reading through the `casemind_gameplay` role only); case page, claim builder, live ranking with explanations, verdict, results; contract and canary tests on every response.
 - [ ] **11. Docker and README.** Compose stack already runs Postgres and a backend with `/health` (`make up`). Still to do: persistence layer, frontend container, README, `make` targets that reproduce every reported table.
@@ -59,10 +59,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09, **step 7a done:** the first models exposed a scripted tell (culprits never claimed a witness; D-023), so the dataset went to v0.3.0. LR and LightGBM were tuned by grouped CV and calibrated on val; LightGBM is selected at 0.78 val top-1, +0.19 over the rule (D-024). Tests 161 → 166.
 - 2026-11-09, **step 7b done:** `Ranker` with evidence-linked explanations (LR coefficients, LightGBM TreeSHAP), a 'remove this evidence' counterfactual, the rule fallback and val-chosen abstention (D-025); import cycle fixed. Tests 166 → 174.
 - 2026-11-09, **step 8a done:** leakage audit PASSED, all 7 checks (D-026). The model relies mostly on scene presence (alone 0.684 vs full 0.779). Tests 174 → 176.
+- 2026-11-09, **step 8 done:** E1 pre-registered and run (H1, H3, H4 confirmed; H2 refuted; H5 mixed; H6 partly); final test evaluation run once through the deployed Ranker (D-027).
 
 ## Next action
 
-Write the E1 hypotheses down and commit them *before* running, then run E1 (A / A+B / A+B+C plus leave-one-group-out) and the one-time test evaluation.
+Step 9 (E3): a slot-based question bank; a scripted player simulator (honest innocent, lying guilty, evasive innocent, mixed); an entropy-based question policy against random, fixed-order and top-two policies; budgets of 3, 5 and 8 questions.
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 
@@ -97,6 +98,18 @@ Scores measure recovery of the generator's logic, not real-world skill.
 | Accurate claims | 0% |
 
 **Disagreements (D-016):** 1.25 per case; 100% involve a false claim. False claims caught by a flag *or* a disagreement: **85%**. 37% of accurate innocents are involved in a disagreement (the honest counterpart), so it is never treated as blame.
+
+## Final test results (`make final-eval`, run once; top-1, 95% CI)
+
+| Split | Model | Rule | Paired difference |
+|---|---|---|---|
+| test_in_dist (171) | 0.796 | 0.583 | +0.213 [0.163, 0.264] |
+| Held-out maps (375) | 0.791 | 0.627 | +0.164 [0.131, 0.194] |
+| Shifted OOD (150) | 0.689 | 0.594 | +0.095 [0.052, 0.140] |
+
+**Abstention (target 80%):** met on in-dist (82.6%) and held-out maps (81.5%); **not met on OOD (71.9%)**.
+
+**E1:** A 0.644 → A+B 0.794 → A+B+C 0.791 on held-out maps. H2 is refuted: contradictions add nothing beyond scene presence.
 
 ## Models (`make models`, val only; top-1 with 95% CI)
 
@@ -145,6 +158,9 @@ Scores measure recovery of the generator's logic, not real-world skill.
 - **Lie rate.** The culprit lie rate is 0.820 observed against 0.806 sampled (z = 1.75, not significant); re-check.
 
 ## Open questions / blockers
+
+- **Next model version:** E1 shows A+B is as good as A+B+C and simpler. Decide on **val** whether to drop group C (never on the test results already seen).
+- **OOD calibration:** abstention reaches only 72% accuracy on shifted cases. Consider OOD warnings (CL-05), and analyse this in E4 (v1.0).
 
 - **Step 10 (UI):** render statements with room names, character names and clock times. Generated free text uses raw IDs and minutes.
 - **Art:** portraits to be generated by the user from `docs/art/portraits.csv` into `frontend/public/portraits/`.
