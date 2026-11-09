@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 8. Leakage audit and E1 (not started; waiting for the user's OK)
+- **Current step:** 8. Leakage audit and E1 (8a audit PASSED; next: write the E1 hypotheses, run E1, then the one-time test evaluation)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -58,10 +58,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09: **learning journal** `docs/JOURNAL.md` is now a project rule.
 - 2026-11-09, **step 7a done:** the first models exposed a scripted tell (culprits never claimed a witness; D-023), so the dataset went to v0.3.0. LR and LightGBM were tuned by grouped CV and calibrated on val; LightGBM is selected at 0.78 val top-1, +0.19 over the rule (D-024). Tests 161 → 166.
 - 2026-11-09, **step 7b done:** `Ranker` with evidence-linked explanations (LR coefficients, LightGBM TreeSHAP), a 'remove this evidence' counterfactual, the rule fallback and val-chosen abstention (D-025); import cycle fixed. Tests 166 → 174.
+- 2026-11-09, **step 8a done:** leakage audit PASSED, all 7 checks (D-026). The model relies mostly on scene presence (alone 0.684 vs full 0.779). Tests 174 → 176.
 
 ## Next action
 
-Run the leakage audit (step 8): feature-name audit, shuffled-label control, single-feature models and permutation importance, a reveal-artefact check (including the stage-0 briefing fact) and the E1 ablation A/B/C plus leave-one-group-out. Then unseal the test splits once.
+Write the E1 hypotheses down and commit them *before* running, then run E1 (A / A+B / A+B+C plus leave-one-group-out) and the one-time test evaluation.
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 

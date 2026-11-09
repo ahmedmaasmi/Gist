@@ -202,3 +202,31 @@ case generator (simulation)  ->  hidden truth (T3) + evidence the player can fin
   - **Additive explanations (SHAP or linear terms) are exact on the score, not on the final probability.** The probability depends on everyone else in the case. In the UI, say "pushes towards / away from".
   - **Counterfactuals** are the most intuitive explanation for a player ("without this record…"), and they test whether the model really relies on what it claims to.
   - **Selective prediction.** Abstaining trades coverage for accuracy. The risk–coverage curve shows the whole trade-off, and the threshold is a product choice (80%), stated up front rather than tuned after the fact.
+
+## Step 8a: the leakage and shortcut audit
+
+- **What:** `app/evaluation/leakage_audit.py` and `make audit-leakage` → `reports/leakage_audit.md`. Seven checks, all passed.
+- **Why:** PRD 8.8 requires the audit *before* any results are reported. It is the last gate before the sealed test sets are opened. Twice already (steps 2 and 7a) the generator handed the model a shortcut, so the audit has to look for that kind of thing systematically.
+- **How** (each check has a pass rule fixed in code before running):
+  1. **Names.** No input called anything like `id`, `culprit`, `label` or `lie`, and no row key used as an input. A test plants `suspect_id_rel` and `label` to prove the check can fail.
+  2. **Shuffled labels.** Give every training case a *random* culprit and retrain. If the pipeline were leaking the answer some other way, it would still score above chance. Result: 0.182, *below* chance (0.238): no leak.
+  3. **One feature at a time.** Train on each feature alone. If one feature nearly matches the full model, it's a shortcut.
+  4. **Permutation importance.** Scramble one feature across suspects and see how much accuracy drops.
+  5. **Reveal and order artefacts:**
+     - does the guaranteed first clue give the culprit away?
+     - recomputing features from only what is visible gives exactly the stored values;
+     - listing the suspects in reverse order changes nothing.
+- **Numbers (val):**
+
+  | Model | Top-1 |
+  |---|---|
+  | Full model | 0.779 |
+  | Shuffled labels | 0.182 |
+  | Best single feature (scene presence) | 0.684 |
+  | Corroboration alone (the old tell) | 0.235 |
+
+  Permuting scene presence costs 43 points, and the model still beats chance without it (0.35 vs 0.29). The briefing fact is slightly biased (0.36 vs 0.30, within tolerance).
+- **Concepts:**
+  - **Why "below chance" is fine.** A model fitted to noise learns "typical = positive", and real culprits are atypical. The PRD question is "does it find signal that isn't there?", so only *above-chance* results would be alarming. That makes the test one-sided.
+  - **Dominance is not leakage, but it is a limitation.** The model's skill comes mostly from one plausible clue (opportunity: a door log in the murder room). That's honest detective evidence, but the report must say so, and E1 will show how much the other groups add.
+  - **Audits must be able to fail.** A check that can never fail tells you nothing, which is why the planted-name test exists.

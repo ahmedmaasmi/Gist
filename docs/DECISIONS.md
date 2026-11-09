@@ -250,3 +250,22 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **What I should learn from this:**
   - **Additive explanations are exact on the model's score, not on the normalised probability.** Say so in the UI: "pushes towards / away", not "adds 12% probability".
   - **A counterfactual is a simpler and more honest explanation** for a player than a SHAP value: "without this badge record, Reed drops from 70% to 21%".
+
+## D-026 (2026-11-09): Leakage and shortcut audit (PRD 8.8): passed
+
+- **Decision:** `make audit-leakage` runs 7 checks on train/val, with pass criteria fixed in code before running:
+  1. feature names;
+  2. shuffled-label control (no evidence of beating chance: upper 95% bound of the gain ≤ 0.03);
+  3. single-feature models (none within 0.05 top-1 of the full model);
+  4. permutation importance (no feature whose removal drops the model to near chance);
+  5. the stage-0 briefing fact (no more culprit-revealing than a random crime-scene record, ±0.10);
+  6. features recomputed from the visible snapshot alone (exact match);
+  7. suspect-order invariance.
+
+  All 7 pass. Test splits may now be evaluated **once**.
+- **Alternatives considered:** a two-sided shuffled-label criterion ("CI includes 0"). It is wrong here: a tree fitted to random labels scores *below* chance (0.182 vs 0.238), because it favours the dense, typical region where innocents live while culprits are outliers. The PRD asks for "falls to chance", so only *above-chance* gains matter.
+- **Findings to report honestly:**
+  - **The model leans heavily on one clue.** "Seen at the scene during the window" alone reaches 0.684 top-1 (full model 0.779), and permuting it costs 43 points.
+  - **The briefing fact is slightly biased.** It names the culprit 35.8% of the time vs 30.0% for a random scene record (within tolerance).
+  - **The D-023 fix holds.** `claimed_corroboration_share` alone is at chance (0.235).
+- **What I should learn from this:** A leakage audit is a set of *falsifiable* checks written before looking. Each check must be able to fail (a test plants a forbidden input name). And the criteria must match the question: "no evidence of beating chance" is not "equal to chance".
