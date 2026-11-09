@@ -165,3 +165,14 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **Alternatives considered:** The PRD's minimum of 3 hand-authored cases.
 - **Reason:** User preference. Held-out templates plus out-of-range parameters still test generalisation, though only *within the generator's family*. That limitation must be stated.
 - **What I should learn from this:** Out-of-distribution means outside the *training* distribution. Without independent hand-made data, every test set shares the generator's assumptions, so "generalises" can only mean "to unseen maps and parameter ranges of the same generator".
+
+## D-021 (2026-11-09): Dataset v0.2.0 (splits, folds, feature table, one command)
+
+- **Decision:**
+  - **Build.** `make dataset` builds 1,500 cases spread evenly over the 12 maps, plus 150 shifted-OOD cases, into `data/generated/v0.2.0/` (gitignored). It writes `snapshots.jsonl`, `features.csv` and `manifest.json`. The manifest records the dataset version, feature-spec version, git commit, seed, variable ranges, counts per split (**both** cases and templates) and sha256 checksums.
+  - **Splits (PRD 8.4).** Cases on the 9 dev maps are split by case: train 783 / val 171 / test_in_dist 171. All 375 cases on the 3 held-out maps go to `test_held_out_template`, and the 150 shifted cases go to `test_ood_shifted`.
+  - **Folds.** Train cases carry a grouped-CV fold: 3 folds of 3 maps each.
+  - **Hard cases.** The artificial hard-case mechanism was removed, because hard cases now occur naturally (train rows: HARD 63%, MEDIUM 35%, EASY 2%).
+- **Alternatives considered:** Templates as the val split (the old design, not what PRD 8.4 says); keeping artificial hard cases; storing features only (snapshots let features be recomputed if the spec changes).
+- **Reason:** PRD 8.1, 8.3, 8.4 and 10.3. Verified: two builds give identical checksums. The culprit share is about 22% of rows in every split.
+- **What I should learn from this:** "Same seed, same result" is only a claim until a checksum proves it. Storing raw evidence states (not just features) means a new feature spec doesn't require regenerating the world.

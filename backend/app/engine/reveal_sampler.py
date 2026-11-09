@@ -14,7 +14,7 @@ VALID_SNAPSHOT_SPLITS = {
     "val",
     "test_in_dist",
     "test_held_out_template",
-    "test_ood_hand_authored",
+    "test_ood_shifted",
 }
 
 
@@ -30,7 +30,16 @@ class EvidenceStateSnapshot(BaseModel):
     template_id: str = Field(..., min_length=1)
     split: str = Field(
         ...,
-        description="One of 'train', 'val', 'test_in_dist', 'test_held_out_template', 'test_ood_hand_authored'",
+        description="One of 'train', 'val', 'test_in_dist', 'test_held_out_template', 'test_ood_shifted'",
+    )
+    cv_fold: int | None = Field(
+        default=None,
+        description="Grouped CV fold (group = template) for train-split snapshots; None elsewhere",
+    )
+    difficulty: str | None = Field(default=None, description="Validator label: EASY / MEDIUM / HARD")
+    setting: SettingTemplate | None = Field(
+        default=None,
+        description="This case's map (public T0 data), so features can be recomputed from the snapshot alone",
     )
     order_idx: int = Field(..., ge=0)
     stage_idx: int = Field(..., ge=0)

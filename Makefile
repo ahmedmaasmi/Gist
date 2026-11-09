@@ -1,5 +1,5 @@
 # CaseMind — one entry point per task. Python tooling runs through uv inside backend/.
-.PHONY: install test lint fmt up down logs audit-generator audit-contradictions
+.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset
 
 install:  ## Install locked dependencies (incl. dev tools) into backend/.venv
 	cd backend && uv sync
@@ -27,3 +27,6 @@ audit-generator:  ## Shortcut audit of the case generator (PRD 8.2); writes repo
 
 audit-contradictions:  ## Precision / recall / false-positive rate of the structured contradiction layer
 	cd backend && uv run python -m app.evaluation.contradiction_audit --out ../reports/contradiction_audit.json
+
+dataset:  ## Build the versioned dataset (1,500 cases + 150 shifted OOD) into data/generated/v<version>/
+	cd backend && uv run python -m app.engine.dataset_generator --out ../data/generated

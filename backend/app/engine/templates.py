@@ -221,18 +221,34 @@ CASE_VARIABLE_RANGES: dict[str, tuple[float, float]] = {
 }
 
 
+# Shifted out-of-distribution set (D-020): deliberately OUTSIDE the training ranges above (longer
+# windows, slower corridors, noisier witnesses, more missing records, fainter traces, more evasive
+# innocents). Generated only on held-out templates; never used for training or tuning.
+SHIFTED_CASE_VARIABLE_RANGES: dict[str, tuple[float, float]] = {
+    **CASE_VARIABLE_RANGES,
+    "murder_window_length_min": (50, 60),
+    "travel_time_factor": (1.25, 1.40),
+    "witness_noise_rate": (0.35, 0.50),
+    "record_drop_rate": (0.40, 0.50),
+    "forensic_trace_rate": (0.30, 0.45),
+    "innocent_lie_rate": (0.45, 0.60),
+}
+
+
 def load_name_pool(path: Path = NAMES_PATH) -> list[str]:
     """Famous historical and public-domain fictional names (data/names.json). Flavour only (PRD 7A.1)."""
     return [entry["name"] for entry in json.loads(path.read_text(encoding="utf-8"))["names"]]
 
 
-def _draw(rng: random.Random, variable: str) -> float:
-    low, high = CASE_VARIABLE_RANGES[variable]
+def _draw(rng: random.Random, ranges: dict[str, tuple[float, float]], variable: str) -> float:
+    low, high = ranges[variable]
     return round(rng.uniform(low, high), 3)
 
 
-def _draw_tick(rng: random.Random, variable: str, tick_size_min: int = 10) -> int:
-    low, high = CASE_VARIABLE_RANGES[variable]
+def _draw_tick(
+    rng: random.Random, ranges: dict[str, tuple[float, float]], variable: str, tick_size_min: int = 10
+) -> int:
+    low, high = ranges[variable]
     return rng.randrange(int(low), int(high) + 1, tick_size_min)
 
 
@@ -279,6 +295,7 @@ def sample_case_setup_from_template(
     template: SettingTemplate,
     seed: int,
     num_suspects: int | None = None,
+    variable_ranges: dict[str, tuple[float, float]] | None = None,
 ) -> SampledCaseSetup:
     """
     PRD Section 7B.2, 7B.4 (CL-06), 8.2, and CH-03/CH-04:
@@ -286,11 +303,13 @@ def sample_case_setup_from_template(
     asymmetric RelationshipGraph, and SimulationConfig) from a `SettingTemplate`
     using an isolated `random.Random(seed)` instance.
 
-    Every variable in CASE_VARIABLE_RANGES is drawn per case (num_suspects only if not given).
+    Every variable in `variable_ranges` (default CASE_VARIABLE_RANGES) is drawn per case
+    (num_suspects only if not given).
     """
+    ranges = variable_ranges or CASE_VARIABLE_RANGES
     rng = random.Random(seed)
     if num_suspects is None:
-        low, high = CASE_VARIABLE_RANGES["num_suspects"]
+        low, high = ranges["num_suspects"]
         num_suspects = rng.randint(int(low), int(high))
     if num_suspects < 3 or num_suspects > 6:
         raise ValueError(
@@ -298,11 +317,11 @@ def sample_case_setup_from_template(
         )
 
     # This evening's version of the map: corridor times vary a little from case to case.
-    tpl = template.with_travel_variation(rng, *CASE_VARIABLE_RANGES["travel_time_factor"])
-    window_start = _draw_tick(rng, "murder_window_start_min")
+    tpl = template.with_travel_variation(rng, *ranges["travel_time_factor"])
+    window_start = _draw_tick(rng, ranges, "murder_window_start_min")
     murder_window = TimeInterval(
         start_min=window_start,
-        end_min=window_start + _draw_tick(rng, "murder_window_length_min"),
+        end_min=min(window_start + _draw_tick(rng, ranges, "murder_window_length_min"), 1430),
     )
 
     # 1. Select crime location and social/alibi hubs
@@ -489,11 +508,11 @@ def sample_case_setup_from_template(
         victim_id=victim_id,
         crime_location_id=crime_location_id,
         murder_window=murder_window,
-        witness_noise_rate=_draw(rng, "witness_noise_rate"),
-        record_drop_rate=_draw(rng, "record_drop_rate"),
-        forensic_trace_rate=_draw(rng, "forensic_trace_rate"),
-        guilty_lie_rate=_draw(rng, "guilty_lie_rate"),
-        innocent_lie_rate=_draw(rng, "innocent_lie_rate"),
+        witness_noise_rate=_draw(rng, ranges, "witness_noise_rate"),
+        record_drop_rate=_draw(rng, ranges, "record_drop_rate"),
+        forensic_trace_rate=_draw(rng, ranges, "forensic_trace_rate"),
+        guilty_lie_rate=_draw(rng, ranges, "guilty_lie_rate"),
+        innocent_lie_rate=_draw(rng, ranges, "innocent_lie_rate"),
         culprit_temperature=CULPRIT_TEMPERATURE,
     )
 

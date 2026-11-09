@@ -1,11 +1,9 @@
 # backend/tests/test_dataset_generator.py
 from pathlib import Path
 
-from app.engine.dataset_generator import (
-    DatasetGenerator,
-    generate_dataset,
-    save_dataset,
-)
+import pytest
+
+from app.engine.dataset_generator import DatasetGenerator, save_dataset
 from app.engine.reveal_sampler import (
     sample_reveal_snapshots,
 )
@@ -83,125 +81,79 @@ def test_reveal_monotonicity_and_convergence() -> None:
             assert len(prev_claims) <= len(next_claims)
 
 
-def test_strict_case_level_split_isolation_and_template_isolation() -> None:
-    """
-    Task 3.2 & 3.3 (PRD Section 8.3 & 8.4):
-    - Generate a test dataset of 40 cases (~200 snapshots).
-    - Assert that the sets of `case_id`s in 'train', 'val', 'test_in_dist', and
-      'test_held_out_template' are 100% mutually disjoint (zero overlap across splits).
-    - Assert that 'train' and 'val' splits contain ZERO snapshots from 'train'
-      (Night Express) or 'lodge' (Alpine Lodge) templates, and 'test_held_out_template'
-      contains ONLY those held-out templates.
-    """
-    snapshots, manifest = generate_dataset(
-        total_cases=40,
-        master_seed=2026,
-        hard_case_ratio=0.10,
-        num_orderings=2,
-    )
+@pytest.fixture(scope="module")
+def small_dataset():
+    return DatasetGenerator.generate_dataset(total_cases=72, master_seed=2026, ood_shifted_cases=6)
 
-    # 40 cases * 5 snapshots/case = 200 snapshots
-    assert manifest.num_cases_total == 40
+
+def test_splits_follow_prd_8_4(small_dataset) -> None:
+    """
+    PRD 8.3/8.4: dev-template cases split by case into train/val/test_in_dist; held-out templates only
+    in test_held_out_template and test_ood_shifted; every snapshot of a case shares its split.
+    """
+    snapshots, manifest = small_dataset
+    held_out = set(manifest.templates_by_group["test_held_out_template"])
+    assert held_out == {"train", "lodge", "abbey"}
     assert manifest.num_templates_total == 12
-    assert len(snapshots) == 200
-    assert sum(manifest.cases_by_split.values()) == 40
-    assert sum(manifest.snapshots_by_split.values()) == 200
+    assert manifest.num_cases_total == 72 + 6
 
-    # Group case_ids and template_ids by split
-    cases_by_split: dict[str, set[str]] = {
-        "train": set(),
-        "val": set(),
-        "test_in_dist": set(),
-        "test_held_out_template": set(),
-    }
-    templates_by_split: dict[str, set[str]] = {
-        "train": set(),
-        "val": set(),
-        "test_in_dist": set(),
-        "test_held_out_template": set(),
-    }
-
+    split_of_case: dict[str, str] = {}
+    templates_by_split: dict[str, set[str]] = {}
     for snap in snapshots:
-        cases_by_split[snap.split].add(snap.case_id)
-        templates_by_split[snap.split].add(snap.template_id)
-
-    # Every split must be populated
-    for split_name, case_set in cases_by_split.items():
-        assert len(case_set) > 0, f"Expected non-empty split '{split_name}'"
-        assert len(case_set) == manifest.cases_by_split[split_name]
-
-    # Strict Case-Level Split Isolation: 100% mutually disjoint case_ids across all splits
-    split_names = list(cases_by_split.keys())
-    for i in range(len(split_names)):
-        for j in range(i + 1, len(split_names)):
-            split_a = split_names[i]
-            split_b = split_names[j]
-            overlap = cases_by_split[split_a] & cases_by_split[split_b]
-            assert overlap == set(), (
-                f"Case leakage detected between '{split_a}' and '{split_b}': {overlap}"
-            )
-
-    # Union of all split case_ids equals 40 unique cases
-    all_unique_cases = set().union(*cases_by_split.values())
-    assert len(all_unique_cases) == 40
-
-    # Strict Template-Held-Out Isolation (PRD 8.4)
-    held_out_template_ids = {"train", "lodge", "abbey"}
-    assert templates_by_split["train"].isdisjoint(held_out_template_ids)
-    assert templates_by_split["val"].isdisjoint(held_out_template_ids)
-    assert templates_by_split["test_in_dist"].isdisjoint(held_out_template_ids)
-    assert templates_by_split["test_held_out_template"] == held_out_template_ids
-    # PRD 8.4: train / val / test_in_dist are split by case, all on the dev templates
-    dev_template_ids = {
-        "manor", "office", "clinic", "gallery", "yacht", "warehouse", "hotel", "theatre", "college"
-    }
-    for split_name in ("train", "val", "test_in_dist"):
-        assert templates_by_split[split_name] <= dev_template_ids
+        assert split_of_case.setdefault(snap.case_id, snap.split) == snap.split
+        templates_by_split.setdefault(snap.split, set()).add(snap.template_id)
+    for split in ("train", "val", "test_in_dist"):
+        assert templates_by_split[split] and templates_by_split[split].isdisjoint(held_out)
+    assert templates_by_split["test_held_out_template"] == held_out
+    assert templates_by_split["test_ood_shifted"] <= held_out
+    assert sum(manifest.cases_by_split.values()) == manifest.num_cases_total
 
 
-def test_determinism_and_manifest_honesty(tmp_path: Path) -> None:
-    """
-    Task 3.4 (PRD Section 8.1 & 10.3):
-    Running `generate_dataset(total_cases=24, master_seed=123)` twice yields the
-    exact same `DatasetManifest` and snapshot IDs, and the manifest explicitly
-    records both `num_templates_total` and `num_cases_total`.
-    Also verifies `save_dataset` and `load_dataset` round-trip persistence.
-    """
-    snapshots_a, manifest_a = DatasetGenerator.generate_dataset(
-        total_cases=24,
-        master_seed=123,
-        hard_case_ratio=0.10,
-        num_orderings=2,
-    )
-    snapshots_b, manifest_b = DatasetGenerator.generate_dataset(
-        total_cases=24,
-        master_seed=123,
-        hard_case_ratio=0.10,
-        num_orderings=2,
-    )
+def test_cv_folds_partition_train_cases_by_template(small_dataset) -> None:
+    snapshots, manifest = small_dataset
+    fold_of_template = {tid: int(fold) for fold, tids in manifest.cv_folds.items() for tid in tids}
+    assert set(fold_of_template) == set(manifest.templates_by_group["dev"])
+    assert len(set(fold_of_template.values())) == 3
+    for snap in snapshots:
+        if snap.split == "train":
+            assert snap.cv_fold == fold_of_template[snap.template_id]
+        else:
+            assert snap.cv_fold is None
 
-    # Exact manifest determinism & honest framing (PRD 8.1 & 10.3)
-    assert manifest_a == manifest_b
-    assert manifest_a.dataset_version == "v0.1.0"
-    assert manifest_a.master_seed == 123
-    assert manifest_a.num_templates_total == 12
-    assert manifest_a.num_cases_total == 24
-    # Hard (under-determined) cases now also occur naturally, because solvability check 4 labels
-    # difficulty instead of filtering (D-010); the requested slice is a lower bound.
-    assert manifest_a.hard_cases_count >= round(24 * 0.10)
 
-    # Exact snapshot list determinism
-    assert [s.snapshot_id for s in snapshots_a] == [s.snapshot_id for s in snapshots_b]
-    assert snapshots_a == snapshots_b
+def test_shifted_ood_cases_are_outside_training_ranges(small_dataset) -> None:
+    from app.engine.templates import CASE_VARIABLE_RANGES
 
-    # Verify save_dataset and load_dataset round-trip
-    saved_paths = save_dataset(snapshots_a, manifest_a, tmp_path / "dataset_out")
-    assert saved_paths["manifest_path"].exists()
-    assert saved_paths["snapshots_path"].exists()
+    snapshots, _ = small_dataset
+    shifted = [s for s in snapshots if s.split == "test_ood_shifted"]
+    assert shifted
+    for snap in shifted:
+        assert snap.murder_window.duration > CASE_VARIABLE_RANGES["murder_window_length_min"][1]
 
-    loaded_snapshots, loaded_manifest = DatasetGenerator.load_dataset(
-        tmp_path / "dataset_out"
-    )
-    assert loaded_manifest == manifest_a
-    assert loaded_snapshots == snapshots_a
 
+def test_feature_table_has_one_culprit_per_evidence_state(small_dataset) -> None:
+    snapshots, _ = small_dataset
+    rows = DatasetGenerator.feature_rows(snapshots)
+    per_state: dict[tuple, int] = {}
+    for row in rows:
+        key = (row["case_id"], row["order_idx"], row["stage_idx"])
+        per_state[key] = per_state.get(key, 0) + int(row["label"])
+    assert len(per_state) == len(snapshots)
+    assert set(per_state.values()) == {1}
+
+
+def test_determinism_checksums_and_round_trip(tmp_path: Path) -> None:
+    """PRD 10.3: same master seed -> identical dataset files (checksums); save/load round-trips."""
+    a_snaps, a_manifest = DatasetGenerator.generate_dataset(total_cases=24, master_seed=123, ood_shifted_cases=3)
+    b_snaps, b_manifest = DatasetGenerator.generate_dataset(total_cases=24, master_seed=123, ood_shifted_cases=3)
+    assert a_manifest == b_manifest and a_snaps == b_snaps
+
+    a_paths = save_dataset(a_snaps, a_manifest, tmp_path / "a")
+    b_paths = save_dataset(b_snaps, b_manifest, tmp_path / "b")
+    for key in ("snapshots_path", "features_path", "manifest_path"):
+        assert a_paths[key].read_bytes() == b_paths[key].read_bytes()
+
+    loaded_snaps, loaded_manifest = DatasetGenerator.load_dataset(tmp_path / "a")
+    assert loaded_snaps == a_snaps
+    assert loaded_manifest.checksums["features.csv"]
+    assert loaded_manifest.feature_spec_version == a_manifest.feature_spec_version

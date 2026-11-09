@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 5. Dataset and splits (5a done; 5b next: folds, feature table, `make dataset`)
+- **Current step:** 6. Baselines and evaluation harness (not started; waiting for the user's OK)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -12,7 +12,7 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - [x] **2. Simulation engine.** Role-free sampler, noisy culprit choice, no culprit-only clues, coherent timelines, role-neutral wording, determinism (CH-03), reason strings (CH-02), full OOD range, 20 manor seeds hand-checked; `make audit-generator`. *(Done 2026-11-09.)*
 - [x] **3. Structured contradiction checks.** Audited against PRD 6.4.B; "seen at some moment" semantics for observed people; `linked_source_ids`; point-in-time traces; travel-feasible schedules; `make audit-contradictions` (false-positive rate 0%, precision 100%, recall 52%). *(Done 2026-11-09.)*
 - [x] **4. Feature spec v1.** 12 features in E1 groups A/B/C plus context; `docs/FEATURES.md` kept in sync with `app/features/spec.py`; T1-only signature guarantee; hand-computed test. *(Done 2026-11-09, spec v1.0.0.)*
-- [ ] **5. Dataset and splits.** *5a done: 12 floor-plan maps, per-case variables, famous names, dev/held-out templates.* Remaining: Reveal orderings and evidence states; splits by case and by held-out template; grouped CV folds (group = template); at least 3 hand-authored OOD cases frozen before model work; dataset versioning; report the number of cases and the number of templates. *(Generator exists, unaudited.)*
+- [x] **5. Dataset and splits.** 12 floor-plan maps, per-case variables, famous names; `make dataset` → v0.2.0 (1,650 cases; train/val/test_in_dist by case, 3 held-out maps, shifted OOD set, grouped-CV folds; checksums reproduce). *(Done 2026-11-09.)*
 - [ ] **6. Baselines and evaluation harness.** Random/prior, motive-plus-opportunity rule, symbolic timeline solver; top-1, top-2, MRR, log loss, Brier; 95% bootstrap CIs over cases; one command builds the table. *(Solver exists, unaudited.)*
 - [ ] **7. Models.** Logistic Regression and LightGBM, within-case normalisation, calibration on validation, per-suspect explanations linked to evidence IDs (MD-08), heuristic fallback (MD-09), simple abstention rule (MD-06).
 - [ ] **8. Leakage audit and E1.** Feature-name audit, shuffled-label control, single-feature models, permutation importance, reveal-artefact check; E1 ablation A/B/C plus leave-one-group-out.
@@ -52,10 +52,12 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09, **step 3 follow-up:** cross-speaker disagreements (D-016); tests 101 → 104. The PRD PDF stays out of git (`docs/*.pdf` ignored).
 - 2026-11-09, **step 4 done:** feature spec v1.0.0 (12 features, E1 groups); `docs/FEATURES.md`; T1-only signature guarantee; tests 104 → 110.
 - 2026-11-09, **step 5a done:** 12 floor-plan maps; per-case variables; famous character names (D-018 to D-020); argument-witness facts made point-in-time; tests 110 → 147.
+- 2026-11-09: **art.** Style reference and the 31-portrait prompt list (`docs/art/`).
+- 2026-11-09, **step 5 done:** `make dataset` builds v0.2.0. Splits follow PRD 8.4, with grouped-CV folds, a shifted OOD set, a feature table and a checksummed manifest. Artificial hard cases removed. Tests 148 → 151.
 
 ## Next action
 
-Step 5b: grouped CV folds, remove artificial hard cases, the shifted OOD set, `features.csv` plus manifest, and `make dataset`.
+Build the baselines and evaluation harness (step 6): random/prior, motive-plus-opportunity rule and symbolic timeline solver; case-level metrics with bootstrap CIs over cases; one command builds the table.
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 
@@ -91,18 +93,32 @@ Scores measure recovery of the generator's logic, not real-world skill.
 
 **Disagreements (D-016):** 1.25 per case; 100% involve a false claim. False claims caught by a flag *or* a disagreement: **85%**. 37% of accurate innocents are involved in a disagreement (the honest counterpart), so it is never treated as blame.
 
-## Step 5 audit items
+## Dataset v0.2.0 (`make dataset`, about 15 s)
 
-- **Artificial hard cases.** `DatasetGenerator._make_under_determined_variant` deletes only the culprit's scene traces to manufacture hard cases. Hard cases now occur naturally (D-010), and the deletion is itself a culprit-specific artefact. Remove it in 5b.
-- **Lie rate.** Observed culprit lie rate is 0.820 against a sampled mean of 0.806 (z = 1.75 on 2,400 fresh cases). Not significant, but re-check on the full dataset.
-- **Shifted OOD set** (D-020): generate cases with variables outside `CASE_VARIABLE_RANGES` on held-out maps.
-- **Feature watch-list** (see `docs/FEATURES.md`): `claimed_corroboration_share` is a possible near-shortcut; `claim_claim_conflicts` is constant in generated data.
+- **Cases:** 1,650 on 12 maps.
+
+| Split | Cases | Feature rows |
+|---|---|---|
+| Train | 783 | 17,520 |
+| Val | 171 | 3,880 |
+| Test (in distribution) | 171 | 3,895 |
+| Test (held-out maps: train, lodge, abbey) | 375 | 8,320 |
+| Test (shifted OOD) | 150 | 3,320 |
+
+- **CV folds (train):** {clinic, hotel, theatre}, {college, manor, warehouse}, {gallery, office, yacht}.
+- **Reproducibility:** two builds give identical checksums.
+
+## Step 8 watch-list (leakage audit)
+
+- **Briefing fact at stage 0.** `EvidenceRevealSampler` always reveals one "briefing" fact first: the earliest record at the crime scene. Check whether it favours the culprit (a reveal artefact, PRD 8.8).
+- **Corroboration share.** `claimed_corroboration_share` is a possible near-shortcut. Lying culprits never claim corroboration.
+- **Constant feature.** `claim_claim_conflicts` is always 0 in generated data.
+- **Lie rate.** The culprit lie rate is 0.820 observed against 0.806 sampled (z = 1.75, not significant); re-check.
 
 ## Open questions / blockers
 
 - **Step 10 (UI):** render statements with room names, character names and clock times. Generated free text uses raw IDs and minutes.
-- **Titles clash with occupations** (e.g. "Sergeant Cuff (Governess)"): keep them as playful mash-ups, or show names without titles? This is the user's style call.
-- **Art:** the 2D style reference and the portrait list (31 characters) are pending from the user.
+- **Art:** portraits to be generated by the user from `docs/art/portraits.csv` into `frontend/public/portraits/`.
 
 - **E. Templates.** Manor only for play, all 8 templates for dataset generation? (Decide by step 5.)
 - **G. Abstention.** Simple threshold rule in v0.1 (step 7), E4 in v1.0?
