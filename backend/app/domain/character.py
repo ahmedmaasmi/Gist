@@ -1,5 +1,5 @@
 # backend/app/domain/character.py
-from typing import Optional
+
 from pydantic import BaseModel, Field, model_validator
 
 from app.domain.enums import GoalType, RelationshipTag
@@ -40,7 +40,7 @@ class CharacterGoal(BaseModel):
     PRD Section 7A.1: Explicit goal motivating a character's actions.
     """
     goal_type: GoalType
-    target_character_id: Optional[str] = None
+    target_character_id: str | None = None
     description: str
 
 
@@ -147,13 +147,25 @@ class RelationshipEdge(BaseModel):
         self.obligation = max(0.0, min(1.0, self.obligation + d_obligation))
 
 
+class RevealedRelationship(BaseModel):
+    """
+    PRD Section 7A.2 & CH-06 (T1): What the player may know about a relationship.
+    Only who, the categorical tags, and the T1 fact that revealed it. The numeric
+    affinity/trust/obligation values stay in the T3 RelationshipGraph.
+    """
+    source_id: str
+    target_id: str
+    tags: list[RelationshipTag] = Field(default_factory=list)
+    evidence_fact_id: str = Field(..., min_length=1, description="T1 fact that revealed this relationship")
+
+
 class RelationshipGraph(BaseModel):
     """
     PRD Section 7A.2 & 7A.6 (CH-06): Directed relationship graph over case characters.
     """
     edges: list[RelationshipEdge] = Field(default_factory=list)
 
-    def get_edge(self, source_id: str, target_id: str) -> Optional[RelationshipEdge]:
+    def get_edge(self, source_id: str, target_id: str) -> RelationshipEdge | None:
         """Returns the directed edge source_id -> target_id if present, else None."""
         for edge in self.edges:
             if edge.source_id == source_id and edge.target_id == target_id:

@@ -15,7 +15,6 @@ from app.engine.templates import (
     sample_case_setup_from_template,
 )
 
-
 EXPECTED_TEMPLATE_IDS = {
     "manor",
     "train",

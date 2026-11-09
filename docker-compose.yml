@@ -20,5 +20,22 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: casemind_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # The app reaches Postgres by its compose service name, not localhost.
+      POSTGRES_HOST: db
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   postgres_data:

@@ -1,8 +1,9 @@
 # backend/app/engine/templates.py
 import json
 import random
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator, Optional
+
 from pydantic import BaseModel
 
 from app.domain.character import (
@@ -20,7 +21,6 @@ from app.domain.simulation import SimulatedCaseBundle
 from app.domain.world import SimulationConfig, TimeInterval
 from app.engine.simulator import SocialSimulator
 from app.engine.solver import CaseSolvabilityValidator, CaseValidationReport
-
 
 DEFAULT_TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "data" / "templates"
 
@@ -102,12 +102,12 @@ class TemplateRegistry:
     PRD Section 7B.2, 8.1, and 8.4:
     Loads, validates, and queries the 8 structural setting templates from `data/templates/`.
     """
-    _cache: Optional[dict[str, SettingTemplate]] = None
+    _cache: dict[str, SettingTemplate] | None = None
 
     @classmethod
     def load_all_templates(
         cls,
-        templates_dir: Optional[Path | str] = None,
+        templates_dir: Path | str | None = None,
         force_reload: bool = False,
     ) -> dict[str, SettingTemplate]:
         """
@@ -140,7 +140,7 @@ class TemplateRegistry:
     def get_template(
         cls,
         template_id: str,
-        templates_dir: Optional[Path | str] = None,
+        templates_dir: Path | str | None = None,
     ) -> SettingTemplate:
         """
         Returns a validated `SettingTemplate` by `template_id` (e.g. 'manor' or 'tpl_manor').
@@ -159,7 +159,7 @@ class TemplateRegistry:
     def get_templates_by_split(
         cls,
         split_group: str,
-        templates_dir: Optional[Path | str] = None,
+        templates_dir: Path | str | None = None,
     ) -> list[SettingTemplate]:
         """
         Returns all templates assigned to `split_group` ('train', 'val', or 'test_held_out_template').
@@ -177,7 +177,7 @@ class TemplateRegistry:
 
 
 def load_all_templates(
-    templates_dir: Optional[Path | str] = None,
+    templates_dir: Path | str | None = None,
     force_reload: bool = False,
 ) -> dict[str, SettingTemplate]:
     """Module-level wrapper for TemplateRegistry.load_all_templates()."""
@@ -189,7 +189,7 @@ def load_all_templates(
 
 def get_template(
     template_id: str,
-    templates_dir: Optional[Path | str] = None,
+    templates_dir: Path | str | None = None,
 ) -> SettingTemplate:
     """Module-level wrapper for TemplateRegistry.get_template()."""
     return TemplateRegistry.get_template(
@@ -200,7 +200,7 @@ def get_template(
 
 def get_templates_by_split(
     split_group: str,
-    templates_dir: Optional[Path | str] = None,
+    templates_dir: Path | str | None = None,
 ) -> list[SettingTemplate]:
     """Module-level wrapper for TemplateRegistry.get_templates_by_split()."""
     return TemplateRegistry.get_templates_by_split(
@@ -284,7 +284,6 @@ def sample_case_setup_from_template(
     ]
 
     # 2. Sample distinct names and occupations for (1 victim + num_suspects suspects)
-    total_chars = num_suspects + 1
     first_pool = list(FIRST_NAMES)
     last_pool = list(LAST_NAMES)
     rng.shuffle(first_pool)
@@ -664,9 +663,9 @@ def generate_valid_case(
     Samples a case setup starting from `base_seed` (re-trying incremental seeds up to
     `max_attempts` if needed) and verifies `CaseSolvabilityValidator.validate_case` passes.
     """
-    last_setup: Optional[SampledCaseSetup] = None
-    last_bundle: Optional[SimulatedCaseBundle] = None
-    last_report: Optional[CaseValidationReport] = None
+    last_setup: SampledCaseSetup | None = None
+    last_bundle: SimulatedCaseBundle | None = None
+    last_report: CaseValidationReport | None = None
 
     for offset in range(max_attempts):
         candidate_seed = base_seed + offset

@@ -1,5 +1,4 @@
 # backend/app/engine/consistency.py
-from typing import Optional
 
 from app.domain.enums import ContradictionType, VerificationStatus
 from app.domain.setting import SettingTemplate
@@ -23,7 +22,7 @@ class StructuredConsistencyEngine:
         loc_b: str,
         interval_b: TimeInterval,
         setting: SettingTemplate,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Checks whether being at `loc_a` during `interval_a` and `loc_b` during `interval_b`
         violates direct time overlap (Rule A) or minimum travel time feasibility (Rule B).

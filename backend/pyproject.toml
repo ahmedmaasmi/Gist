@@ -1,13 +1,12 @@
-# backend/pyproject.toml
 [build-system]
 requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
+
 [project]
 name = "casemind-backend"
 version = "0.1.0"
 description = "CaseMind ML Investigation Platform & Simulation Engine"
-readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
@@ -17,16 +16,26 @@ dependencies = [
     "psycopg[binary]>=3.2.3",
 ]
 
-[project.optional-dependencies]
+# Dev-only tools, installed by `uv sync` but never by the production image.
+[dependency-groups]
 dev = [
     "pytest>=8.3.0",
+    "ruff>=0.8.0",
 ]
 
-test = [
-    "pytest>=8.3.0",
-]
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+testpaths = ["tests"]
 
+[tool.ruff]
+line-length = 110
+target-version = "py312"
 
+[tool.ruff.lint]
+# E/F: pyflakes + pycodestyle errors, I: import sorting, UP: modern syntax, B: likely bugs
+select = ["E", "F", "I", "UP", "B"]
+# Line length is the formatter's job (`ruff format`); the linter would double-report it.
+ignore = ["E501"]

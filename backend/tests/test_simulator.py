@@ -1,5 +1,6 @@
 # backend/tests/test_simulator.py
 import json
+
 import pytest
 
 from app.domain.character import (
@@ -340,7 +341,7 @@ def test_ch02_reason_strings_and_provenance(
         assert claim.status == VerificationStatus.UNVERIFIED
 
     # Verify all T2 private facts and cover story claims have valid provenance and status
-    for char_id, t2_pack in bundle.t2_knowledge.items():
+    for t2_pack in bundle.t2_knowledge.values():
         for pfact in t2_pack.private_facts:
             assert isinstance(pfact.provenance, ProvenanceClass)
             assert isinstance(pfact.status, VerificationStatus)
@@ -451,7 +452,7 @@ def test_zero_canary_leakage_in_derived_t0_t1_t2(
     """
     4. Zero Canary Leakage in Derived T1/T2:
     Serialize t0_public, t1_session, and t2_knowledge to JSON and assert
-    t3_canonical.canary_token (and "CANARY_T3_") does not appear anywhere in T0, T1, or T2.
+    none of t3_canonical's canaries (nor the "CANARY_T3_" prefix) appear anywhere in T0, T1, or T2.
     """
     characters, graph = manor_cast
     bundle = SocialSimulator().simulate(
@@ -461,8 +462,8 @@ def test_zero_canary_leakage_in_derived_t0_t1_t2(
         config=_make_config(seed=42),
     )
 
-    canary = bundle.t3_canonical.canary_token
-    assert canary.startswith("CANARY_T3_")
+    canaries = bundle.t3_canonical.canary_set()
+    assert canaries and all(c.startswith("CANARY_T3_") for c in canaries)
 
     t0_json = json.dumps(bundle.t0_public.model_dump(mode="json"))
     t1_json = json.dumps(bundle.t1_session.model_dump(mode="json"))
@@ -471,7 +472,8 @@ def test_zero_canary_leakage_in_derived_t0_t1_t2(
     )
 
     for payload_name, payload in (("T0", t0_json), ("T1", t1_json), ("T2", t2_json)):
-        assert canary not in payload, f"Canary token leaked into {payload_name}!"
+        for canary in canaries:
+            assert canary not in payload, f"Canary token leaked into {payload_name}!"
         assert "CANARY_T3_" not in payload, f"CANARY_T3_ prefix leaked into {payload_name}!"
 
 

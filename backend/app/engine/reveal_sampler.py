@@ -1,10 +1,9 @@
 # backend/app/engine/reveal_sampler.py
 import math
 import random
-from typing import Optional
+
 from pydantic import BaseModel, Field, field_validator
 
-from app.domain.enums import EvidenceCategory
 from app.domain.setting import SettingTemplate
 from app.domain.simulation import SimulatedCaseBundle
 from app.domain.tiers import T0Public, T1Session
@@ -203,17 +202,12 @@ class EvidenceRevealSampler:
                     staged_facts = [f.model_copy(deep=True) for f in ordered_facts[:k_facts]]
                     staged_claims = [c.model_copy(deep=True) for c in ordered_claims[:k_claims]]
 
-                    revealed_rel_pairs = {
-                        (f.subject_id, f.target_id)
-                        for f in staged_facts
-                        if f.category == EvidenceCategory.RELATIONSHIP
-                        and f.subject_id is not None
-                        and f.target_id is not None
-                    }
+                    # A relationship is visible only once the fact that revealed it is staged.
+                    staged_fact_ids = {f.fact_id for f in staged_facts}
                     staged_edges = [
                         edge.model_copy(deep=True)
                         for edge in bundle.t1_session.revealed_edges
-                        if (edge.source_id, edge.target_id) in revealed_rel_pairs
+                        if edge.evidence_fact_id in staged_fact_ids
                     ]
 
                     t1_partial = T1Session(

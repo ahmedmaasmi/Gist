@@ -1,5 +1,5 @@
 # backend/app/engine/solver.py
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from app.domain.enums import (
@@ -38,8 +38,8 @@ class SymbolicTimelineSolver:
         t0: T0Public,
         t1: T1Session,
         setting: SettingTemplate,
-        crime_location_id: Optional[str] = None,
-        murder_window: Optional[TimeInterval] = None,
+        crime_location_id: str | None = None,
+        murder_window: TimeInterval | None = None,
     ) -> dict[str, str]:
         """
         Inspects high-reliability established facts (status == ESTABLISHED,
@@ -142,8 +142,8 @@ class SymbolicTimelineSolver:
         t0: T0Public,
         t1: T1Session,
         setting: SettingTemplate,
-        crime_location_id: Optional[str] = None,
-        murder_window: Optional[TimeInterval] = None,
+        crime_location_id: str | None = None,
+        murder_window: TimeInterval | None = None,
         eps: float = 0.0,
         tie_break_by_evidence: bool = False,
     ) -> dict[str, float]:

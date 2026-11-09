@@ -1,12 +1,13 @@
 # backend/app/domain/world.py
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
+
 from pydantic import BaseModel, Field, model_validator
 
 from app.domain.enums import (
     ContradictionType,
     EvidenceCategory,
     InteractionType,
+    LieKind,
     ProvenanceClass,
     VerificationStatus,
 )
@@ -59,10 +60,10 @@ class Fact(BaseModel):
     description: str = Field(..., min_length=1, description="Human-readable fact statement")
 
     # Structured slots for deterministic consistency & feature derivation
-    subject_id: Optional[str] = Field(None, description="Character ID involved, if applicable")
-    target_id: Optional[str] = Field(None, description="Second Character ID (e.g., argument/debt)")
-    location_id: Optional[str] = Field(None, description="Structured location ID")
-    time_interval: Optional[TimeInterval] = Field(None, description="Structured time window")
+    subject_id: str | None = Field(None, description="Character ID involved, if applicable")
+    target_id: str | None = Field(None, description="Second Character ID (e.g., argument/debt)")
+    location_id: str | None = Field(None, description="Structured location ID")
+    time_interval: TimeInterval | None = Field(None, description="Structured time window")
 
     # Provenance & Feature Categorisation
     category: EvidenceCategory
@@ -90,15 +91,15 @@ class Claim(BaseModel):
     case_id: str = Field(..., min_length=1)
     speaker_id: str = Field(..., min_length=1, description="Character ID who made the statement")
     turn_index: int = Field(..., ge=0, description="Interrogation turn when recorded")
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Structured slots built via the Claim Builder (PRD Section 6.2)
-    claimed_location_id: Optional[str] = Field(None, description="Where the speaker claims they or someone else was")
-    claimed_time_interval: Optional[TimeInterval] = Field(None, description="When they claim to have been there")
+    claimed_location_id: str | None = Field(None, description="Where the speaker claims they or someone else was")
+    claimed_time_interval: TimeInterval | None = Field(None, description="When they claim to have been there")
     subject_id: str = Field(..., description="Who the claim is about (usually speaker_id or an observed suspect)")
     observed_character_ids: list[str] = Field(default_factory=list, description="Who they claim to have seen")
     has_corroboration_claim: bool = Field(default=False, description="Whether speaker claims a record/witness backs them")
-    free_text: Optional[str] = Field(None, description="Optional player or LLM verbalised text")
+    free_text: str | None = Field(None, description="Optional player or LLM verbalised text")
 
     # MD-04 Provenance defaults: Always starts as SELF_REPORT and UNVERIFIED
     provenance: ProvenanceClass = Field(default=ProvenanceClass.SELF_REPORT)
@@ -133,7 +134,7 @@ class SimulationConfig(BaseModel):
     victim_id: str = Field(..., min_length=1)
     crime_location_id: str = Field(..., min_length=1)
     murder_window: TimeInterval
-    forced_culprit_id: Optional[str] = Field(
+    forced_culprit_id: str | None = Field(
         default=None,
         description="If None, simulation selects culprit via motive + opportunity + low composure (PRD 7A.4)",
     )
@@ -159,8 +160,8 @@ class CanonicalEvent(BaseModel):
     tick_min: int
     location_id: str = Field(..., min_length=1)
     actor_id: str = Field(..., min_length=1)
-    target_id: Optional[str] = None
-    interaction_type: Optional[InteractionType] = None
+    target_id: str | None = None
+    interaction_type: InteractionType | None = None
     event_kind: str = Field(..., description="MOVEMENT, INTERACTION, or MURDER")
     reason_string: str = Field(
         ...,
@@ -169,6 +170,19 @@ class CanonicalEvent(BaseModel):
     )
     witness_ids: list[str] = Field(default_factory=list)
     metadata: dict[str, str | float | bool] = Field(default_factory=dict)
+
+
+class LieAnnotation(BaseModel):
+    """
+    PRD Section 7.2 & 7A.3 (T3 only): Marks a recorded claim as an INTENTIONAL_LIE.
+    Kept apart from the Claim so that sending a Claim to the player or the ranker can never
+    reveal whether it is true. Accidental inconsistencies are NOT annotated here.
+    """
+    claim_id: str = Field(..., min_length=1)
+    liar_id: str = Field(..., min_length=1)
+    kind: LieKind
+    true_location_id: str | None = Field(None, description="Where the liar actually was, if location is the lie")
+    note: str = Field(default="", description="Free text; stamped with a T3 canary")
 
 
 def __getattr__(name: str):

@@ -2,7 +2,6 @@
 import hashlib
 import json
 import random
-from typing import Optional
 
 from app.domain.character import (
     Character,
@@ -20,7 +19,7 @@ from app.domain.enums import (
 from app.domain.setting import SettingTemplate
 from app.domain.simulation import SimulatedCaseBundle
 from app.domain.tiers import T0Public, T3Canonical
-from app.domain.world import CanonicalEvent, Fact, SimulationConfig, TimeInterval
+from app.domain.world import CanonicalEvent, Fact, SimulationConfig
 from app.engine.observation import ObservationModel
 
 
@@ -34,10 +33,10 @@ class SocialSimulator:
 
     def __init__(
         self,
-        config: Optional[SimulationConfig] = None,
-        setting: Optional[SettingTemplate] = None,
-        characters: Optional[list[Character]] = None,
-        relationship_graph: Optional[RelationshipGraph] = None,
+        config: SimulationConfig | None = None,
+        setting: SettingTemplate | None = None,
+        characters: list[Character] | None = None,
+        relationship_graph: RelationshipGraph | None = None,
     ) -> None:
         self.config = config
         self.setting = setting
@@ -172,10 +171,10 @@ class SocialSimulator:
 
     def simulate(
         self,
-        setting: Optional[SettingTemplate] = None,
-        characters: Optional[list[Character]] = None,
-        relationship_graph: Optional[RelationshipGraph] = None,
-        config: Optional[SimulationConfig] = None,
+        setting: SettingTemplate | None = None,
+        characters: list[Character] | None = None,
+        relationship_graph: RelationshipGraph | None = None,
+        config: SimulationConfig | None = None,
     ) -> SimulatedCaseBundle:
         """
         Executes the full tick-based social simulation and derives T0, T1, T2, and T3.
@@ -267,7 +266,7 @@ class SocialSimulator:
 
         victim_alive = True
         murder_executed = False
-        culprit_id: Optional[str] = None
+        culprit_id: str | None = None
         culprit_scores: dict[str, tuple[float, float, float, float]] = {}
 
         conflicting_goal_types = {
@@ -736,7 +735,6 @@ class SocialSimulator:
         assert culprit_id is not None, "Simulation must select a culprit_id."
 
         log_hash = self.compute_log_hash(canonical_events)
-        canary_token = f"CANARY_T3_{cfg.case_id}_{cfg.seed}"
 
         t0_public = T0Public(
             case_id=cfg.case_id,
@@ -754,7 +752,7 @@ class SocialSimulator:
                 fact_id=f"t3_gt_{cfg.case_id}_murder",
                 case_id=cfg.case_id,
                 description=(
-                    f"[{canary_token}] Ground truth: {culprit_id} murdered "
+                    f"Ground truth: {culprit_id} murdered "
                     f"{cfg.victim_id} in {cfg.crime_location_id} at tick {murder_tick}."
                 ),
                 subject_id=culprit_id,
@@ -768,18 +766,23 @@ class SocialSimulator:
             )
         ]
 
-        t3_canonical = T3Canonical(
+        t3_fields = dict(
             case_id=cfg.case_id,
+            seed=cfg.seed,
             culprit_id=culprit_id,
             crime_location_id=cfg.crime_location_id,
             crime_window=cfg.murder_window,
+            solution_summary=(
+                f"{culprit_id} murdered {cfg.victim_id} in {cfg.crime_location_id} "
+                f"at minute {murder_tick}."
+            ),
             ground_truth_facts=ground_truth_facts,
             canonical_events=canonical_events,
             relationship_graph=graph,
-            canary_token=canary_token,
         )
+        t3_canonical = T3Canonical(**t3_fields)
 
-        t1_session, t2_knowledge = ObservationModel.derive(
+        t1_session, t2_knowledge, lie_annotations = ObservationModel.derive(
             config=cfg,
             setting=tpl,
             characters=chars,
@@ -788,6 +791,8 @@ class SocialSimulator:
             t3_canonical=t3_canonical,
             rng=rng,
         )
+        # Lies are only known once the observation model has generated the claims.
+        t3_canonical = T3Canonical(**t3_fields, lie_annotations=lie_annotations)
 
         return SimulatedCaseBundle(
             config=cfg,

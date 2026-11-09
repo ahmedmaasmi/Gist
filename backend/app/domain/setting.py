@@ -1,5 +1,6 @@
 # backend/app/domain/setting.py
 from typing import Any
+
 from pydantic import BaseModel, Field, model_validator
 
 VALID_SPLIT_GROUPS = {"train", "val", "test_held_out_template"}

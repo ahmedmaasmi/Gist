@@ -11,7 +11,6 @@ from app.domain.character import (
     ScheduleSlot,
 )
 from app.domain.enums import (
-    ContradictionType,
     EvidenceCategory,
     GoalType,
     ProvenanceClass,
@@ -27,7 +26,6 @@ from app.domain.tiers import (
     T3Canonical,
 )
 from app.domain.world import (
-    CanonicalEvent,
     Claim,
     ContradictionFlag,
     Fact,
@@ -144,7 +142,7 @@ def _make_base_bundle(
         ground_truth_facts=[],
         canonical_events=[],
         relationship_graph=RelationshipGraph(),
-        canary_token="CANARY_T3_VAL_TEST",
+        seed=0,
     )
 
     return SimulatedCaseBundle(
@@ -411,7 +409,6 @@ def test_trivial_case_blocked_by_validator(manor_setting: SettingTemplate) -> No
     only 1 plausible suspect), validate_case blocks the case (is_valid=False),
     explains that it is trivially solved, and outputs a concrete suggestion.
     """
-    murder_window = TimeInterval(start_min=1300, end_min=1320)
     facts = [
         # Eliminate innocent suspects A, C, and D via Boathouse records
         Fact(
@@ -541,7 +538,6 @@ def test_hard_under_determined_case_mode(manor_setting: SettingTemplate) -> None
     (default for standard Case Lab) but accepted with is_under_determined_hard_case=True
     and difficulty_estimate="HARD" when allow_hard_cases=True (for E4 abstention testing).
     """
-    murder_window = TimeInterval(start_min=1300, end_min=1320)
     facts = [
         # Both culprit B and innocent C have identical discoverable motive & access support
         Fact(

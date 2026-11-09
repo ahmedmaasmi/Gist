@@ -94,3 +94,23 @@ class RelationshipTag(StrEnum):
     SECRET_AFFAIR = "SECRET_AFFAIR"
     EMPLOYER_EMPLOYEE = "EMPLOYER_EMPLOYEE"
     NEIGHBOUR = "NEIGHBOUR"
+
+
+class InformationTier(StrEnum):
+    """
+    PRD Section 5.2: Who may read a piece of data. Every tier model declares its tier.
+    """
+    T0 = "T0"  # Public: synopsis, suspect list, locations (everyone)
+    T1 = "T1"  # Session-visible: discovered evidence, recorded statements (player UI, ML, consistency engine)
+    T2 = "T2"  # Character knowledge: one character's own truth and cover story (that character's dialogue only)
+    T3 = "T3"  # Canonical solution: culprit, true timeline, lies (author tools, evaluator, post-verdict results)
+
+
+class LieKind(StrEnum):
+    """
+    PRD Section 7.2 / 7A.3: Why a claim is an INTENTIONAL_LIE. Stored only in T3 (LieAnnotation),
+    so the truth about a claim never travels with the claim itself.
+    """
+    CULPRIT_COVER_STORY = "CULPRIT_COVER_STORY"  # Guilty suspect places themselves away from the scene
+    COVER_FOR = "COVER_FOR"                      # Loyal/obligated suspect gives a false joint alibi
+    RED_HERRING_EVASION = "RED_HERRING_EVASION"  # Innocent suspect hides an unrelated secret

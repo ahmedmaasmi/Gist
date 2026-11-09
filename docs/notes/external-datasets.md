@@ -1,3 +1,8 @@
+# External datasets (reference only; OUT OF SCOPE)
+
+> PRD Section 2 non-goals exclude real criminal data. These links were collected early and are
+> **not** used for training or evaluation in v0.1. Kept only as background reading.
+
 https://github.com/ritikamotwani/Deception-Detection
 https://web.eecs.umich.edu/~zmohamed/PDFs/Trial.ICMI.pdf
 https://arxiv.org/pdf/2404.17662

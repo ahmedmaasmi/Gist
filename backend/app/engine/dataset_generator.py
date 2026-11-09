@@ -2,7 +2,7 @@
 import json
 import random
 from pathlib import Path
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from app.domain.enums import EvidenceCategory
@@ -95,8 +95,8 @@ class DatasetGenerator:
         Generates a case for `(template, case_id)` starting from `base_seed`, re-rolling
         with incremented sub-seeds until `CaseSolvabilityValidator.validate_case` passes.
         """
-        last_bundle: Optional[SimulatedCaseBundle] = None
-        last_report: Optional[CaseValidationReport] = None
+        last_bundle: SimulatedCaseBundle | None = None
+        last_report: CaseValidationReport | None = None
 
         for offset in range(max_attempts):
             sub_seed = base_seed + offset
@@ -143,7 +143,7 @@ class DatasetGenerator:
         hard_case_ratio: float = 0.10,
         num_orderings: int = 2,
         stage_fractions: tuple[float, ...] = DEFAULT_STAGE_FRACTIONS,
-        templates_dir: Optional[Path | str] = None,
+        templates_dir: Path | str | None = None,
     ) -> tuple[list[EvidenceStateSnapshot], DatasetManifest]:
         """
         PRD Section 8.1–8.4 & 10.3:
@@ -354,7 +354,7 @@ def generate_dataset(
     hard_case_ratio: float = 0.10,
     num_orderings: int = 2,
     stage_fractions: tuple[float, ...] = DatasetGenerator.DEFAULT_STAGE_FRACTIONS,
-    templates_dir: Optional[Path | str] = None,
+    templates_dir: Path | str | None = None,
 ) -> tuple[list[EvidenceStateSnapshot], DatasetManifest]:
     """Module-level wrapper for DatasetGenerator.generate_dataset()."""
     return DatasetGenerator.generate_dataset(

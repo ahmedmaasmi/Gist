@@ -1,18 +1,18 @@
 # backend/app/engine/observation.py
 import random
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
-from app.domain.character import Character, CharacterSecret, RelationshipGraph
+from app.domain.character import Character, CharacterSecret, RelationshipGraph, RevealedRelationship
 from app.domain.enums import (
     EvidenceCategory,
     InteractionType,
+    LieKind,
     ProvenanceClass,
     VerificationStatus,
 )
 from app.domain.setting import SettingTemplate
 from app.domain.tiers import T1Session, T2CharacterKnowledge, T3Canonical
-from app.domain.world import CanonicalEvent, Claim, Fact, SimulationConfig, TimeInterval
+from app.domain.world import CanonicalEvent, Claim, Fact, LieAnnotation, SimulationConfig, TimeInterval
 
 
 class ObservationModel:
@@ -30,7 +30,7 @@ class ObservationModel:
         setting: SettingTemplate,
     ) -> str:
         """Returns the character's scheduled location overlapping the window, or a fallback."""
-        best_loc: Optional[str] = None
+        best_loc: str | None = None
         best_overlap = -1
         for slot in character.schedule:
             overlap = slot.time_interval.overlap_duration(window)
@@ -66,10 +66,11 @@ class ObservationModel:
         relationship_graph: RelationshipGraph,
         canonical_events: list[CanonicalEvent],
         t3_canonical: T3Canonical,
-        rng: Optional[random.Random] = None,
-    ) -> tuple[T1Session, dict[str, T2CharacterKnowledge]]:
+        rng: random.Random | None = None,
+    ) -> tuple[T1Session, dict[str, T2CharacterKnowledge], list[LieAnnotation]]:
         """
-        Derives (T1Session, dict[str, T2CharacterKnowledge]) deterministically from T3 state.
+        Derives (T1Session, dict[str, T2CharacterKnowledge], lie annotations) deterministically
+        from T3 state. The lie annotations are T3 data: the caller stores them in T3Canonical.
         """
         local_rng = rng if rng is not None else random.Random(config.seed + 1000)
         char_map: dict[str, Character] = {c.character_id: c for c in characters}
@@ -267,25 +268,39 @@ class ObservationModel:
                         )
                     )
 
-        revealed_edges = []
+        # CH-06: the player learns *that* a relationship exists and its qualitative nature,
+        # never the T3 edge values (affinity/trust/obligation numbers).
+        revealed_edges: list[RevealedRelationship] = []
         for edge in relationship_graph.edges:
             if (
                 edge.obligation >= 0.5
                 or edge.affinity <= -0.3
                 or edge.is_revealed_to_player
             ):
-                revealed_copy = edge.model_copy(deep=True)
-                revealed_copy.is_revealed_to_player = True
-                revealed_edges.append(revealed_copy)
+                rel_fact_id = next_t1_fact_id("rel")
+                revealed_edges.append(
+                    RevealedRelationship(
+                        source_id=edge.source_id,
+                        target_id=edge.target_id,
+                        tags=list(edge.tags),
+                        evidence_fact_id=rel_fact_id,
+                    )
+                )
+
+                observations = []
+                if edge.obligation >= 0.5:
+                    observations.append(f"{edge.source_id} owes {edge.target_id} a significant debt or favour")
+                if edge.affinity <= -0.3:
+                    observations.append(f"{edge.source_id} is openly hostile toward {edge.target_id}")
+                if not observations:
+                    observations.append(f"{edge.source_id} has a known relationship with {edge.target_id}")
+                tag_text = f" [{', '.join(edge.tags)}]" if edge.tags else ""
 
                 t1_facts.append(
                     Fact(
-                        fact_id=next_t1_fact_id("rel"),
+                        fact_id=rel_fact_id,
                         case_id=config.case_id,
-                        description=(
-                            f"Relationship record between {edge.source_id} and {edge.target_id} "
-                            f"(affinity={edge.affinity:.2f}, obligation={edge.obligation:.2f})."
-                        ),
+                        description=f"Relationship record{tag_text}: {'; '.join(observations)}.",
                         subject_id=edge.source_id,
                         target_id=edge.target_id,
                         category=EvidenceCategory.RELATIONSHIP,
@@ -321,6 +336,10 @@ class ObservationModel:
 
         # Track true co-located observations during murder_window
         true_murder_window_loc: dict[str, str] = {}
+        # Every location visited during the window, in order. Used to decide whether a
+        # "I was at X throughout the window" claim is a lie (true_murder_window_loc only
+        # keeps the last location, which misses a culprit who left and came back).
+        murder_window_visits: dict[str, list[str]] = {}
         true_murder_window_observed: dict[str, list[str]] = {
             c.character_id: [] for c in characters
         }
@@ -332,6 +351,9 @@ class ObservationModel:
                 )
                 if config.murder_window.overlaps(ev_interval):
                     true_murder_window_loc[event.actor_id] = event.location_id
+                    visits = murder_window_visits.setdefault(event.actor_id, [])
+                    if event.location_id not in visits:
+                        visits.append(event.location_id)
                     for wit_id in event.witness_ids:
                         if (
                             wit_id != config.victim_id
@@ -341,10 +363,11 @@ class ObservationModel:
                                 wit_id
                             )
 
-        deterministic_timestamp = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc) + timedelta(
+        deterministic_timestamp = datetime(2026, 1, 1, 0, 0, tzinfo=UTC) + timedelta(
             minutes=config.end_min
         )
         initial_claims: list[Claim] = []
+        lie_annotations: list[LieAnnotation] = []
 
         for char in sorted(characters, key=lambda c: c.character_id):
             cid = char.character_id
@@ -447,11 +470,13 @@ class ObservationModel:
                     planned_loc, config.crime_location_id, setting
                 )
                 true_loc = true_murder_window_loc.get(cid, planned_loc)
+                lie_kind: LieKind | None = None
 
                 if cid == culprit_id:
                     # Culprit alibi generation
                     if local_rng.random() < config.guilty_lie_rate:
                         claimed_loc = safe_alibi_loc
+                        lie_kind = LieKind.CULPRIT_COVER_STORY
                         observed_ids: list[str] = []
                         corroborated = False
                         text = (
@@ -474,6 +499,7 @@ class ObservationModel:
 
                     if covered_partner is not None:
                         claimed_loc = safe_alibi_loc
+                        lie_kind = LieKind.COVER_FOR
                         observed_ids = [covered_partner]
                         corroborated = True
                         text = (
@@ -486,6 +512,7 @@ class ObservationModel:
                             safe_alibi_loc, true_loc, setting
                         )
                         claimed_loc = evasive_loc
+                        lie_kind = LieKind.RED_HERRING_EVASION
                         observed_ids = []
                         corroborated = False
                         text = (
@@ -517,6 +544,36 @@ class ObservationModel:
                     status=VerificationStatus.UNVERIFIED,
                 )
                 cover_story.append(alibi_claim)
+                # COVER_FOR is a lie even at the right location (the joint alibi is false);
+                # the other kinds are lies if the speaker was anywhere other than the claimed
+                # location during the window.
+                elsewhere = [loc for loc in murder_window_visits.get(cid, []) if loc != claimed_loc]
+                if lie_kind == LieKind.COVER_FOR:
+                    lie_annotations.append(
+                        LieAnnotation(
+                            claim_id=alibi_claim.claim_id,
+                            liar_id=cid,
+                            kind=lie_kind,
+                            true_location_id=elsewhere[0] if elsewhere else true_loc,
+                            note=(
+                                f"INTENTIONAL_LIE ({lie_kind}): {cid} falsely claimed to be with "
+                                f"{covered_partner} at {claimed_loc}."
+                            ),
+                        )
+                    )
+                elif lie_kind is not None and elsewhere:
+                    lie_annotations.append(
+                        LieAnnotation(
+                            claim_id=alibi_claim.claim_id,
+                            liar_id=cid,
+                            kind=lie_kind,
+                            true_location_id=elsewhere[0],
+                            note=(
+                                f"INTENTIONAL_LIE ({lie_kind}): {cid} claimed {claimed_loc} throughout "
+                                f"the window but was also at {', '.join(elsewhere)}."
+                            ),
+                        )
+                    )
                 initial_claims.append(alibi_claim)
 
             t2_knowledge[cid] = T2CharacterKnowledge(
@@ -539,5 +596,5 @@ class ObservationModel:
             revealed_edges=revealed_edges,
         )
 
-        return t1_session, t2_knowledge
+        return t1_session, t2_knowledge, lie_annotations
 

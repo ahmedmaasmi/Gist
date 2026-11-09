@@ -3,13 +3,10 @@ from pathlib import Path
 
 from app.engine.dataset_generator import (
     DatasetGenerator,
-    DatasetManifest,
     generate_dataset,
     save_dataset,
 )
 from app.engine.reveal_sampler import (
-    EvidenceRevealSampler,
-    EvidenceStateSnapshot,
     sample_reveal_snapshots,
 )
 from app.engine.templates import generate_valid_case, get_template
@@ -67,7 +64,7 @@ def test_reveal_monotonicity_and_convergence() -> None:
         assert [s.reveal_fraction for s in ord_partial_snaps] == [0.35, 0.65]
 
         stage_sequence = [*ord_partial_snaps, full_snap]
-        for prev_snap, next_snap in zip(stage_sequence, stage_sequence[1:]):
+        for prev_snap, next_snap in zip(stage_sequence, stage_sequence[1:], strict=False):
             prev_facts = {f.fact_id for f in prev_snap.t1_partial.discovered_facts}
             next_facts = {f.fact_id for f in next_snap.t1_partial.discovered_facts}
             assert len(prev_facts) >= 1, "Stage 0 must include at least 1 baseline briefing fact"
