@@ -120,3 +120,10 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **Alternatives considered:** Add a time tolerance to the consistency engine; let the simulator delay arrivals.
 - **Reason:** The last 2% of false positives came from 10-minute trace intervals reaching into the next tick. There were also 28 record pairs in which innocents "teleported" between schedule slots. Both are now 0. A tolerance would have hidden the problem and weakened true detections.
 - **What I should learn from this:** Fix inconsistencies where they are created (the generator) rather than where they are noticed (the checker). Otherwise the checker learns to excuse a broken world.
+
+## D-016 (2026-11-09): Cross-speaker "disagreements" that blame nobody
+
+- **Decision:** New `Disagreement` type from `StructuredConsistencyEngine.find_disagreements`. When B says they saw A at X and A's own claim rules out A being at X at every minute of B's interval, the two claims are linked as a disagreement involving both speakers. It is separate from `ContradictionFlag`, which blames one speaker. The PRD's `claim_claim_conflicts` stays self-contradiction only.
+- **Alternatives considered:** Treat it as CLAIM_CLAIM blamed on the later speaker; flag both speakers as contradicted; leave it out.
+- **Reason:** 72% of COVER_FOR lies went undetected, because the engine never compared two people's statements. Blaming either side would wrongly accuse the honest party. Results (`make audit-contradictions`): 1.25 disagreements per case, 100% involve at least one false claim, and the share of false claims caught by a flag *or* a disagreement rose from 52% to 81% (COVER_FOR from 28% to 77%). The cost is that 37% of accurate innocents are involved in some disagreement, which is why it stays a separate, unblamed signal.
+- **What I should learn from this:** Some evidence is symmetric. It tells you *that* something is wrong, not *who* is wrong. Modelling it as symmetric, and letting the learner weigh it, is more honest than forcing an attribution that a rule cannot justify.

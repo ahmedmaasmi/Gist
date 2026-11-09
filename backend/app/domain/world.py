@@ -132,6 +132,19 @@ class ContradictionFlag(BaseModel):
     is_semantic: bool = Field(default=False, description="False if caught by Layer 1 structured rules; True if Layer 2 NLI")
 
 
+class Disagreement(BaseModel):
+    """
+    Two suspects' claims that cannot both be true (e.g. B: "I was with A in the lounge",
+    A: "I was in the library the whole time"). Unlike a ContradictionFlag it blames nobody:
+    either speaker may be the one lying or mistaken, so it is linked to both (D-016).
+    """
+    disagreement_id: str = Field(..., min_length=1)
+    case_id: str = Field(..., min_length=1)
+    suspect_ids: tuple[str, str]
+    claim_ids: tuple[str, str]
+    explanation: str = Field(..., min_length=1)
+
+
 class SimulationConfig(BaseModel):
     """
     PRD Section 7A.4 & Section 8.2: Deterministic simulation parameters and

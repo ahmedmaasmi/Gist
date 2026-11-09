@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 4. Feature spec v1 (not started; waiting for the user's OK)
+- **Current step:** 4. Feature spec v1 (in progress)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -49,6 +49,7 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
   - **Coherent world.** Forensic traces are point-in-time and schedules respect travel time, so the generator no longer makes impossible worlds.
   - **New evaluation.** `make audit-contradictions` reports precision, recall and false-positive rate with CIs.
   - **Tests.** 99 → 101.
+- 2026-11-09, **step 3 follow-up:** cross-speaker disagreements (D-016); tests 101 → 104. The PRD PDF stays out of git (`docs/*.pdf` ignored).
 
 ## Next action
 
@@ -88,6 +89,8 @@ These were all 1.00 before the step 2 redesign.
 | COVER_FOR lies | 28% |
 | Accurate claims | 0% |
 
+**Disagreements (D-016):** 1.25 per case; 100% involve a false claim. False claims caught by a flag *or* a disagreement: **81%** (COVER_FOR lies 77%). 37% of accurate innocents are involved in a disagreement (the honest counterpart), so it is never treated as blame.
+
 ## Step 4 notes (feature spec)
 
 - **Corroboration flag.** Lying culprits never claim corroboration, while honest innocents often do. That is plausible behaviour, but it is a likely strong feature; watch for it in the leakage audit (step 8).
@@ -98,8 +101,6 @@ These were all 1.00 before the step 2 redesign.
 - **Artificial hard cases.** `DatasetGenerator._make_under_determined_variant` deletes only the culprit's scene traces to manufacture hard cases. Hard cases now occur naturally (D-010), and the deletion is itself a culprit-specific artefact. Likely remove it.
 
 ## Open questions / blockers
-
-- **Cross-speaker contradictions?** The engine only compares a speaker with their *own* earlier claims (PRD 5.3 defines `claim_claim_conflicts` as self-contradiction). Comparing B's "I was with A at X" against A's "I was at Y" would catch many of the 72% of COVER_FOR lies that are missed now. It is a design choice; decide before step 4.
 
 - **E. Templates.** Manor only for play, all 8 templates for dataset generation? (Decide by step 5.)
 - **G. Abstention.** Simple threshold rule in v0.1 (step 7), E4 in v1.0?

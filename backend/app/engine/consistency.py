@@ -3,7 +3,7 @@
 from app.domain.enums import ContradictionType, VerificationStatus
 from app.domain.setting import SettingTemplate
 from app.domain.tiers import T1Session
-from app.domain.world import Claim, ContradictionFlag, Fact, TimeInterval
+from app.domain.world import Claim, ContradictionFlag, Disagreement, Fact, TimeInterval
 
 
 class StructuredConsistencyEngine:
@@ -155,7 +155,30 @@ class StructuredConsistencyEngine:
         return flags
 
     @staticmethod
+    def ruled_out_minutes(
+        location_id: str,
+        interval: TimeInterval,
+        sightings: list[tuple[str, TimeInterval]],
+        setting: SettingTemplate,
+    ) -> set[int]:
+        """
+        Minutes of `interval` at which someone cannot be at `location_id`, given `sightings`
+        (location, time) of that person elsewhere. Being at another location during [s, e] rules
+        out [s - travel + 1, e + travel - 1] (the same rule as the timeline solver).
+        """
+        ruled_out: set[int] = set()
+        for other_loc, when in sightings:
+            if other_loc == location_id:
+                continue
+            reach = max(setting.get_travel_time(other_loc, location_id) - 1, 0)
+            lo = max(interval.start_min, when.start_min - reach)
+            hi = min(interval.end_min, when.end_min + reach)
+            ruled_out.update(range(lo, hi + 1))
+        return ruled_out
+
+    @classmethod
     def _facts_ruling_out_presence(
+        cls,
         subject_id: str,
         location_id: str,
         interval: TimeInterval,
@@ -164,26 +187,20 @@ class StructuredConsistencyEngine:
     ) -> list[Fact]:
         """
         Returns the records that together make it impossible for `subject_id` to be at `location_id`
-        at ANY minute of `interval` (empty list if some minute remains possible). A record at another
-        location at minute t rules out [t - travel + 1, t + travel - 1], as in the timeline solver.
+        at ANY minute of `interval` (empty list if some minute remains possible).
         """
-        blocks: list[tuple[int, int, Fact]] = []
-        for fact in facts:
-            if fact.subject_id != subject_id or fact.location_id == location_id:
-                continue
-            travel = setting.get_travel_time(fact.location_id, location_id)
-            reach = max(travel - 1, 0)
-            b_start = fact.time_interval.start_min - reach
-            b_end = fact.time_interval.end_min + reach
-            if b_end >= interval.start_min and b_start <= interval.end_min:
-                blocks.append((b_start, b_end, fact))
-        if not blocks:
-            return []
-        every_minute_blocked = all(
-            any(b_start <= m <= b_end for b_start, b_end, _ in blocks)
-            for m in range(interval.start_min, interval.end_min + 1)
-        )
-        return [fact for _, _, fact in blocks] if every_minute_blocked else []
+        relevant = [
+            f
+            for f in facts
+            if f.subject_id == subject_id
+            and f.location_id != location_id
+            and cls.ruled_out_minutes(location_id, interval, [(f.location_id, f.time_interval)], setting)
+        ]
+        sightings = [(f.location_id, f.time_interval) for f in relevant]
+        all_minutes = interval.end_min - interval.start_min + 1
+        if relevant and len(cls.ruled_out_minutes(location_id, interval, sightings, setting)) == all_minutes:
+            return relevant
+        return []
 
     @classmethod
     def check_claim_against_claims(
@@ -234,6 +251,66 @@ class StructuredConsistencyEngine:
                 )
 
         return flags
+
+    @classmethod
+    def find_disagreements(
+        cls,
+        session: T1Session,
+        setting: SettingTemplate,
+    ) -> list[Disagreement]:
+        """
+        Cross-speaker check (D-016): B claims to have seen A at X during [b1, b2]; A claims to have
+        been at L throughout [a1, a2]. If A's own claim, treated like a sighting, rules out every
+        minute of [b1, b2] at X, the two claims cannot both be true. Neither speaker is blamed.
+        """
+        claims = sorted(session.recorded_claims, key=lambda c: (c.turn_index, c.claim_id))
+        own_whereabouts = [
+            c
+            for c in claims
+            if c.subject_id == c.speaker_id
+            and c.claimed_location_id is not None
+            and c.claimed_time_interval is not None
+        ]
+        found: list[Disagreement] = []
+        seen: set[tuple[str, str]] = set()
+        for b_claim in claims:
+            if b_claim.claimed_location_id is None or b_claim.claimed_time_interval is None:
+                continue
+            for observed_id in b_claim.observed_character_ids:
+                if observed_id == b_claim.speaker_id:
+                    continue
+                for a_claim in own_whereabouts:
+                    if a_claim.speaker_id != observed_id:
+                        continue
+                    key = tuple(sorted((a_claim.claim_id, b_claim.claim_id)))
+                    if key in seen:
+                        continue
+                    window = b_claim.claimed_time_interval
+                    ruled_out = cls.ruled_out_minutes(
+                        b_claim.claimed_location_id,
+                        window,
+                        [(a_claim.claimed_location_id, a_claim.claimed_time_interval)],
+                        setting,
+                    )
+                    if len(ruled_out) < window.end_min - window.start_min + 1:
+                        continue
+                    seen.add(key)
+                    found.append(
+                        Disagreement(
+                            disagreement_id=f"dis_{key[0]}_{key[1]}",
+                            case_id=session.case_id,
+                            suspect_ids=(b_claim.speaker_id, a_claim.speaker_id),
+                            claim_ids=(b_claim.claim_id, a_claim.claim_id),
+                            explanation=(
+                                f"'{b_claim.speaker_id}' says they saw '{observed_id}' at "
+                                f"'{b_claim.claimed_location_id}' during [{window.start_min}, {window.end_min}], "
+                                f"but '{observed_id}' says they were at '{a_claim.claimed_location_id}' "
+                                f"throughout [{a_claim.claimed_time_interval.start_min}, "
+                                f"{a_claim.claimed_time_interval.end_min}]. At least one of them is wrong."
+                            ),
+                        )
+                    )
+        return found
 
     @classmethod
     def evaluate_session(

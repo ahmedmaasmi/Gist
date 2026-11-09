@@ -354,3 +354,55 @@ def test_no_false_positives_on_accurate_generated_claims():
     result = run(seeds=6)
     assert result["confusion"]["FP"] == 0, result["flag_rate_by_category"]
     assert result["recall_inaccurate_claims"][0] > 0.5
+
+
+def _session_with(claims):
+    from app.domain.tiers import T1Session
+
+    return T1Session(session_id="s", case_id="case_blackwood", recorded_claims=claims)
+
+
+def test_cross_speaker_disagreement_blames_nobody(blackwood_setting: SettingTemplate):
+    """D-016: B says they were with A at the gatehouse; A says the library throughout -> disagreement."""
+    b_claim = Claim(
+        claim_id="claim_b", case_id="case_blackwood", speaker_id="suspect_b", subject_id="suspect_b",
+        turn_index=0, claimed_location_id="loc_gatehouse",
+        claimed_time_interval=TimeInterval(start_min=1260, end_min=1280),
+        observed_character_ids=["suspect_a"],
+    )
+    a_claim = Claim(
+        claim_id="claim_a", case_id="case_blackwood", speaker_id="suspect_a", subject_id="suspect_a",
+        turn_index=0, claimed_location_id="loc_library",
+        claimed_time_interval=TimeInterval(start_min=1250, end_min=1290),
+    )
+    session = _session_with([b_claim, a_claim])
+    found = StructuredConsistencyEngine.find_disagreements(session, blackwood_setting)
+    assert len(found) == 1
+    assert set(found[0].suspect_ids) == {"suspect_a", "suspect_b"}
+    assert set(found[0].claim_ids) == {"claim_a", "claim_b"}
+    # Not a contradiction of either speaker on its own
+    assert StructuredConsistencyEngine.evaluate_session(session, blackwood_setting) == []
+
+
+def test_no_disagreement_when_both_can_be_true(blackwood_setting: SettingTemplate):
+    """A was in the library 21:00-21:05 only; B saw A in the study (2 min away) 21:00-21:20: compatible."""
+    b_claim = Claim(
+        claim_id="claim_b", case_id="case_blackwood", speaker_id="suspect_b", subject_id="suspect_b",
+        turn_index=0, claimed_location_id="loc_study",
+        claimed_time_interval=TimeInterval(start_min=1260, end_min=1280),
+        observed_character_ids=["suspect_a"],
+    )
+    a_claim = Claim(
+        claim_id="claim_a", case_id="case_blackwood", speaker_id="suspect_a", subject_id="suspect_a",
+        turn_index=0, claimed_location_id="loc_library",
+        claimed_time_interval=TimeInterval(start_min=1260, end_min=1265),
+    )
+    assert StructuredConsistencyEngine.find_disagreements(_session_with([b_claim, a_claim]), blackwood_setting) == []
+
+
+def test_generated_disagreements_always_involve_a_false_claim():
+    from app.evaluation.contradiction_audit import run
+
+    result = run(seeds=6)
+    assert result["disagreements"]["count"] > 0
+    assert result["disagreements"]["valid_share"][0] == 1.0

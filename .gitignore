@@ -111,3 +111,6 @@ mlruns/
 # Claude Code local settings
 # ==========================================
 .claude/settings.local.json
+
+# Spec PDFs are kept locally, not in git (user decision 2026-11-09)
+docs/*.pdf

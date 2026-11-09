@@ -7,7 +7,9 @@ Run:  make audit-contradictions   (or: cd backend && uv run python -m app.evalua
 Ground truth comes from T3 (evaluator-only, PRD 5.2). A claim is INACCURATE if it carries an
 intentional-lie annotation or if the speaker visited any location other than the claimed one during
 the claimed interval (this includes honest confusion, D-009). Otherwise it is ACCURATE.
-A claim is FLAGGED if the structured engine raises any contradiction for it.
+A claim is FLAGGED if the structured engine raises any contradiction for it. Separately, a
+DISAGREEMENT (D-016) links two speakers' claims that cannot both be true without blaming either;
+it is valid if at least one of the two claims is inaccurate, and it can only ever be valid.
 
 Headline safety metric: false-positive rate = flagged accurate claims / accurate claims.
 Confidence intervals are 95% Wilson intervals over claims; claims within a case are not independent,
@@ -62,6 +64,7 @@ def label_claims(bundle: SimulatedCaseBundle) -> dict[str, tuple[bool, str]]:
 def run(seeds: int = 50) -> dict:
     confusion = Counter()
     by_category = Counter()
+    dis = Counter()
     for template_id in sorted(load_all_templates()):
         tpl = get_template(template_id)
         for seed in range(seeds):
@@ -69,7 +72,19 @@ def run(seeds: int = 50) -> dict:
             flagged = {
                 f.primary_claim_id for f in StructuredConsistencyEngine.evaluate_session(bundle.t1_session, tpl)
             }
-            for claim_id, (inaccurate, category) in label_claims(bundle).items():
+            labels = label_claims(bundle)
+            disagreements = StructuredConsistencyEngine.find_disagreements(bundle.t1_session, tpl)
+            in_disagreement = {cid for d in disagreements for cid in d.claim_ids}
+            for d in disagreements:
+                dis["disagreements"] += 1
+                dis["valid"] += any(labels[cid][0] for cid in d.claim_ids)
+            for claim_id, (inaccurate, category) in labels.items():
+                by_category[(category, "flag_or_disagreement")] += (
+                    claim_id in flagged or claim_id in in_disagreement
+                )
+                if inaccurate:
+                    dis["inaccurate"] += 1
+                    dis["inaccurate_caught_by_either"] += claim_id in flagged or claim_id in in_disagreement
                 hit = claim_id in flagged
                 confusion[("TP" if inaccurate else "FP") if hit else ("FN" if inaccurate else "TN")] += 1
                 by_category[(category, "n")] += 1
@@ -86,6 +101,15 @@ def run(seeds: int = 50) -> dict:
         "confusion": {"TP": tp, "FP": fp, "FN": fn, "TN": tn},
         "flag_rate_by_category": {
             c: wilson(by_category[(c, "flagged")], by_category[(c, "n")]) for c in categories
+        },
+        "disagreements": {
+            "count": dis["disagreements"],
+            "per_case": round(dis["disagreements"] / (seeds * len(load_all_templates())), 3),
+            "valid_share": wilson(dis["valid"], dis["disagreements"]),
+            "recall_flag_or_disagreement": wilson(dis["inaccurate_caught_by_either"], dis["inaccurate"]),
+            "involvement_rate_by_category": {
+                c: wilson(by_category[(c, "flag_or_disagreement")], by_category[(c, "n")]) for c in categories
+            },
         },
         "note": (
             "Intervals are (estimate, low, high), 95% Wilson over claims. "
