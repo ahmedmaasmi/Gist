@@ -1,0 +1,84 @@
+{
+  "template_id": "warehouse",
+  "name": "Dockside Bonded Warehouse",
+  "description": "A fog-shrouded maritime cargo warehouse containing a high-security customs cage, refrigerated storage, and a perimeter watchman hut.",
+  "split_group": "val",
+  "default_crime_location_ids": [
+    "loc_customs_cage",
+    "loc_foreman_office"
+  ],
+  "archetype_occupations": [
+    "Harbour Foreman",
+    "Customs Broker",
+    "Import Wholesaler",
+    "Union Shop Steward",
+    "Freight Insurer",
+    "Night Watchman",
+    "Cold-Chain Inspector"
+  ],
+  "locations": [
+    {
+      "location_id": "loc_customs_cage",
+      "name": "Bonded Customs Cage",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_foreman_office",
+      "name": "Elevated Foreman's Office",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_loading_dock",
+      "name": "Main Freight Loading Dock",
+      "is_restricted": false
+    },
+    {
+      "location_id": "loc_cold_storage",
+      "name": "Refrigerated Cold Storage",
+      "is_restricted": false
+    },
+    {
+      "location_id": "loc_watchman_hut",
+      "name": "Perimeter Watchman Hut",
+      "is_restricted": false
+    }
+  ],
+  "travel_matrix": {
+    "loc_customs_cage": {
+      "loc_customs_cage": 0,
+      "loc_foreman_office": 4,
+      "loc_loading_dock": 3,
+      "loc_cold_storage": 6,
+      "loc_watchman_hut": 11
+    },
+    "loc_foreman_office": {
+      "loc_customs_cage": 4,
+      "loc_foreman_office": 0,
+      "loc_loading_dock": 3,
+      "loc_cold_storage": 7,
+      "loc_watchman_hut": 10
+    },
+    "loc_loading_dock": {
+      "loc_customs_cage": 3,
+      "loc_foreman_office": 3,
+      "loc_loading_dock": 0,
+      "loc_cold_storage": 4,
+      "loc_watchman_hut": 8
+    },
+    "loc_cold_storage": {
+      "loc_customs_cage": 6,
+      "loc_foreman_office": 7,
+      "loc_loading_dock": 4,
+      "loc_cold_storage": 0,
+      "loc_watchman_hut": 12
+    },
+    "loc_watchman_hut": {
+      "loc_customs_cage": 11,
+      "loc_foreman_office": 10,
+      "loc_loading_dock": 8,
+      "loc_cold_storage": 12,
+      "loc_watchman_hut": 0
+    }
+  }
+}
+

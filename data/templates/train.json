@@ -1,0 +1,102 @@
+{
+  "template_id": "train",
+  "name": "Night Express to Ashford",
+  "description": "A luxury overnight sleeper train arranged as a strict linear corridor from the rear baggage car to the forward VIP sleeper.",
+  "split_group": "test_held_out_template",
+  "default_crime_location_ids": [
+    "loc_sleeper_vip",
+    "loc_baggage_car"
+  ],
+  "archetype_occupations": [
+    "Diplomatic Courier",
+    "Head Conductor",
+    "Industrialist",
+    "Investigative Journalist",
+    "Opera Singer",
+    "Railway Engineer",
+    "Customs Inspector"
+  ],
+  "locations": [
+    {
+      "location_id": "loc_sleeper_vip",
+      "name": "VIP Sleeper Compartment",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_dining_car",
+      "name": "First-Class Dining Car",
+      "is_restricted": false
+    },
+    {
+      "location_id": "loc_lounge_car",
+      "name": "Club Lounge Car",
+      "is_restricted": false
+    },
+    {
+      "location_id": "loc_staff_cabin",
+      "name": "Conductor & Staff Cabin",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_baggage_car",
+      "name": "Locked Baggage Car",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_observation_deck",
+      "name": "Rear Observation Deck",
+      "is_restricted": false
+    }
+  ],
+  "travel_matrix": {
+    "loc_sleeper_vip": {
+      "loc_sleeper_vip": 0,
+      "loc_dining_car": 2,
+      "loc_lounge_car": 4,
+      "loc_staff_cabin": 7,
+      "loc_baggage_car": 10,
+      "loc_observation_deck": 12
+    },
+    "loc_dining_car": {
+      "loc_sleeper_vip": 2,
+      "loc_dining_car": 0,
+      "loc_lounge_car": 2,
+      "loc_staff_cabin": 5,
+      "loc_baggage_car": 8,
+      "loc_observation_deck": 10
+    },
+    "loc_lounge_car": {
+      "loc_sleeper_vip": 4,
+      "loc_dining_car": 2,
+      "loc_lounge_car": 0,
+      "loc_staff_cabin": 3,
+      "loc_baggage_car": 6,
+      "loc_observation_deck": 8
+    },
+    "loc_staff_cabin": {
+      "loc_sleeper_vip": 7,
+      "loc_dining_car": 5,
+      "loc_lounge_car": 3,
+      "loc_staff_cabin": 0,
+      "loc_baggage_car": 3,
+      "loc_observation_deck": 5
+    },
+    "loc_baggage_car": {
+      "loc_sleeper_vip": 10,
+      "loc_dining_car": 8,
+      "loc_lounge_car": 6,
+      "loc_staff_cabin": 3,
+      "loc_baggage_car": 0,
+      "loc_observation_deck": 2
+    },
+    "loc_observation_deck": {
+      "loc_sleeper_vip": 12,
+      "loc_dining_car": 10,
+      "loc_lounge_car": 8,
+      "loc_staff_cabin": 5,
+      "loc_baggage_car": 2,
+      "loc_observation_deck": 0
+    }
+  }
+}
+

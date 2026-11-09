@@ -48,7 +48,11 @@ def test_setting_template_travel_time_and_validation(blackwood_setting: SettingT
         SettingTemplate(
             template_id="tpl_bad",
             name="Invalid Manor",
-            locations=[Location(location_id="loc_study", name="Study")],
+            locations=[
+                Location(location_id="loc_study", name="Study", is_restricted=True),
+                Location(location_id="loc_library", name="Library"),
+                Location(location_id="loc_gatehouse", name="Gatehouse"),
+            ],
             travel_matrix={"loc_study": {"loc_nonexistent": 5}},
         )
 

@@ -1,0 +1,84 @@
+{
+  "template_id": "clinic",
+  "name": "St. Jude Research Clinic",
+  "description": "A private biomedical research facility during the night shift, featuring restricted toxicology labs and a controlled-substance pharmacy vault.",
+  "split_group": "train",
+  "default_crime_location_ids": [
+    "loc_toxicology_lab",
+    "loc_pharmacy_vault"
+  ],
+  "archetype_occupations": [
+    "Chief Pharmacologist",
+    "Clinical Trial Director",
+    "Senior Toxicologist",
+    "Hospital Benefactor",
+    "Head Night Nurse",
+    "Medical Ethics Auditor",
+    "Lab Technician"
+  ],
+  "locations": [
+    {
+      "location_id": "loc_toxicology_lab",
+      "name": "Toxicology Analysis Lab",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_pharmacy_vault",
+      "name": "Controlled Pharmacy Vault",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_doctors_lounge",
+      "name": "Physicians' On-Call Lounge",
+      "is_restricted": false
+    },
+    {
+      "location_id": "loc_reception_ward",
+      "name": "Main Reception & Ward",
+      "is_restricted": false
+    },
+    {
+      "location_id": "loc_courtyard",
+      "name": "Enclosed Garden Courtyard",
+      "is_restricted": false
+    }
+  ],
+  "travel_matrix": {
+    "loc_toxicology_lab": {
+      "loc_toxicology_lab": 0,
+      "loc_pharmacy_vault": 4,
+      "loc_doctors_lounge": 3,
+      "loc_reception_ward": 6,
+      "loc_courtyard": 11
+    },
+    "loc_pharmacy_vault": {
+      "loc_toxicology_lab": 4,
+      "loc_pharmacy_vault": 0,
+      "loc_doctors_lounge": 5,
+      "loc_reception_ward": 4,
+      "loc_courtyard": 9
+    },
+    "loc_doctors_lounge": {
+      "loc_toxicology_lab": 3,
+      "loc_pharmacy_vault": 5,
+      "loc_doctors_lounge": 0,
+      "loc_reception_ward": 4,
+      "loc_courtyard": 8
+    },
+    "loc_reception_ward": {
+      "loc_toxicology_lab": 6,
+      "loc_pharmacy_vault": 4,
+      "loc_doctors_lounge": 4,
+      "loc_reception_ward": 0,
+      "loc_courtyard": 5
+    },
+    "loc_courtyard": {
+      "loc_toxicology_lab": 11,
+      "loc_pharmacy_vault": 9,
+      "loc_doctors_lounge": 8,
+      "loc_reception_ward": 5,
+      "loc_courtyard": 0
+    }
+  }
+}
+

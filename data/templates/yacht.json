@@ -1,0 +1,85 @@
+{
+  "template_id": "yacht",
+  "name": "M/Y Sovereign Charter Yacht",
+  "description": "A 65-meter motor yacht anchored offshore during a stormy evening charter, with isolated lower engine decks and a locked bridge.",
+  "split_group": "val",
+  "default_crime_location_ids": [
+    "loc_master_stateroom",
+    "loc_bridge",
+    "loc_engine_room"
+  ],
+  "archetype_occupations": [
+    "Yacht Charter Host",
+    "First Mate",
+    "Chief Marine Engineer",
+    "Hedge Fund Manager",
+    "Maritime Lawyer",
+    "Chief Steward",
+    "Shipping Heiress"
+  ],
+  "locations": [
+    {
+      "location_id": "loc_master_stateroom",
+      "name": "Owner's Master Stateroom",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_bridge",
+      "name": "Navigation Bridge",
+      "is_restricted": true
+    },
+    {
+      "location_id": "loc_main_saloon",
+      "name": "Main Deck Saloon",
+      "is_restricted": false
+    },
+    {
+      "location_id": "loc_sun_deck",
+      "name": "Upper Aft Sun Deck",
+      "is_restricted": false
+    },
+    {
+      "location_id": "loc_engine_room",
+      "name": "Lower Engine Room",
+      "is_restricted": true
+    }
+  ],
+  "travel_matrix": {
+    "loc_master_stateroom": {
+      "loc_master_stateroom": 0,
+      "loc_bridge": 5,
+      "loc_main_saloon": 3,
+      "loc_sun_deck": 6,
+      "loc_engine_room": 9
+    },
+    "loc_bridge": {
+      "loc_master_stateroom": 5,
+      "loc_bridge": 0,
+      "loc_main_saloon": 4,
+      "loc_sun_deck": 3,
+      "loc_engine_room": 11
+    },
+    "loc_main_saloon": {
+      "loc_master_stateroom": 3,
+      "loc_bridge": 4,
+      "loc_main_saloon": 0,
+      "loc_sun_deck": 4,
+      "loc_engine_room": 6
+    },
+    "loc_sun_deck": {
+      "loc_master_stateroom": 6,
+      "loc_bridge": 3,
+      "loc_main_saloon": 4,
+      "loc_sun_deck": 0,
+      "loc_engine_room": 10
+    },
+    "loc_engine_room": {
+      "loc_master_stateroom": 9,
+      "loc_bridge": 11,
+      "loc_main_saloon": 6,
+      "loc_sun_deck": 10,
+      "loc_engine_room": 0
+    }
+  }
+}
+
