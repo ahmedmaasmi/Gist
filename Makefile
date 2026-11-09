@@ -1,5 +1,5 @@
 # CaseMind — one entry point per task. Python tooling runs through uv inside backend/.
-.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset
+.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset baselines
 
 install:  ## Install locked dependencies (incl. dev tools) into backend/.venv
 	cd backend && uv sync
@@ -30,3 +30,6 @@ audit-contradictions:  ## Precision / recall / false-positive rate of the struct
 
 dataset:  ## Build the versioned dataset (1,500 cases + 150 shifted OOD) into data/generated/v<version>/
 	cd backend && uv run python -m app.engine.dataset_generator --out ../data/generated
+
+baselines:  ## Baseline table with 95% bootstrap CIs (needs `make dataset` first) -> reports/baselines.{json,md}
+	cd backend && uv run python -m app.evaluation.baseline_report

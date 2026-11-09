@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 6. Baselines and evaluation harness (not started; waiting for the user's OK)
+- **Current step:** 7. Models (not started; waiting for the user's OK)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -13,7 +13,7 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - [x] **3. Structured contradiction checks.** Audited against PRD 6.4.B; "seen at some moment" semantics for observed people; `linked_source_ids`; point-in-time traces; travel-feasible schedules; `make audit-contradictions` (false-positive rate 0%, precision 100%, recall 52%). *(Done 2026-11-09.)*
 - [x] **4. Feature spec v1.** 12 features in E1 groups A/B/C plus context; `docs/FEATURES.md` kept in sync with `app/features/spec.py`; T1-only signature guarantee; hand-computed test. *(Done 2026-11-09, spec v1.0.0.)*
 - [x] **5. Dataset and splits.** 12 floor-plan maps, per-case variables, famous names; `make dataset` → v0.2.0 (1,650 cases; train/val/test_in_dist by case, 3 held-out maps, shifted OOD set, grouped-CV folds; checksums reproduce). *(Done 2026-11-09.)*
-- [ ] **6. Baselines and evaluation harness.** Random/prior, motive-plus-opportunity rule, symbolic timeline solver; top-1, top-2, MRR, log loss, Brier; 95% bootstrap CIs over cases; one command builds the table. *(Solver exists, unaudited.)*
+- [x] **6. Baselines and evaluation harness.** `app/ml/metrics.py` (case-level metrics, case bootstrap, paired differences); uniform, motive+opportunity rule and timeline solver; `make baselines` → `reports/baselines.{json,md}`, reproducible. *(Done 2026-11-09.)*
 - [ ] **7. Models.** Logistic Regression and LightGBM, within-case normalisation, calibration on validation, per-suspect explanations linked to evidence IDs (MD-08), heuristic fallback (MD-09), simple abstention rule (MD-06).
 - [ ] **8. Leakage audit and E1.** Feature-name audit, shuffled-label control, single-feature models, permutation importance, reveal-artefact check; E1 ablation A/B/C plus leave-one-group-out.
 - [ ] **9. Question policy and E3.** Slot-based question bank, scripted player simulator (honest innocent, lying guilty, evasive innocent, mixed), entropy policy vs random, fixed-order and top-two; budgets 3, 5 and 8.
@@ -54,10 +54,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09, **step 5a done:** 12 floor-plan maps; per-case variables; famous character names (D-018 to D-020); argument-witness facts made point-in-time; tests 110 → 147.
 - 2026-11-09: **art.** Style reference and the 31-portrait prompt list (`docs/art/`).
 - 2026-11-09, **step 5 done:** `make dataset` builds v0.2.0. Splits follow PRD 8.4, with grouped-CV folds, a shifted OOD set, a feature table and a checksummed manifest. Artificial hard cases removed. Tests 148 → 151.
+- 2026-11-09, **step 6 done:** evaluation harness and three baselines. The rule reaches about 0.6 top-1 and the solver barely beats chance (D-022). Tests 151 → 161.
 
 ## Next action
 
-Build the baselines and evaluation harness (step 6): random/prior, motive-plus-opportunity rule and symbolic timeline solver; case-level metrics with bootstrap CIs over cases; one command builds the table.
+Build the models (step 7): Logistic Regression and LightGBM with within-case normalisation, tuned by grouped CV on train only, calibrated on val; per-suspect explanations (MD-08), heuristic fallback (MD-09) and a simple abstention rule (MD-06).
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 
@@ -92,6 +93,17 @@ Scores measure recovery of the generator's logic, not real-world skill.
 | Accurate claims | 0% |
 
 **Disagreements (D-016):** 1.25 per case; 100% involve a false claim. False claims caught by a flag *or* a disagreement: **85%**. 37% of accurate innocents are involved in a disagreement (the honest counterpart), so it is never treated as blame.
+
+## Baselines (`make baselines`; top-1 with 95% CI over cases)
+
+| Split | Uniform | Motive + opportunity rule | Timeline solver |
+|---|---|---|---|
+| val | 0.24 | 0.60 | 0.25 |
+| test_in_dist | 0.23 | 0.58 [0.52, 0.65] | 0.24 |
+| held-out maps | 0.24 | 0.63 [0.59, 0.67] | 0.25 |
+| shifted OOD | 0.24 | 0.59 [0.53, 0.66] | 0.25 |
+
+**The bar for step 7:** beat the rule, with a paired CI that excludes 0.
 
 ## Dataset v0.2.0 (`make dataset`, about 15 s)
 

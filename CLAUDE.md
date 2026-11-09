@@ -40,6 +40,7 @@ d. When a step is done: run tests, update `docs/STATUS.md`, append decisions to 
 - `make audit-generator`: shortcut audit of the case generator → `reports/generator_audit.json`.
 - `make audit-contradictions`: precision/recall/false-positive rate of the contradiction layer → `reports/contradiction_audit.json`.
 - `make dataset`: builds the versioned dataset → `data/generated/v<version>/` (gitignored; checksums in `manifest.json`).
+- `make baselines`: baseline table with 95% CIs → `reports/baselines.{json,md}` (needs `make dataset`).
 - Art: style reference and portrait prompts in `docs/art/`.
 - `make up` / `make down`: Postgres + backend in Docker Compose; API on http://localhost:8000/health.
 - Storage is **PostgreSQL in Docker** (user decision D-005, deviates from PRD's JSON/SQLite):

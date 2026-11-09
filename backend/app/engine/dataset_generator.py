@@ -81,8 +81,9 @@ class DatasetManifest(BaseModel):
 
 def _git_commit() -> str:
     try:
+        # "-dirty" marks output built from uncommitted code
         return subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
+            ["git", "describe", "--always", "--dirty"], capture_output=True, text=True, check=True
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return "unknown"

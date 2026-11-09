@@ -176,3 +176,29 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **Alternatives considered:** Templates as the val split (the old design, not what PRD 8.4 says); keeping artificial hard cases; storing features only (snapshots let features be recomputed if the spec changes).
 - **Reason:** PRD 8.1, 8.3, 8.4 and 10.3. Verified: two builds give identical checksums. The culprit share is about 22% of rows in every split.
 - **What I should learn from this:** "Same seed, same result" is only a claim until a checksum proves it. Storing raw evidence states (not just features) means a new feature spec doesn't require regenerating the world.
+
+## D-022 (2026-11-09): Baselines and the evaluation harness
+
+- **Decision:**
+  - **Harness (`app/ml/metrics.py`).** Case-level top-1, top-2, MRR, log loss and multi-class Brier per evidence state. Ties are scored at their expected value under a random tie-break. 95% percentile CIs come from 2,000 bootstrap resamples over **cases** (all of a case's evidence states move together), plus a paired bootstrap for differences between methods.
+  - **Baselines (`app/ml/baselines.py`)**, frozen a priori:
+    - **uniform:** suspects are exchangeable, so this is also the prior;
+    - **motive + opportunity rule:** motive + presence at the scene during the window + opportunity + 0.5·log(1 + access);
+    - **symbolic timeline solver.**
+  - **Calibration.** Each baseline's only knob (rule softmax temperature, solver ε) is fitted on val by log loss.
+  - **One command.** `make baselines` → `reports/baselines.{json,md}`. Rebuilding gives an identical file.
+- **Alternatives considered:** Bootstrapping over rows (overstates certainty, because 5 states per case are not independent); breaking ties by list order (lets "don't know" predictors get lucky); tuning the rule weights (it would stop being a human heuristic).
+- **Reason:** PRD 8.5 and 8.6, plus the v0.1 exit gate ("one command reproduces the baseline table with confidence intervals").
+- **Results** (top-1, 95% CI):
+
+  | Split | Uniform | Rule | Solver |
+  |---|---|---|---|
+  | val | 0.24 | 0.60 | 0.25 |
+  | test_in_dist | 0.23 | 0.58 [0.52, 0.65] | 0.24 |
+  | held-out maps | 0.24 | 0.63 [0.59, 0.67] | 0.25 |
+  | shifted OOD | 0.24 | 0.59 [0.53, 0.66] | 0.25 |
+
+  The rule improves as evidence accumulates (val: 0.53 → 0.60 → 0.67). The solver never rules out the true culprit, but rules out anyone in only 30% of full-evidence states.
+- **What I should learn from this:**
+  - **The model has a real bar to clear.** A two-line human heuristic already reaches about 60% top-1, so in step 7 the ranker must beat *that*, with a paired CI excluding zero, or the report says it doesn't.
+  - **Logic alone is weak in this world.** Records are point sightings (D-012), so pure elimination rarely closes a 20–40 minute window. That is a property of the task, not a bug, and is worth stating in the report.
