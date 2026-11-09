@@ -73,6 +73,6 @@ Hypotheses are written and committed **before** each experiment runs (PRD 9). Re
 | H6: ordering holds on OOD; all lower | **Partly** | all lower than held-out (0.69 vs 0.79), but A+B ≈ A+B+C as in H2 |
 
 **Interpretation.**
-- **Why C adds nothing:** in this generator, a statement is refuted mostly *by the very badge record in the murder room* that group B already counts as presence at the scene. So contradiction features are informative on their own (0.50 top-1 in the leakage audit) but redundant once presence is known. The learned model is not "reasoning about lies" beyond what opportunity evidence shows.
+- **Why C adds nothing:** in this generator, a statement is refuted mostly *by the very badge record in the murder room* that group B already counts as presence at the scene. So contradiction features are informative on their own (0.50 top-1 in the leakage audit) but redundant once presence is known. *Checked:* on val (all evidence), **90% of the culprits' refuted statements (360/402) are refuted by a crime-scene record**, against 64% for innocents (199/312). The learned model is not "reasoning about lies" beyond what opportunity evidence shows.
 - **Two directions this suggests:** contradictions that come from sources *other* than scene records (independent witnesses, cross-checks between suspects), or E3, where the question policy *elicits* new claims that could be refuted in new ways.
 - **Generalisation:** the gains carry over to unseen maps. On the shifted set they shrink by about 10 points, but they stay above the rule and the solver.
