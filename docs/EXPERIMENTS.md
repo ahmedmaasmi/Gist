@@ -76,3 +76,39 @@ Hypotheses are written and committed **before** each experiment runs (PRD 9). Re
 - **Why C adds nothing:** in this generator, a statement is refuted mostly *by the very badge record in the murder room* that group B already counts as presence at the scene. So contradiction features are informative on their own (0.50 top-1 in the leakage audit) but redundant once presence is known. *Checked:* on val (all evidence), **90% of the culprits' refuted statements (360/402) are refuted by a crime-scene record**, against 64% for innocents (199/312). The learned model is not "reasoning about lies" beyond what opportunity evidence shows.
 - **Two directions this suggests:** contradictions that come from sources *other* than scene records (independent witnesses, cross-checks between suspects), or E3, where the question policy *elicits* new claims that could be refuted in new ways.
 - **Generalisation:** the gains carry over to unseen maps. On the shifted set they shrink by about 10 points, but they stay above the rule and the solver.
+
+---
+
+## E3: question policies (PRD 9.3)
+
+**Question.** Does choosing questions by expected entropy reduction find the culprit faster than random, fixed-order and top-two policies, across honest, evasive and mixed simulated players?
+
+### Design (fixed before running)
+
+- **Cases.** Fresh cases, generated for E3 only:
+  - **300** on the **held-out templates** (train, lodge, abbey; 100 each), seeds 6,000,000+.
+  - The answer-outcome model is estimated on **300 separate cases from dev templates**, seeds 5,000,000+, with the *mixed* population. The policy does not know which population it faces.
+- **Start.** Each episode starts from the case's **15%** evidence state (about 11 facts), first ordering. Starting accuracy there is about 0.52 on dev maps, measured before any policy was run. Starting at 35% leaves less room: about 0.65 on dev maps, 0.69 at the 35% stage of the final test. It is reported as a secondary analysis. *Limitation:* the ranker was trained on states with 35% or more of the evidence.
+- **Question bank** (12–24 questions): per suspect, "where were you at" the start, middle and end of the window, plus "request records". Each question at most once.
+- **Players** (`app/modes/mode1_detective/players.py`):
+  - **honest_innocents:** a lying culprit and honest innocents.
+  - **evasive_innocents:** a lying culprit and innocents who are evasive 50% of the time.
+  - **mixed:** behaviour as generated, with innocents evasive 25% of the time.
+- **Policies:** random, fixed_order, top_two, entropy. The ranker is fixed (`lightgbm-6d50342630`) and updates after every action.
+- **Metrics** (paired over the same cases; 95% case-bootstrap CIs):
+  - top-1 accuracy of the leading suspect after **3, 5 and 8** actions;
+  - **actions to reach and hold** the correct leader (9 if never within 8).
+- **Command:** `make e3` → `reports/e3.{json,md}`.
+
+### Hypotheses (written 2026-11-09, before running)
+
+- **H1.** Entropy beats random on top-1 after 5 actions, for every population.
+- **H2.** Entropy beats fixed_order on top-1 after 3 and after 5 actions.
+- **H3.** Entropy is not worse than top_two at any budget (paired CI not entirely below 0). The two may tie, since both focus on likely suspects.
+- **H4.** Every policy improves on the starting accuracy (0 actions) by 8 actions.
+- **H5.** For every policy, accuracy after 5 actions is lower with evasive innocents than with honest innocents.
+- **H6.** Entropy needs fewer actions to reach and hold the correct leader than random.
+
+### Results
+
+*(added after running; the hypotheses above are not edited)*
