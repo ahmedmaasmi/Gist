@@ -18,7 +18,6 @@ import csv
 import hashlib
 import io
 import json
-import subprocess
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -34,6 +33,7 @@ from app.engine.templates import (
     sample_case_setup_from_template,
 )
 from app.features import FEATURE_SPEC_VERSION, FEATURES, compute_suspect_features
+from app.provenance import git_commit
 
 DATASET_VERSION = "0.3.0"  # 0.3.0: culprits may name false witnesses (D-023)
 # Share of each dev template's cases per split (PRD 8.4); the rest is train.
@@ -79,14 +79,6 @@ class DatasetManifest(BaseModel):
     note: str = "Synthetic-data scores measure recovery of the generator's logic, not real-world skill."
 
 
-def _git_commit() -> str:
-    try:
-        # "-dirty" marks output built from uncommitted code
-        return subprocess.run(
-            ["git", "describe", "--always", "--dirty"], capture_output=True, text=True, check=True
-        ).stdout.strip()
-    except (OSError, subprocess.CalledProcessError):
-        return "unknown"
 
 
 class DatasetGenerator:
@@ -198,7 +190,7 @@ class DatasetGenerator:
             cv_folds.setdefault(str(fold), []).append(tid)
 
         manifest = DatasetManifest(
-            git_commit=_git_commit(),
+            git_commit=git_commit(),
             master_seed=master_seed,
             num_templates_total=len(ordered),
             templates_by_group={

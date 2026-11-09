@@ -11,7 +11,6 @@ NOTE: scores on synthetic data measure recovery of the generator's logic, not re
 """
 import argparse
 import json
-import subprocess
 from pathlib import Path
 
 from app.engine.dataset_generator import DATASET_VERSION
@@ -27,6 +26,7 @@ from app.ml.baselines import (
     uniform,
 )
 from app.ml.metrics import METRICS, evaluate, paired_difference
+from app.provenance import git_commit
 
 EVAL_SPLITS = ("val", "test_in_dist", "test_held_out_template", "test_ood_shifted")
 STAGE_NAMES = {0.35: "35% of evidence", 0.65: "65% of evidence", 1.0: "all evidence"}
@@ -37,14 +37,6 @@ HONEST_FRAMING = (
 )
 
 
-def _git_commit() -> str:
-    try:
-        # "-dirty" marks output built from uncommitted code
-        return subprocess.run(
-            ["git", "describe", "--always", "--dirty"], capture_output=True, text=True, check=True
-        ).stdout.strip()
-    except (OSError, subprocess.CalledProcessError):
-        return "unknown"
 
 
 def build_report(dataset_dir: Path, n_boot: int = 2000, seed: int = 0) -> dict:
@@ -89,7 +81,7 @@ def build_report(dataset_dir: Path, n_boot: int = 2000, seed: int = 0) -> dict:
         "dataset_version": manifest.get("dataset_version", DATASET_VERSION),
         "dataset_checksum_features_csv": manifest.get("checksums", {}).get("features.csv"),
         "feature_spec_version": manifest.get("feature_spec_version"),
-        "git_commit": _git_commit(),
+        "git_commit": git_commit(),
         "bootstrap": {"resamples": n_boot, "seed": seed, "unit": "case", "interval": "95% percentile"},
         "fitted_on_val": {"rule_softmax_temperature": temperature, "solver_uniform_epsilon": epsilon},
         "rule_definition": {"weights": RULE_WEIGHTS, "log1p_access_evidence_weight": RULE_LOG_ACCESS_WEIGHT},

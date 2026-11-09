@@ -22,7 +22,7 @@ from pathlib import Path
 import joblib
 
 from app.engine.dataset_generator import DATASET_VERSION
-from app.evaluation.baseline_report import HONEST_FRAMING, STAGE_NAMES, _git_commit
+from app.evaluation.baseline_report import HONEST_FRAMING, STAGE_NAMES
 from app.features import FEATURE_SPEC_VERSION
 from app.ml.baselines import fit_rule_temperature, load_states, rule_predictor, uniform
 from app.ml.data import MODEL_FEATURE_NAMES, build_table
@@ -38,6 +38,7 @@ from app.ml.models import (
     positive_scores,
     tune,
 )
+from app.provenance import git_commit
 
 ARTIFACTS_DIR = Path(__file__).resolve().parents[3] / "ml" / "artifacts"
 FAMILIES = {"logistic_regression": LR_GRID, "lightgbm": LGBM_GRID}
@@ -112,7 +113,7 @@ def train_and_report(dataset_dir: Path, artifacts_dir: Path = ARTIFACTS_DIR, n_b
             "dataset_version": manifest.get("dataset_version", DATASET_VERSION),
             "dataset_checksum_features_csv": checksum,
             "seed": SEED,
-            "git_commit": _git_commit(),
+            "git_commit": git_commit(),
             "trained_on": "train split (all folds)",
             "calibrated_on": "val split",
             "selected": family == selected,
@@ -124,7 +125,7 @@ def train_and_report(dataset_dir: Path, artifacts_dir: Path = ARTIFACTS_DIR, n_b
         "dataset_version": manifest.get("dataset_version", DATASET_VERSION),
         "dataset_checksum_features_csv": checksum,
         "feature_spec_version": FEATURE_SPEC_VERSION,
-        "git_commit": _git_commit(),
+        "git_commit": git_commit(),
         "split_evaluated": "val",
         "val_cases": len({s.case_id for s in val.states}),
         "val_templates": sorted({s.template_id for s in val.states}),
