@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 10. API and minimal web UI (starting)
+- **Current step:** 10. API and minimal web UI (10a API done; 10b next: the pixel-art web UI)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -62,10 +62,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09, **step 8 done:** E1 pre-registered and run (H1, H3, H4 confirmed; H2 refuted; H5 mixed; H6 partly); final test evaluation run once through the deployed Ranker (D-027).
 - 2026-11-09, **step 9 done:** Machine Detective policies and pre-registered E3. Entropy beats every other policy; interview answers barely matter to the current ranker (D-028). Tests 178 → 184.
 - 2026-11-09, **step 9b:** interview training data (dataset 0.4.0), interview features (spec 1.1.0), per-state balanced training (case-size confound found by the pooled shuffled control). E3b: answers still don't matter (refuted). New model evaluated once (D-029). Tests 184 → 188.
+- 2026-11-09, **step 10a done:** Mode 1 game API. Cases, sessions, detective steps, your answers, ranking with explanations and counterfactuals, verdict, results after the verdict; contract and canary tests; runs in Docker with the trained model (D-030). Tests 188 → 198.
 
 ## Next action
 
-Step 10: FastAPI endpoints (sessions, claims, evidence, ranking with explanations, next question, verdict, results after the verdict) with T3 contract and canary tests, then the minimal pixel-art web UI.
+Step 10b: the minimal web UI in the pixel-art style (`docs/art/style_reference.png`): case page, your dossier, claim builder, live ranking with explanations and counterfactuals, verdict and results, talking to the API.
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 

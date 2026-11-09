@@ -335,3 +335,25 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **What I should learn from this:**
   - **A control that passes with one random draw can still be hiding a bias.** Pool replicates before trusting a "no leak" result.
   - **Training a model to read a signal cannot create information the signal doesn't carry.** Answers that can only be verified by records the model already sees are redundant by construction. The fix must add a new *source* of truth (witnesses about others), not a new feature.
+
+## D-030 (2026-11-09): Mode 1 game API (step 10a)
+
+- **Decision:** a FastAPI server for Mode 1.
+  - **Cases.** `GET /cases` serves a deterministic catalogue: 6 manor cases, each with two role variants (you are the culprit / an innocent, PRD 6.1).
+  - **Session start.** `POST /sessions` returns the public case plus **your own** character brief (your T2: true whereabouts, secrets, your statement so far).
+  - **The detective's move.** `POST …/next-question`: the entropy policy picks the action and logs its alternatives (MD-03). A question for you waits for `POST …/claims` (the claim builder, stored as SELF_REPORT and UNVERIFIED, MD-04). Scripted suspects and record requests resolve on the server.
+  - **Ranking.** `GET …/ranking` gives probabilities with explanations and evidence. `GET …/counterfactual?evidence_id=` (MD-08). Every prediction is logged with model and feature versions (MD-02).
+  - **Verdict and results.** `POST …/verdict` returns the leading suspect, supporting evidence, contradictions, alternatives, uncertainty, or an abstention (MD-07). `GET …/results` is refused (409) until a verdict exists, and returns a readable solution with canaries stripped.
+  - **Idempotency.** Mutating endpoints accept `Idempotency-Key`.
+  - **Storage and Docker.** Sessions are in memory for now (Postgres persistence: step 11). The Docker image bundles the name pool, the outcome model (`data/outcome_model.json`) and the trained ranker.
+- **Alternatives considered:**
+  - Sending T3 to the client and hiding it in the UI: rejected (PRD 5.2).
+  - Free-text parsing of answers: no; v0.1 is structured slots, and free text is stored only.
+  - Persisting to Postgres now: deferred, so the game loop could be verified first.
+- **Reason:** PRD 6.3, 11, 12 and 13 and requirements MD-01 to MD-07. The layering keeps T3 out of client data by construction:
+  - `game.py` holds the server state;
+  - `views.py` is the only translator to client data;
+  - `schemas.py` defines typed responses.
+
+  Tests: the contract check (no pre-verdict response type can hold hidden types or fields), full games in both roles scanned for canaries and `culprit_id`, idempotency, and input validation.
+- **What I should learn from this:** Put the secrecy boundary in *one* place (the view layer) and test the *types*, not just the outputs. A new endpoint then can't leak the solution by accident, because its response model wouldn't pass the contract test.

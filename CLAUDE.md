@@ -49,7 +49,8 @@ d. When a step (or sub-step) is done: run tests, update `docs/STATUS.md`, append
 - `make e3`: E3 question policies (pre-registered). Machine Detective code in `app/modes/mode1_detective/`.
 - Play-time ranking: `app/ml/ranker.Ranker` (`load()`, `rank(t0, t1, setting)`, `counterfactual(...)`); falls back to the rule if no model loads.
 - Art: style reference and portrait prompts in `docs/art/`.
-- `make up` / `make down`: Postgres + backend in Docker Compose; API on http://localhost:8000/health.
+- `make up` / `make down`: Postgres + backend in Docker Compose; API on http://localhost:8000 (`/health`, `/cases`, `/sessions…`, interactive docs at `/docs`). The image bundles `ml/artifacts`, so run `make models` before building.
+- API code: `app/api/` (game logic in `game.py`; **only `views.py` turns server state into client data**).
 - Storage is **PostgreSQL in Docker** (user decision D-005, deviates from PRD's JSON/SQLite):
   role `casemind_gameplay` has no access to schema `t3_canonical`; only `casemind_vault` does.
 - T3 isolation tests: `tests/test_canary.py`, `tests/test_tier_contracts.py`, `tests/test_lie_annotations.py`.

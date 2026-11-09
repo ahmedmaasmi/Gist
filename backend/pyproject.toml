@@ -22,6 +22,7 @@ dependencies = [
 # Dev-only tools, installed by `uv sync` but never by the production image.
 [dependency-groups]
 dev = [
+    "httpx>=0.27",
     "pytest>=8.3.0",
     "ruff>=0.8.0",
 ]
@@ -32,6 +33,7 @@ include = ["app*"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`:DeprecationWarning"]
 
 [tool.ruff]
 line-length = 110

@@ -1,0 +1,32 @@
+{
+  "_source": "Answer-outcome model P(outcome | culprit/innocent, question type), estimated on 300 dev-map cases (mixed players) by make e3b; copied here as an input for the play-time entropy policy.",
+  "counts": {
+    "ask": {
+      "culprit": {
+        "consistent": 803,
+        "evasive": 0,
+        "refuted": 66,
+        "self_contradiction": 31
+      },
+      "innocent": {
+        "consistent": 2239,
+        "evasive": 765,
+        "refuted": 45,
+        "self_contradiction": 35
+      }
+    },
+    "check": {
+      "culprit": {
+        "nothing": 0,
+        "other_record": 39,
+        "scene_record": 261
+      },
+      "innocent": {
+        "nothing": 11,
+        "other_record": 847,
+        "scene_record": 170
+      }
+    }
+  },
+  "model_version": "lightgbm-0a9d150890"
+}

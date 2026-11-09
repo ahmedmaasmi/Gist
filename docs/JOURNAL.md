@@ -340,3 +340,20 @@ case generator (simulation)  ->  hidden truth (T3) + evidence the player can fin
   - **Base-rate confounding.** When the label rate differs between groups (here, case sizes) and features can tell the groups apart, a model learns the group, not the target. Per-group balancing removes it.
   - **Statistical power of controls.** One random shuffle is one noisy draw. Replicating it is how a hidden 8–10 point bias became visible.
   - **Information vs representation.** Better features or more training data can't extract information the signal doesn't contain. When an experiment says "no effect", ask whether the *data source* can carry the effect at all.
+
+## Step 10a: the game server (API)
+
+- **What:**
+  - `backend/app/api/`: `game.py` (game logic), `views.py` (the only place server data becomes client data), `schemas.py` (typed responses), `routes.py` (endpoints).
+  - Docker now runs the full game with the trained model.
+- **Why:** PRD 6.3, 11, 12 and 13. The web UI needs a server that plays Mode 1 and never lets the solution reach the browser before the verdict.
+- **How:**
+  - **Start a game:** choose a case and a role (culprit or innocent). You get the public case plus your own character's knowledge.
+  - **The detective moves one step at a time.** It asks you, asks a scripted suspect, or requests records, always the best expected question (entropy policy), and logs the alternatives.
+  - **You answer with the claim builder:** room, time, who you saw, optional text. It's stored as an unverified self-report; the model re-ranks and logs its prediction with versions.
+  - **The verdict** gives the top suspect with supporting evidence and contradictions, or "not enough evidence". **Results** unlock only after the verdict.
+  - **Retries are safe:** `Idempotency-Key` stops a retried request from acting twice.
+- **Numbers:** a test game played as the culprit (Count Dracula): the detective named Dracula at 97% after 8 actions. Tests 188 → 198.
+- **Concepts:**
+  - **A single secrecy boundary.** Only `views.py` turns server state into client data, and contract tests check the response *types*. If someone adds an endpoint that could leak the solution, the test fails before any data exists.
+  - **Idempotency.** Networks retry requests. An idempotency key turns "do it again" into "give me the same answer again".
