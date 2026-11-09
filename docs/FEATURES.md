@@ -1,6 +1,6 @@
 # CaseMind feature specification
 
-Version: 1.0.0 (`FEATURE_SPEC_VERSION` in `backend/app/features/spec.py`)
+Version: 1.1.0 (`FEATURE_SPEC_VERSION` in `backend/app/features/spec.py`). 1.1.0 adds group D, the interview features (D-029).
 
 > Scores on synthetic cases measure how well a model recovers the generator's logic.
 > They are not evidence of real-world investigative ability (PRD 1).
@@ -31,6 +31,7 @@ Groups follow the E1 ablation (PRD 9.1):
 - **A:** motive and opportunity
 - **A + B:** adds timeline compatibility and alibi
 - **A + B + C:** adds evidence reliability and contradictions
+- **D:** interview answers (added in 1.1.0 after E3; not part of the E1 variants)
 - **context:** included in every variant
 
 "Established" means status ESTABLISHED or VERIFIED.
@@ -48,6 +49,9 @@ Groups follow the E1 ablation (PRD 9.1):
 | `claim_claim_conflicts` | C | Number of the suspect's claims with at least one CLAIM_CLAIM (self-contradiction) flag. |
 | `disagreement_count` | C | Number of cross-speaker disagreements the suspect is part of (D-016). Disagreements blame nobody. |
 | `unverified_claim_share` | C | Fraction of the suspect's whereabouts claims with no established fact at the claimed place and time. Support is computed, because claims are never auto-verified (MD-04). |
+| `interview_answers` | D | Number of answers the suspect gave to the detective's questions (turn ≥ 1), "I don't remember" included. |
+| `evasive_answer_share` | D | Fraction of those answers that were "I don't remember" (no location). |
+| `answers_refuted` | D | Number of those answers refuted by an established fact (CLAIM_FACT). |
 | `evidence_coverage` | context | Fraction of the 5 evidence categories with at least one discovered fact. Same value for every suspect in a case state. |
 
 ## Known properties to watch (leakage audit, step 8)

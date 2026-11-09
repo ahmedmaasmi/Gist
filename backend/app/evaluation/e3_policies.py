@@ -19,7 +19,8 @@ from app.engine.dataset_generator import DatasetGenerator
 from app.engine.templates import CASE_VARIABLE_RANGES, load_all_templates
 from app.evaluation.baseline_report import HONEST_FRAMING
 from app.ml.ranker import Ranker
-from app.modes.mode1_detective.episode import OUTCOMES, apply_action, initial_state, run_episode
+from app.modes.mode1_detective.episode import run_episode
+from app.modes.mode1_detective.interview import OUTCOMES, apply_action, initial_state
 from app.modes.mode1_detective.players import POPULATIONS, behaviours
 from app.modes.mode1_detective.policies import (
     EntropyPolicy,
@@ -68,7 +69,7 @@ def _ci(values: np.ndarray, n_boot: int, seed: int) -> dict[str, float]:
 
 def run_e3(n_cases: int = 300, start_fraction: float | None = None, n_boot: int = 2000, seed: int = 0,
            ranker: Ranker | None = None) -> dict:
-    from app.modes.mode1_detective.episode import START_FRACTION
+    from app.modes.mode1_detective.interview import START_FRACTION
 
     start = START_FRACTION if start_fraction is None else start_fraction
     ranker = ranker or Ranker.load()

@@ -22,7 +22,7 @@ from pathlib import Path
 import joblib
 
 from app.engine.dataset_generator import DATASET_VERSION
-from app.evaluation.baseline_report import HONEST_FRAMING, STAGE_NAMES
+from app.evaluation.baseline_report import HONEST_FRAMING, stage_indices
 from app.features import FEATURE_SPEC_VERSION
 from app.ml.abstention import choose_thresholds, risk_coverage_curve
 from app.ml.baselines import fit_rule_temperature, load_states, rule_predictor, uniform
@@ -96,8 +96,7 @@ def train_and_report(dataset_dir: Path, artifacts_dir: Path = ARTIFACTS_DIR, n_b
         for f in FAMILIES
     }
     by_stage = {}
-    for frac, label in STAGE_NAMES.items():
-        idx = [i for i, s in enumerate(val.states) if abs(s.reveal_fraction - frac) < 1e-9]
+    for label, idx in stage_indices(val.states).items():
         by_stage[label] = {
             name: evaluate([val.states[i] for i in idx], [preds[i] for i in idx], n_boot, seed)["top1"]
             for name, preds in predictions.items()

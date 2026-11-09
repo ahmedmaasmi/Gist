@@ -56,6 +56,7 @@ def load_states(features_csv: Path, splits: Iterable[str]) -> list[EvidenceState
                     "stage_idx": key[2],
                     "reveal_fraction": float(row["reveal_fraction"]),
                     "cv_fold": int(row["cv_fold"]) if row["cv_fold"] != "" else None,
+                    "interview_turns": int(row.get("interview_turns") or 0),
                     "suspect_ids": [],
                     "culprit_id": None,
                     "features": {},

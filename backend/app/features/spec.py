@@ -7,13 +7,14 @@ Groups follow the E1 ablation (PRD 9.1):
   A        motive and opportunity
   B        timeline compatibility and alibi       (E1 variant B = A + B)
   C        evidence reliability and contradictions (E1 variant C = A + B + C)
+  D        interview answers (added in 1.1.0 after E3, D-029; not part of the E1 variants)
   context  case-level context, included in every variant
 
 Bump FEATURE_SPEC_VERSION whenever any definition changes; every dataset and model records it.
 """
 from dataclasses import dataclass
 
-FEATURE_SPEC_VERSION = "1.0.0"
+FEATURE_SPEC_VERSION = "1.1.0"
 
 
 @dataclass(frozen=True)
@@ -84,6 +85,21 @@ FEATURES: tuple[FeatureDef, ...] = (
         "C",
         "Fraction of the suspect's claims not supported by any established fact at the claimed place "
         "and time. (Claims are never auto-verified, MD-04, so support is computed, not read from status.)",
+    ),
+    FeatureDef(
+        "interview_answers",
+        "D",
+        "Number of answers the suspect has given to the detective's questions (turn >= 1), dodges included.",
+    ),
+    FeatureDef(
+        "evasive_answer_share",
+        "D",
+        "Fraction of the suspect's interview answers that were 'I don't remember' (no location given).",
+    ),
+    FeatureDef(
+        "answers_refuted",
+        "D",
+        "Number of the suspect's interview answers refuted by established facts (CLAIM_FACT flags).",
     ),
     FeatureDef(
         "evidence_coverage",

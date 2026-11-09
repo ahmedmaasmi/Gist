@@ -23,6 +23,10 @@ from app.domain.simulation import SimulatedCaseBundle
 POPULATIONS = ("honest_innocents", "evasive_innocents", "mixed")
 EVASION_RATE = 0.5
 MIXED_EVASION_RATE = 0.25
+# Interview training data (dataset >= 0.4.0): liars keep their story and EVERYONE, culprit included, dodges
+# at the same rate, so "dodged a question" is not a free tell for innocence (lesson of D-023).
+TRAINING_POPULATION = "training"
+TRAINING_EVASION_RATE = 0.20
 
 
 @dataclass(frozen=True)
@@ -40,6 +44,9 @@ def behaviours(bundle: SimulatedCaseBundle, population: str) -> dict[str, Behavi
             out[s] = Behaviour(keeps_cover_story=s == culprit, evasion_rate=0.0)
         elif population == "evasive_innocents":
             out[s] = Behaviour(keeps_cover_story=s == culprit, evasion_rate=0.0 if s == culprit else EVASION_RATE)
+        elif population == TRAINING_POPULATION:
+            keeps = s in liars
+            out[s] = Behaviour(keeps_cover_story=keeps, evasion_rate=TRAINING_EVASION_RATE)
         elif population == "mixed":
             culprit_lies = any(
                 a.liar_id == culprit and a.kind == LieKind.CULPRIT_COVER_STORY for a in bundle.t3_canonical.lie_annotations

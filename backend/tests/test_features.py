@@ -32,7 +32,7 @@ def test_feature_names_respect_exclusion_list():
     assert len(NAMES) == len(set(NAMES))
     for name in NAMES:
         assert not set(name.split("_")) & EXCLUDED_NAME_TOKENS, name
-    assert set(FEATURE_GROUPS) == {"A", "B", "C", "context"}
+    assert set(FEATURE_GROUPS) == {"A", "B", "C", "D", "context"}
 
 
 def test_feature_function_can_only_see_t0_t1_and_setting():
@@ -134,3 +134,21 @@ def test_hand_computed_values():
     assert b["alibi_strength"] == pytest.approx(0.9)
     assert (a["claimed_corroboration_share"], b["claimed_corroboration_share"]) == (0.0, 1.0)
     assert a["evidence_coverage"] == pytest.approx(4 / 5) == b["evidence_coverage"]  # no FORENSIC
+
+
+def test_interview_features_count_answers_dodges_and_refutations():
+    window = TimeInterval(start_min=1260, end_min=1280)
+    t0 = T0Public(case_id="c", victim_id="v", crime_location_id="loc_study", crime_window=window, suspect_ids=["a"])
+    record = _fact("rec", "a", EvidenceCategory.ACCESS, loc="loc_study", minute=1270)
+    alibi = Claim(claim_id="alibi", case_id="c", speaker_id="a", subject_id="a", turn_index=0,
+                  claimed_location_id="loc_study", claimed_time_interval=window)
+    lie = Claim(claim_id="q1", case_id="c", speaker_id="a", subject_id="a", turn_index=1,
+                claimed_location_id="loc_gatehouse", claimed_time_interval=TimeInterval(start_min=1270, end_min=1270))
+    dodge = Claim(claim_id="q2", case_id="c", speaker_id="a", subject_id="a", turn_index=2)
+    t1 = T1Session(case_id="c", discovered_facts=[record], recorded_claims=[alibi, lie, dodge])
+    (row,) = compute_suspect_features(t0, t1, _setting())
+    assert row.features["interview_answers"] == 2.0
+    assert row.features["evasive_answer_share"] == 0.5
+    assert row.features["answers_refuted"] == 1.0
+    assert row.evidence["answers_refuted"][0] == "q1"
+

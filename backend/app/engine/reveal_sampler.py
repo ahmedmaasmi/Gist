@@ -49,6 +49,7 @@ class EvidenceStateSnapshot(BaseModel):
     crime_location_id: str = Field(..., min_length=1)
     murder_window: TimeInterval
     is_under_determined_hard_case: bool = Field(default=False)
+    interview_turns: int = Field(default=0, ge=0, description="Questions/record requests asked so far (0 = no interview)")
     culprit_id: str = Field(
         ...,
         min_length=1,

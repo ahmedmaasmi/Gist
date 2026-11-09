@@ -15,7 +15,7 @@ from pathlib import Path
 from app.domain.setting import SettingTemplate
 from app.domain.tiers import T0Public, T1Session
 from app.engine.dataset_generator import DATASET_VERSION
-from app.evaluation.baseline_report import HONEST_FRAMING, STAGE_NAMES
+from app.evaluation.baseline_report import HONEST_FRAMING, stage_indices
 from app.evaluation.contradiction_audit import wilson
 from app.ml.baselines import (
     fit_rule_temperature,
@@ -74,8 +74,7 @@ def run_final(dataset_dir: Path, audit_report: Path, n_boot: int = 2000, seed: i
         answered = [s for s in st if not ranked[s.key]["abstain"]]
         correct = sum(ranked[s.key]["leader"] == s.culprit_id for s in answered)
         stages = {}
-        for frac, label in STAGE_NAMES.items():
-            idx = [i for i, s in enumerate(st) if abs(s.reveal_fraction - frac) < 1e-9]
+        for label, idx in stage_indices(st).items():
             stages[label] = {n: evaluate([st[i] for i in idx], [p[i] for i in idx], n_boot, seed)["top1"]
                              for n, p in preds.items()}
         results[split] = {

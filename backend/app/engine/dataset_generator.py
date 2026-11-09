@@ -18,6 +18,7 @@ import csv
 import hashlib
 import io
 import json
+import random
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -35,7 +36,12 @@ from app.engine.templates import (
 from app.features import FEATURE_SPEC_VERSION, FEATURES, compute_suspect_features
 from app.provenance import git_commit
 
-DATASET_VERSION = "0.3.0"  # 0.3.0: culprits may name false witnesses (D-023)
+DATASET_VERSION = "0.4.0"  # 0.3.0: false witnesses (D-023); 0.4.0: interview states (D-029)
+# Interview states (D-029): from the 15% and 35% evidence states, 6 random questions/record requests answered
+# by "training" players (liars keep their story; everyone dodges 20%), snapshotted after 2, 4 and 6 actions.
+INTERVIEW_STARTS = (0.15, 0.35)
+INTERVIEW_ACTIONS = 6
+INTERVIEW_SNAPSHOT_AT = (2, 4, 6)
 # Share of each dev template's cases per split (PRD 8.4); the rest is train.
 DEV_SPLIT_FRACTIONS = {"val": 0.15, "test_in_dist": 0.15}
 NUM_CV_FOLDS = 3
@@ -49,6 +55,7 @@ FEATURE_TABLE_KEYS = (
     "order_idx",
     "stage_idx",
     "reveal_fraction",
+    "interview_turns",
     "suspect_id",
     "label",
 )
@@ -173,6 +180,7 @@ class DatasetGenerator:
                 stage_fractions=stage_fractions,
                 is_under_determined_hard_case=report.is_under_determined_hard_case,
             )
+            case_snaps = [*case_snaps, *cls._interview_snapshots(bundle, tpl.template_id, split)]
             snapshots.extend(
                 s.model_copy(
                     update={"cv_fold": fold, "difficulty": report.difficulty_estimate, "setting": bundle.setting}
@@ -217,6 +225,42 @@ class DatasetGenerator:
         return snapshots, manifest
 
     @staticmethod
+    def _interview_snapshots(bundle: SimulatedCaseBundle, template_id: str, split: str) -> list[EvidenceStateSnapshot]:
+        """Evidence states during a simulated interview with random questions (no policy bias in the data)."""
+        from app.modes.mode1_detective.interview import apply_action, initial_state
+        from app.modes.mode1_detective.players import TRAINING_POPULATION, behaviours
+        from app.modes.mode1_detective.questions import build_question_bank
+
+        rng = random.Random(bundle.config.seed + 2000)
+        who = behaviours(bundle, TRAINING_POPULATION)
+        out = []
+        for j, fraction in enumerate(INTERVIEW_STARTS):
+            t1 = initial_state(bundle, fraction)
+            bank = build_question_bank(bundle.t0_public)
+            rng.shuffle(bank)
+            for turn, action in enumerate(bank[:INTERVIEW_ACTIONS], start=1):
+                t1, _ = apply_action(bundle, t1, action, who, rng, turn)
+                if turn in INTERVIEW_SNAPSHOT_AT:
+                    out.append(
+                        EvidenceStateSnapshot(
+                            snapshot_id=f"{bundle.config.case_id}_interview{j}_turn{turn}",
+                            case_id=bundle.config.case_id,
+                            template_id=template_id,
+                            split=split,
+                            order_idx=10 + j,
+                            stage_idx=turn,
+                            reveal_fraction=fraction,
+                            t0_public=bundle.t0_public,
+                            t1_partial=t1,
+                            crime_location_id=bundle.t0_public.crime_location_id,
+                            murder_window=bundle.t0_public.crime_window,
+                            culprit_id=bundle.t3_canonical.culprit_id,
+                            interview_turns=turn,
+                        )
+                    )
+        return out
+
+    @staticmethod
     def feature_rows(snapshots: list[EvidenceStateSnapshot]) -> list[dict[str, object]]:
         """
         One row per suspect per evidence state (PRD 8.3). Features come only from T0, T1 and the map
@@ -235,6 +279,7 @@ class DatasetGenerator:
                         "order_idx": snap.order_idx,
                         "stage_idx": snap.stage_idx,
                         "reveal_fraction": snap.reveal_fraction,
+                        "interview_turns": snap.interview_turns,
                         "suspect_id": row.suspect_id,
                         "label": int(row.suspect_id == snap.culprit_id),
                         **row.features,

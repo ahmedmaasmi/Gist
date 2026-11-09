@@ -30,6 +30,19 @@ from app.provenance import git_commit
 
 EVAL_SPLITS = ("val", "test_in_dist", "test_held_out_template", "test_ood_shifted")
 STAGE_NAMES = {0.35: "35% of evidence", 0.65: "65% of evidence", 1.0: "all evidence"}
+INTERVIEW_LABEL = "after interview questions"
+
+
+def stage_indices(states) -> dict[str, list[int]]:
+    """Index groups for per-stage tables: plain evidence stages, plus interview states (dataset >= 0.4.0)."""
+    groups = {
+        label: [i for i, s in enumerate(states) if s.interview_turns == 0 and abs(s.reveal_fraction - frac) < 1e-9]
+        for frac, label in STAGE_NAMES.items()
+    }
+    interview = [i for i, s in enumerate(states) if s.interview_turns > 0]
+    if interview:
+        groups[INTERVIEW_LABEL] = interview
+    return groups
 HONEST_FRAMING = (
     "Scores on synthetic cases measure how well a method recovers the case generator's logic. "
     "They are not evidence of real-world investigative ability. Generalisation claims rest only on the "
@@ -69,8 +82,7 @@ def build_report(dataset_dir: Path, n_boot: int = 2000, seed: int = 0) -> dict:
             },
             "by_stage": {},
         }
-        for frac, label in STAGE_NAMES.items():
-            idx = [i for i, s in enumerate(split_states) if abs(s.reveal_fraction - frac) < 1e-9]
+        for label, idx in stage_indices(split_states).items():
             stage_states = [split_states[i] for i in idx]
             block["by_stage"][label] = {
                 name: evaluate(stage_states, [preds[name][i] for i in idx], n_boot, seed) for name in predictors

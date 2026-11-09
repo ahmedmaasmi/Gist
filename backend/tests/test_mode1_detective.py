@@ -7,7 +7,8 @@ import pytest
 from app.engine.dataset_generator import DatasetGenerator
 from app.engine.templates import CASE_VARIABLE_RANGES, get_template
 from app.ml.ranker import Ranker
-from app.modes.mode1_detective.episode import EpisodeResult, apply_action, initial_state, run_episode
+from app.modes.mode1_detective.episode import EpisodeResult, run_episode
+from app.modes.mode1_detective.interview import apply_action, initial_state
 from app.modes.mode1_detective.players import (
     Behaviour,
     answer_location,

@@ -157,3 +157,32 @@ def test_determinism_checksums_and_round_trip(tmp_path: Path) -> None:
     assert loaded_snaps == a_snaps
     assert loaded_manifest.checksums["features.csv"]
     assert loaded_manifest.feature_spec_version == a_manifest.feature_spec_version
+
+
+def test_interview_states_are_in_the_case_split_and_carry_answers(small_dataset) -> None:
+    """D-029: interview states (after 2, 4, 6 questions) belong to their case's split and contain answers."""
+    snapshots, _ = small_dataset
+    split_of_case = {s.case_id: s.split for s in snapshots if s.interview_turns == 0}
+    interview = [s for s in snapshots if s.interview_turns > 0]
+    assert interview and {s.interview_turns for s in interview} == {2, 4, 6}
+    for snap in interview:
+        assert snap.split == split_of_case[snap.case_id]
+        answers = [c for c in snap.t1_partial.recorded_claims if c.turn_index >= 1]
+        checks = snap.interview_turns - len(answers)
+        assert 0 <= checks <= snap.interview_turns  # each action is a question (answer) or a record request
+
+
+def test_dodging_questions_is_not_a_tell_in_training_interviews(small_dataset) -> None:
+    """Lesson of D-023: culprits and innocents must dodge at about the same rate in the training data."""
+    snapshots, _ = small_dataset
+    dodged = {"culprit": [0, 0], "innocent": [0, 0]}
+    for snap in snapshots:
+        if snap.interview_turns != 6:
+            continue
+        for c in snap.t1_partial.recorded_claims:
+            if c.turn_index >= 1:
+                role = "culprit" if c.speaker_id == snap.culprit_id else "innocent"
+                dodged[role][0] += c.claimed_location_id is None
+                dodged[role][1] += 1
+    rates = {r: d / n for r, (d, n) in dodged.items() if n}
+    assert abs(rates["culprit"] - rates["innocent"]) < 0.12, rates

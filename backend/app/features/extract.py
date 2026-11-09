@@ -135,6 +135,12 @@ def compute_suspect_features(
         ]
         unverified_claim_share = len(unsupported_claims) / len(whereabouts) if whereabouts else 0.0
 
+        # --- D: interview answers (claims made in reply to questions, turn >= 1)
+        answers = [c for c in own_claims if c.turn_index >= 1]
+        dodged = [c for c in answers if c.claimed_location_id is None]
+        answer_ids = {c.claim_id for c in answers}
+        refuted_answers = sorted({f.primary_claim_id for f in fact_flags if f.primary_claim_id in answer_ids})
+
         values = {
             "motive_evidence": sum(f.reliability for f in motive_facts),
             "victim_relationship_records": float(len(victim_relationships)),
@@ -147,6 +153,9 @@ def compute_suspect_features(
             "claim_claim_conflicts": float(len({f.primary_claim_id for f in claim_flags})),
             "disagreement_count": float(len(own_disagreements)),
             "unverified_claim_share": unverified_claim_share,
+            "interview_answers": float(len(answers)),
+            "evasive_answer_share": len(dodged) / len(answers) if answers else 0.0,
+            "answers_refuted": float(len(refuted_answers)),
             "evidence_coverage": evidence_coverage,
         }
         # MD-08: the T1 facts and claims each feature was computed from, so explanations can cite them.
@@ -162,6 +171,11 @@ def compute_suspect_features(
             "claim_claim_conflicts": [i for f in claim_flags for i in (f.primary_claim_id, *f.linked_source_ids)],
             "disagreement_count": [i for d in own_disagreements for i in d.claim_ids],
             "unverified_claim_share": [c.claim_id for c in unsupported_claims],
+            "interview_answers": [c.claim_id for c in answers],
+            "evasive_answer_share": [c.claim_id for c in dodged],
+            "answers_refuted": [
+                i for f in fact_flags if f.primary_claim_id in answer_ids for i in (f.primary_claim_id, *f.linked_source_ids)
+            ],
             "evidence_coverage": [],
         }
         rows.append(
