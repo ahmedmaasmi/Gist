@@ -72,5 +72,5 @@ def test_no_canary_in_t0_t1_t2_or_snapshots(template_id, seed):
     for cid, pack in bundle.t2_knowledge.items():
         assert_no_canary(pack, canaries, where=f"T2[{cid}]")
     tpl = get_template(template_id)
-    for snap in sample_reveal_snapshots(bundle, template=tpl, split=tpl.split_group):
+    for snap in sample_reveal_snapshots(bundle, template=tpl, split="train"):
         assert_no_canary(snap.t1_partial, canaries, where=f"snapshot {snap.snapshot_id}")

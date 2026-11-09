@@ -1,0 +1,117 @@
+{
+  "template_id": "abbey",
+  "name": "Saint Wendreda's Abbey",
+  "description": "A remote abbey: a cloister garth at its heart, the chapel above a crypt, the scriptorium and the abbot's lodging, a refectory, the herb garden and a bell tower reached by a single stair.",
+  "split_group": "test_held_out_template",
+  "default_crime_location_ids": [
+    "loc_crypt",
+    "loc_abbots_lodging",
+    "loc_bell_tower"
+  ],
+  "archetype_occupations": [
+    "Abbot",
+    "Prior",
+    "Novice",
+    "Archivist Monk",
+    "Pilgrim",
+    "Herbalist",
+    "Visiting Bishop",
+    "Lay Brother"
+  ],
+  "locations": [
+    {
+      "location_id": "loc_cloister",
+      "name": "Cloister Garth",
+      "is_restricted": false,
+      "x": 4,
+      "y": 4
+    },
+    {
+      "location_id": "loc_chapel",
+      "name": "Chapel",
+      "is_restricted": false,
+      "x": 4,
+      "y": 1
+    },
+    {
+      "location_id": "loc_crypt",
+      "name": "Crypt",
+      "is_restricted": true,
+      "x": 2,
+      "y": 0
+    },
+    {
+      "location_id": "loc_scriptorium",
+      "name": "Scriptorium",
+      "is_restricted": false,
+      "x": 8,
+      "y": 4
+    },
+    {
+      "location_id": "loc_abbots_lodging",
+      "name": "Abbot's Lodging",
+      "is_restricted": true,
+      "x": 8,
+      "y": 1
+    },
+    {
+      "location_id": "loc_refectory",
+      "name": "Refectory",
+      "is_restricted": false,
+      "x": 4,
+      "y": 8
+    },
+    {
+      "location_id": "loc_herb_garden",
+      "name": "Herb Garden",
+      "is_restricted": false,
+      "x": 8,
+      "y": 8
+    },
+    {
+      "location_id": "loc_bell_tower",
+      "name": "Bell Tower",
+      "is_restricted": true,
+      "x": 0,
+      "y": 5
+    }
+  ],
+  "connections": [
+    [
+      "loc_cloister",
+      "loc_chapel"
+    ],
+    [
+      "loc_chapel",
+      "loc_crypt"
+    ],
+    [
+      "loc_cloister",
+      "loc_scriptorium"
+    ],
+    [
+      "loc_scriptorium",
+      "loc_abbots_lodging"
+    ],
+    [
+      "loc_chapel",
+      "loc_abbots_lodging"
+    ],
+    [
+      "loc_cloister",
+      "loc_refectory"
+    ],
+    [
+      "loc_refectory",
+      "loc_herb_garden"
+    ],
+    [
+      "loc_scriptorium",
+      "loc_herb_garden"
+    ],
+    [
+      "loc_cloister",
+      "loc_bell_tower"
+    ]
+  ]
+}

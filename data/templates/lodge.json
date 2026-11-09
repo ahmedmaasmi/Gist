@@ -1,102 +1,113 @@
 {
   "template_id": "lodge",
-  "name": "Kestrel Peak Alpine Lodge",
-  "description": "A snowbound mountain resort with a secluded private chalet, subterranean wine cellar, and lakeside boathouse.",
+  "name": "Frostpeak Ski Lodge",
+  "description": "An isolated alpine lodge: a great hall with a kitchen above the wine cellar, a spa wing, a private chalet up the path and a boathouse down by the frozen lake.",
   "split_group": "test_held_out_template",
   "default_crime_location_ids": [
     "loc_private_chalet",
-    "loc_wine_cellar"
+    "loc_wine_cellar",
+    "loc_boathouse"
   ],
   "archetype_occupations": [
-    "Resort Proprietor",
-    "Alpine Guide",
-    "Master Sommelier",
-    "Real Estate Developer",
-    "Former Olympian",
-    "Avalanche Forecaster",
-    "Hospitality Manager"
+    "Lodge Owner",
+    "Ski Instructor",
+    "Mountain Guide",
+    "Chef",
+    "Wealthy Guest",
+    "Spa Therapist",
+    "Photographer",
+    "Caretaker"
   ],
   "locations": [
     {
-      "location_id": "loc_private_chalet",
-      "name": "VIP Private Chalet",
-      "is_restricted": true
+      "location_id": "loc_great_hall",
+      "name": "Great Hall",
+      "is_restricted": false,
+      "x": 4,
+      "y": 4
+    },
+    {
+      "location_id": "loc_kitchen",
+      "name": "Kitchen",
+      "is_restricted": false,
+      "x": 5,
+      "y": 1
     },
     {
       "location_id": "loc_wine_cellar",
-      "name": "Vaulted Wine Cellar",
-      "is_restricted": true
-    },
-    {
-      "location_id": "loc_great_hall",
-      "name": "Fireside Great Hall",
-      "is_restricted": false
+      "name": "Wine Cellar",
+      "is_restricted": true,
+      "x": 3,
+      "y": 0
     },
     {
       "location_id": "loc_sauna_spa",
-      "name": "Nordic Sauna & Spa",
-      "is_restricted": false
+      "name": "Sauna & Spa",
+      "is_restricted": false,
+      "x": 8,
+      "y": 3
     },
     {
       "location_id": "loc_ski_locker",
-      "name": "Heated Ski Locker Room",
-      "is_restricted": false
+      "name": "Ski Locker",
+      "is_restricted": false,
+      "x": 1,
+      "y": 6
     },
     {
       "location_id": "loc_boathouse",
-      "name": "Frozen Lake Boathouse",
-      "is_restricted": false
+      "name": "Lakeside Boathouse",
+      "is_restricted": true,
+      "x": 1,
+      "y": 10
+    },
+    {
+      "location_id": "loc_library",
+      "name": "Reading Room",
+      "is_restricted": false,
+      "x": 7,
+      "y": 6
+    },
+    {
+      "location_id": "loc_private_chalet",
+      "name": "Private Chalet",
+      "is_restricted": true,
+      "x": 9,
+      "y": 7
     }
   ],
-  "travel_matrix": {
-    "loc_private_chalet": {
-      "loc_private_chalet": 0,
-      "loc_wine_cellar": 7,
-      "loc_great_hall": 4,
-      "loc_sauna_spa": 6,
-      "loc_ski_locker": 5,
-      "loc_boathouse": 13
-    },
-    "loc_wine_cellar": {
-      "loc_private_chalet": 7,
-      "loc_wine_cellar": 0,
-      "loc_great_hall": 3,
-      "loc_sauna_spa": 5,
-      "loc_ski_locker": 6,
-      "loc_boathouse": 12
-    },
-    "loc_great_hall": {
-      "loc_private_chalet": 4,
-      "loc_wine_cellar": 3,
-      "loc_great_hall": 0,
-      "loc_sauna_spa": 3,
-      "loc_ski_locker": 4,
-      "loc_boathouse": 10
-    },
-    "loc_sauna_spa": {
-      "loc_private_chalet": 6,
-      "loc_wine_cellar": 5,
-      "loc_great_hall": 3,
-      "loc_sauna_spa": 0,
-      "loc_ski_locker": 5,
-      "loc_boathouse": 9
-    },
-    "loc_ski_locker": {
-      "loc_private_chalet": 5,
-      "loc_wine_cellar": 6,
-      "loc_great_hall": 4,
-      "loc_sauna_spa": 5,
-      "loc_ski_locker": 0,
-      "loc_boathouse": 11
-    },
-    "loc_boathouse": {
-      "loc_private_chalet": 13,
-      "loc_wine_cellar": 12,
-      "loc_great_hall": 10,
-      "loc_sauna_spa": 9,
-      "loc_ski_locker": 11,
-      "loc_boathouse": 0
-    }
-  }
+  "connections": [
+    [
+      "loc_great_hall",
+      "loc_kitchen"
+    ],
+    [
+      "loc_kitchen",
+      "loc_wine_cellar"
+    ],
+    [
+      "loc_great_hall",
+      "loc_sauna_spa"
+    ],
+    [
+      "loc_great_hall",
+      "loc_ski_locker"
+    ],
+    [
+      "loc_ski_locker",
+      "loc_boathouse"
+    ],
+    [
+      "loc_great_hall",
+      "loc_library"
+    ],
+    [
+      "loc_library",
+      "loc_private_chalet"
+    ],
+    [
+      "loc_sauna_spa",
+      "loc_private_chalet"
+    ]
+  ]
 }
-

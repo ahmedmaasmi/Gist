@@ -1,0 +1,117 @@
+{
+  "template_id": "theatre",
+  "name": "The Lyceum Theatre",
+  "description": "A Victorian theatre on opening night: the foyer and box office out front, the auditorium and orchestra pit, and behind the stage a maze of wings, dressing rooms and the prop store.",
+  "split_group": "dev",
+  "default_crime_location_ids": [
+    "loc_backstage",
+    "loc_dressing_rooms",
+    "loc_prop_store"
+  ],
+  "archetype_occupations": [
+    "Leading Actor",
+    "Leading Actress",
+    "Director",
+    "Stage Manager",
+    "Theatre Owner",
+    "Critic",
+    "Costume Designer",
+    "Understudy"
+  ],
+  "locations": [
+    {
+      "location_id": "loc_foyer",
+      "name": "Foyer",
+      "is_restricted": false,
+      "x": 4,
+      "y": 7
+    },
+    {
+      "location_id": "loc_box_office",
+      "name": "Box Office",
+      "is_restricted": false,
+      "x": 1,
+      "y": 8
+    },
+    {
+      "location_id": "loc_auditorium",
+      "name": "Auditorium",
+      "is_restricted": false,
+      "x": 4,
+      "y": 4
+    },
+    {
+      "location_id": "loc_orchestra_pit",
+      "name": "Orchestra Pit",
+      "is_restricted": false,
+      "x": 3,
+      "y": 2
+    },
+    {
+      "location_id": "loc_stage",
+      "name": "Stage",
+      "is_restricted": false,
+      "x": 4,
+      "y": 1
+    },
+    {
+      "location_id": "loc_backstage",
+      "name": "Backstage Wings",
+      "is_restricted": true,
+      "x": 7,
+      "y": 1
+    },
+    {
+      "location_id": "loc_dressing_rooms",
+      "name": "Dressing Rooms",
+      "is_restricted": true,
+      "x": 8,
+      "y": 3
+    },
+    {
+      "location_id": "loc_prop_store",
+      "name": "Prop Store",
+      "is_restricted": true,
+      "x": 1,
+      "y": 0
+    }
+  ],
+  "connections": [
+    [
+      "loc_foyer",
+      "loc_box_office"
+    ],
+    [
+      "loc_foyer",
+      "loc_auditorium"
+    ],
+    [
+      "loc_auditorium",
+      "loc_orchestra_pit"
+    ],
+    [
+      "loc_orchestra_pit",
+      "loc_stage"
+    ],
+    [
+      "loc_auditorium",
+      "loc_stage"
+    ],
+    [
+      "loc_stage",
+      "loc_backstage"
+    ],
+    [
+      "loc_backstage",
+      "loc_dressing_rooms"
+    ],
+    [
+      "loc_stage",
+      "loc_prop_store"
+    ],
+    [
+      "loc_dressing_rooms",
+      "loc_foyer"
+    ]
+  ]
+}

@@ -872,6 +872,7 @@ class SocialSimulator:
 
         return SimulatedCaseBundle(
             config=cfg,
+            setting=tpl,
             t0_public=t0_public,
             t1_session=t1_session,
             t2_knowledge=t2_knowledge,

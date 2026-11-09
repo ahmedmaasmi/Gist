@@ -1,85 +1,113 @@
 {
   "template_id": "yacht",
-  "name": "M/Y Sovereign Charter Yacht",
-  "description": "A 65-meter motor yacht anchored offshore during a stormy evening charter, with isolated lower engine decks and a locked bridge.",
-  "split_group": "val",
+  "name": "The Serenity Superyacht",
+  "description": "A superyacht at anchor: the main saloon between the master stateroom and the bridge, a galley and crew quarters forward, the engine room below and a tender garage at the stern.",
+  "split_group": "dev",
   "default_crime_location_ids": [
     "loc_master_stateroom",
     "loc_bridge",
     "loc_engine_room"
   ],
   "archetype_occupations": [
-    "Yacht Charter Host",
-    "First Mate",
-    "Chief Marine Engineer",
-    "Hedge Fund Manager",
-    "Maritime Lawyer",
-    "Chief Steward",
-    "Shipping Heiress"
+    "Yacht Owner",
+    "Captain",
+    "Chief Engineer",
+    "Chef",
+    "Deckhand",
+    "Guest",
+    "Stewardess",
+    "Bodyguard"
   ],
   "locations": [
     {
+      "location_id": "loc_main_saloon",
+      "name": "Main Saloon",
+      "is_restricted": false,
+      "x": 4,
+      "y": 3
+    },
+    {
       "location_id": "loc_master_stateroom",
-      "name": "Owner's Master Stateroom",
-      "is_restricted": true
+      "name": "Master Stateroom",
+      "is_restricted": true,
+      "x": 0,
+      "y": 2
     },
     {
       "location_id": "loc_bridge",
-      "name": "Navigation Bridge",
-      "is_restricted": true
+      "name": "Bridge",
+      "is_restricted": true,
+      "x": 4,
+      "y": 0
     },
     {
-      "location_id": "loc_main_saloon",
-      "name": "Main Deck Saloon",
-      "is_restricted": false
+      "location_id": "loc_galley",
+      "name": "Galley",
+      "is_restricted": false,
+      "x": 7,
+      "y": 2
     },
     {
-      "location_id": "loc_sun_deck",
-      "name": "Upper Aft Sun Deck",
-      "is_restricted": false
+      "location_id": "loc_crew_quarters",
+      "name": "Crew Quarters",
+      "is_restricted": false,
+      "x": 8,
+      "y": 5
     },
     {
       "location_id": "loc_engine_room",
-      "name": "Lower Engine Room",
-      "is_restricted": true
+      "name": "Engine Room",
+      "is_restricted": true,
+      "x": 7,
+      "y": 8
+    },
+    {
+      "location_id": "loc_sun_deck",
+      "name": "Sun Deck",
+      "is_restricted": false,
+      "x": 3,
+      "y": 7
+    },
+    {
+      "location_id": "loc_tender_garage",
+      "name": "Tender Garage",
+      "is_restricted": false,
+      "x": 1,
+      "y": 9
     }
   ],
-  "travel_matrix": {
-    "loc_master_stateroom": {
-      "loc_master_stateroom": 0,
-      "loc_bridge": 5,
-      "loc_main_saloon": 3,
-      "loc_sun_deck": 6,
-      "loc_engine_room": 9
-    },
-    "loc_bridge": {
-      "loc_master_stateroom": 5,
-      "loc_bridge": 0,
-      "loc_main_saloon": 4,
-      "loc_sun_deck": 3,
-      "loc_engine_room": 11
-    },
-    "loc_main_saloon": {
-      "loc_master_stateroom": 3,
-      "loc_bridge": 4,
-      "loc_main_saloon": 0,
-      "loc_sun_deck": 4,
-      "loc_engine_room": 6
-    },
-    "loc_sun_deck": {
-      "loc_master_stateroom": 6,
-      "loc_bridge": 3,
-      "loc_main_saloon": 4,
-      "loc_sun_deck": 0,
-      "loc_engine_room": 10
-    },
-    "loc_engine_room": {
-      "loc_master_stateroom": 9,
-      "loc_bridge": 11,
-      "loc_main_saloon": 6,
-      "loc_sun_deck": 10,
-      "loc_engine_room": 0
-    }
-  }
+  "connections": [
+    [
+      "loc_main_saloon",
+      "loc_master_stateroom"
+    ],
+    [
+      "loc_main_saloon",
+      "loc_bridge"
+    ],
+    [
+      "loc_main_saloon",
+      "loc_galley"
+    ],
+    [
+      "loc_galley",
+      "loc_crew_quarters"
+    ],
+    [
+      "loc_crew_quarters",
+      "loc_engine_room"
+    ],
+    [
+      "loc_main_saloon",
+      "loc_sun_deck"
+    ],
+    [
+      "loc_sun_deck",
+      "loc_tender_garage"
+    ],
+    [
+      "loc_tender_garage",
+      "loc_engine_room"
+    ]
+  ]
 }
-

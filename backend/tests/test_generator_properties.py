@@ -126,13 +126,24 @@ def test_culprit_is_physically_possible_and_has_a_motive():
     from app.engine.solver import SymbolicTimelineSolver
 
     for template_id in TEMPLATE_IDS:
-        tpl = get_template(template_id)
         for seed in range(10):
             bundle = _bundle(template_id, seed)
             t3 = bundle.t3_canonical
             eliminated = SymbolicTimelineSolver.find_eliminated_suspects(
-                t0=bundle.t0_public, t1=bundle.t1_session, setting=tpl
+                t0=bundle.t0_public, t1=bundle.t1_session, setting=bundle.setting
             )
             assert t3.culprit_id not in eliminated, eliminated.get(t3.culprit_id)
             murder = next(e for e in t3.canonical_events if e.event_kind == "MURDER")
             assert float(murder.metadata["motive_score"]) > 0.0
+
+
+def test_t1_observations_are_points_in_time():
+    """
+    D-012/D-015: an observation of a tick is a single minute. A 10-minute interval claims presence
+    until the next tick and has caused false accusations three times (records, traces, witnesses).
+    """
+    for template_id in TEMPLATE_IDS:
+        bundle = _bundle(template_id, 1)
+        for fact in bundle.t1_session.discovered_facts:
+            if fact.time_interval is not None:
+                assert fact.time_interval.duration == 0, fact.description

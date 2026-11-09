@@ -1,6 +1,7 @@
 # backend/app/domain/simulation.py
 from pydantic import BaseModel, Field
 
+from app.domain.setting import SettingTemplate
 from app.domain.tiers import (
     T0Public,
     T1Session,
@@ -16,6 +17,10 @@ class SimulatedCaseBundle(BaseModel):
     SocialSimulator run and its ObservationModel derivation.
     """
     config: SimulationConfig
+    setting: SettingTemplate | None = Field(
+        default=None,
+        description="The map as simulated (including per-case travel-time variation); public (T0) data",
+    )
     t0_public: T0Public
     t1_session: T1Session
     t2_knowledge: dict[str, T2CharacterKnowledge]

@@ -1,35 +1,88 @@
 {
-  "cases": 400,
-  "templates": 8,
-  "chance_top1": 0.25,
+  "cases": 600,
+  "templates": 12,
+  "chance_top1": 0.241,
   "rule_top1": {
-    "motive evidence": 0.429,
-    "motive evidence [valid only]": 0.429,
-    "crime-scene presence in window": 0.631,
-    "crime-scene presence in window [valid only]": 0.631,
-    "has forensic trace": 0.427,
-    "has forensic trace [valid only]": 0.427,
-    "validator support score": 0.357,
-    "validator support score [valid only]": 0.357
+    "motive evidence": 0.414,
+    "motive evidence [valid only]": 0.414,
+    "crime-scene presence in window": 0.626,
+    "crime-scene presence in window [valid only]": 0.625,
+    "has forensic trace": 0.448,
+    "has forensic trace [valid only]": 0.446,
+    "validator support score": 0.373,
+    "validator support score [valid only]": 0.373
   },
-  "culprit_lie_rate": 0.873,
-  "honest_confusion_rate": 0.183,
+  "best_rule_top1_by_template": {
+    "abbey": [
+      0.595,
+      "crime-scene presence in window"
+    ],
+    "clinic": [
+      0.61,
+      "crime-scene presence in window"
+    ],
+    "college": [
+      0.531,
+      "crime-scene presence in window"
+    ],
+    "gallery": [
+      0.683,
+      "crime-scene presence in window"
+    ],
+    "hotel": [
+      0.6,
+      "crime-scene presence in window"
+    ],
+    "lodge": [
+      0.621,
+      "crime-scene presence in window"
+    ],
+    "manor": [
+      0.71,
+      "crime-scene presence in window"
+    ],
+    "office": [
+      0.638,
+      "crime-scene presence in window"
+    ],
+    "theatre": [
+      0.554,
+      "crime-scene presence in window"
+    ],
+    "train": [
+      0.71,
+      "crime-scene presence in window"
+    ],
+    "warehouse": [
+      0.655,
+      "crime-scene presence in window"
+    ],
+    "yacht": [
+      0.607,
+      "crime-scene presence in window"
+    ]
+  },
+  "culprit_lie_rate": 0.848,
+  "honest_confusion_rate": 0.168,
   "mean_culprit_selection_probability": 0.524,
-  "share_single_eligible_suspect": 0.037,
+  "share_single_eligible_suspect": 0.053,
   "counts": {
-    "cases": 400,
-    "checks_1_to_3_pass": 400,
-    "cover_for_lies=0": 65,
-    "cover_for_lies=1": 166,
-    "cover_for_lies=2": 129,
-    "cover_for_lies=3": 40,
-    "culprit_lied": 349,
-    "difficulty=EASY": 2,
-    "difficulty=HARD": 259,
-    "difficulty=MEDIUM": 139,
-    "honest_confusion": 96,
-    "honest_innocent_claims": 524,
-    "red_herring_lies": 132
+    "cases": 600,
+    "checks_1_to_3_pass": 598,
+    "cover_for_lies=0": 162,
+    "cover_for_lies=1": 152,
+    "cover_for_lies=2": 133,
+    "cover_for_lies=3": 104,
+    "cover_for_lies=4": 42,
+    "cover_for_lies=5": 7,
+    "culprit_lied": 509,
+    "difficulty=EASY": 20,
+    "difficulty=HARD": 357,
+    "difficulty=INVALID": 2,
+    "difficulty=MEDIUM": 221,
+    "honest_confusion": 154,
+    "honest_innocent_claims": 919,
+    "red_herring_lies": 212
   },
   "note": "Synthetic-data scores measure recovery of the generator's logic."
 }

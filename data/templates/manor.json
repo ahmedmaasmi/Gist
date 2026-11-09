@@ -1,8 +1,8 @@
 {
   "template_id": "manor",
   "name": "Blackwood Manor",
-  "description": "A sprawling Victorian country estate with a keycard-locked private study, subterranean wine cellar, and detached outer gatehouse.",
-  "split_group": "train",
+  "description": "A Victorian country estate: a locked study off the library, servants' passages down to the wine cellar, and a gatehouse at the end of the drive.",
+  "split_group": "dev",
   "default_crime_location_ids": [
     "loc_study",
     "loc_cellar"
@@ -14,89 +14,103 @@
     "Family Solicitor",
     "Antiquities Dealer",
     "Private Secretary",
-    "Groundskeeper"
+    "Groundskeeper",
+    "Cook"
   ],
   "locations": [
     {
       "location_id": "loc_study",
       "name": "Lord Blackwood's Study",
-      "is_restricted": true
+      "is_restricted": true,
+      "x": 0,
+      "y": 0
     },
     {
       "location_id": "loc_library",
       "name": "Main Library",
-      "is_restricted": false
+      "is_restricted": false,
+      "x": 2,
+      "y": 0
+    },
+    {
+      "location_id": "loc_entrance_hall",
+      "name": "Entrance Hall",
+      "is_restricted": false,
+      "x": 4,
+      "y": 2
     },
     {
       "location_id": "loc_dining_hall",
       "name": "Grand Dining Hall",
-      "is_restricted": false
+      "is_restricted": false,
+      "x": 6,
+      "y": 0
     },
     {
-      "location_id": "loc_conservatory",
-      "name": "Glass Conservatory",
-      "is_restricted": false
+      "location_id": "loc_kitchen",
+      "name": "Kitchen",
+      "is_restricted": false,
+      "x": 8,
+      "y": 0
     },
     {
       "location_id": "loc_cellar",
       "name": "Subterranean Wine Cellar",
-      "is_restricted": true
+      "is_restricted": true,
+      "x": 8,
+      "y": 3
+    },
+    {
+      "location_id": "loc_conservatory",
+      "name": "Glass Conservatory",
+      "is_restricted": false,
+      "x": 6,
+      "y": 5
     },
     {
       "location_id": "loc_gatehouse",
       "name": "Outer Gatehouse",
-      "is_restricted": false
+      "is_restricted": false,
+      "x": 3,
+      "y": 10
     }
   ],
-  "travel_matrix": {
-    "loc_study": {
-      "loc_study": 0,
-      "loc_library": 2,
-      "loc_dining_hall": 4,
-      "loc_conservatory": 6,
-      "loc_cellar": 8,
-      "loc_gatehouse": 15
-    },
-    "loc_library": {
-      "loc_study": 2,
-      "loc_library": 0,
-      "loc_dining_hall": 3,
-      "loc_conservatory": 5,
-      "loc_cellar": 7,
-      "loc_gatehouse": 14
-    },
-    "loc_dining_hall": {
-      "loc_study": 4,
-      "loc_library": 3,
-      "loc_dining_hall": 0,
-      "loc_conservatory": 3,
-      "loc_cellar": 5,
-      "loc_gatehouse": 12
-    },
-    "loc_conservatory": {
-      "loc_study": 6,
-      "loc_library": 5,
-      "loc_dining_hall": 3,
-      "loc_conservatory": 0,
-      "loc_cellar": 6,
-      "loc_gatehouse": 10
-    },
-    "loc_cellar": {
-      "loc_study": 8,
-      "loc_library": 7,
-      "loc_dining_hall": 5,
-      "loc_conservatory": 6,
-      "loc_cellar": 0,
-      "loc_gatehouse": 13
-    },
-    "loc_gatehouse": {
-      "loc_study": 15,
-      "loc_library": 14,
-      "loc_dining_hall": 12,
-      "loc_conservatory": 10,
-      "loc_cellar": 13,
-      "loc_gatehouse": 0
-    }
-  }
+  "connections": [
+    [
+      "loc_study",
+      "loc_library"
+    ],
+    [
+      "loc_library",
+      "loc_entrance_hall"
+    ],
+    [
+      "loc_entrance_hall",
+      "loc_dining_hall"
+    ],
+    [
+      "loc_dining_hall",
+      "loc_kitchen"
+    ],
+    [
+      "loc_kitchen",
+      "loc_cellar"
+    ],
+    [
+      "loc_entrance_hall",
+      "loc_conservatory"
+    ],
+    [
+      "loc_conservatory",
+      "loc_cellar"
+    ],
+    [
+      "loc_entrance_hall",
+      "loc_gatehouse"
+    ],
+    [
+      "loc_conservatory",
+      "loc_gatehouse"
+    ]
+  ]
 }
-

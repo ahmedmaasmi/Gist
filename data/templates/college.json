@@ -1,0 +1,121 @@
+{
+  "template_id": "college",
+  "name": "Ravensworth College",
+  "description": "An old university college: four sides of a quad with the great hall, the library, a chemistry laboratory and the chapel; the master's lodge behind the lab and a boathouse down by the river.",
+  "split_group": "dev",
+  "default_crime_location_ids": [
+    "loc_laboratory",
+    "loc_master_lodge",
+    "loc_boathouse"
+  ],
+  "archetype_occupations": [
+    "College Master",
+    "Chemistry Fellow",
+    "Librarian",
+    "Porter",
+    "Student",
+    "Rowing Coach",
+    "Benefactor",
+    "Chaplain"
+  ],
+  "locations": [
+    {
+      "location_id": "loc_quad",
+      "name": "The Quad",
+      "is_restricted": false,
+      "x": 4,
+      "y": 4
+    },
+    {
+      "location_id": "loc_great_hall",
+      "name": "Great Hall",
+      "is_restricted": false,
+      "x": 4,
+      "y": 8
+    },
+    {
+      "location_id": "loc_library",
+      "name": "College Library",
+      "is_restricted": false,
+      "x": 0,
+      "y": 4
+    },
+    {
+      "location_id": "loc_laboratory",
+      "name": "Chemistry Laboratory",
+      "is_restricted": true,
+      "x": 8,
+      "y": 4
+    },
+    {
+      "location_id": "loc_master_lodge",
+      "name": "Master's Lodge",
+      "is_restricted": true,
+      "x": 7,
+      "y": 1
+    },
+    {
+      "location_id": "loc_chapel",
+      "name": "College Chapel",
+      "is_restricted": false,
+      "x": 4,
+      "y": 0
+    },
+    {
+      "location_id": "loc_porters_lodge",
+      "name": "Porters' Lodge",
+      "is_restricted": false,
+      "x": 1,
+      "y": 7
+    },
+    {
+      "location_id": "loc_boathouse",
+      "name": "River Boathouse",
+      "is_restricted": true,
+      "x": 2,
+      "y": 11
+    }
+  ],
+  "connections": [
+    [
+      "loc_quad",
+      "loc_great_hall"
+    ],
+    [
+      "loc_quad",
+      "loc_library"
+    ],
+    [
+      "loc_quad",
+      "loc_laboratory"
+    ],
+    [
+      "loc_laboratory",
+      "loc_master_lodge"
+    ],
+    [
+      "loc_quad",
+      "loc_chapel"
+    ],
+    [
+      "loc_chapel",
+      "loc_master_lodge"
+    ],
+    [
+      "loc_great_hall",
+      "loc_boathouse"
+    ],
+    [
+      "loc_quad",
+      "loc_porters_lodge"
+    ],
+    [
+      "loc_porters_lodge",
+      "loc_library"
+    ],
+    [
+      "loc_porters_lodge",
+      "loc_boathouse"
+    ]
+  ]
+}

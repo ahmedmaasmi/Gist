@@ -102,7 +102,7 @@ def test_strict_case_level_split_isolation_and_template_isolation() -> None:
 
     # 40 cases * 5 snapshots/case = 200 snapshots
     assert manifest.num_cases_total == 40
-    assert manifest.num_templates_total == 8
+    assert manifest.num_templates_total == 12
     assert len(snapshots) == 200
     assert sum(manifest.cases_by_split.values()) == 40
     assert sum(manifest.snapshots_by_split.values()) == 200
@@ -146,14 +146,17 @@ def test_strict_case_level_split_isolation_and_template_isolation() -> None:
     assert len(all_unique_cases) == 40
 
     # Strict Template-Held-Out Isolation (PRD 8.4)
-    held_out_template_ids = {"train", "lodge"}
+    held_out_template_ids = {"train", "lodge", "abbey"}
     assert templates_by_split["train"].isdisjoint(held_out_template_ids)
     assert templates_by_split["val"].isdisjoint(held_out_template_ids)
     assert templates_by_split["test_in_dist"].isdisjoint(held_out_template_ids)
     assert templates_by_split["test_held_out_template"] == held_out_template_ids
-    assert templates_by_split["val"] == {"yacht", "warehouse"}
-    assert templates_by_split["train"] <= {"manor", "office", "clinic", "gallery"}
-    assert templates_by_split["test_in_dist"] <= {"manor", "office", "clinic", "gallery"}
+    # PRD 8.4: train / val / test_in_dist are split by case, all on the dev templates
+    dev_template_ids = {
+        "manor", "office", "clinic", "gallery", "yacht", "warehouse", "hotel", "theatre", "college"
+    }
+    for split_name in ("train", "val", "test_in_dist"):
+        assert templates_by_split[split_name] <= dev_template_ids
 
 
 def test_determinism_and_manifest_honesty(tmp_path: Path) -> None:
@@ -181,7 +184,7 @@ def test_determinism_and_manifest_honesty(tmp_path: Path) -> None:
     assert manifest_a == manifest_b
     assert manifest_a.dataset_version == "v0.1.0"
     assert manifest_a.master_seed == 123
-    assert manifest_a.num_templates_total == 8
+    assert manifest_a.num_templates_total == 12
     assert manifest_a.num_cases_total == 24
     # Hard (under-determined) cases now also occur naturally, because solvability check 4 labels
     # difficulty instead of filtering (D-010); the requested slice is a lower bound.

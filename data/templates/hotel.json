@@ -1,0 +1,113 @@
+{
+  "template_id": "hotel",
+  "name": "The Grand Meridian Hotel",
+  "description": "A grand old hotel: the lobby between the ballroom and the bar, a lift up to the penthouse suite and rooftop pool, the manager's office behind reception and a laundry down past the kitchens.",
+  "split_group": "dev",
+  "default_crime_location_ids": [
+    "loc_penthouse_suite",
+    "loc_manager_office",
+    "loc_laundry"
+  ],
+  "archetype_occupations": [
+    "Hotel Manager",
+    "Concierge",
+    "Heiress",
+    "Jazz Singer",
+    "Chef de Cuisine",
+    "Bellboy",
+    "Wealthy Guest",
+    "Head Housekeeper"
+  ],
+  "locations": [
+    {
+      "location_id": "loc_lobby",
+      "name": "Lobby",
+      "is_restricted": false,
+      "x": 4,
+      "y": 4
+    },
+    {
+      "location_id": "loc_ballroom",
+      "name": "Ballroom",
+      "is_restricted": false,
+      "x": 8,
+      "y": 4
+    },
+    {
+      "location_id": "loc_bar",
+      "name": "Cocktail Bar",
+      "is_restricted": false,
+      "x": 2,
+      "y": 6
+    },
+    {
+      "location_id": "loc_manager_office",
+      "name": "Manager's Office",
+      "is_restricted": true,
+      "x": 1,
+      "y": 2
+    },
+    {
+      "location_id": "loc_kitchen",
+      "name": "Hotel Kitchens",
+      "is_restricted": false,
+      "x": 7,
+      "y": 7
+    },
+    {
+      "location_id": "loc_laundry",
+      "name": "Laundry Room",
+      "is_restricted": true,
+      "x": 9,
+      "y": 9
+    },
+    {
+      "location_id": "loc_penthouse_suite",
+      "name": "Penthouse Suite",
+      "is_restricted": true,
+      "x": 4,
+      "y": 0
+    },
+    {
+      "location_id": "loc_rooftop_pool",
+      "name": "Rooftop Pool",
+      "is_restricted": false,
+      "x": 6,
+      "y": -2
+    }
+  ],
+  "connections": [
+    [
+      "loc_lobby",
+      "loc_ballroom"
+    ],
+    [
+      "loc_lobby",
+      "loc_bar"
+    ],
+    [
+      "loc_lobby",
+      "loc_manager_office"
+    ],
+    [
+      "loc_lobby",
+      "loc_kitchen"
+    ],
+    [
+      "loc_ballroom",
+      "loc_kitchen"
+    ],
+    [
+      "loc_kitchen",
+      "loc_laundry"
+    ],
+    [
+      "loc_lobby",
+      "loc_penthouse_suite"
+    ],
+    [
+      "loc_penthouse_suite",
+      "loc_rooftop_pool"
+    ]
+  ]
+}

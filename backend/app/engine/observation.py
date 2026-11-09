@@ -230,10 +230,8 @@ class ObservationModel:
                         subject_id=event.actor_id,
                         target_id=event.target_id,
                         location_id=event.location_id,
-                        time_interval=TimeInterval(
-                            start_min=event.tick_min,
-                            end_min=event.tick_min + config.tick_size_min,
-                        ),
+                        # Point in time, like every observation of a tick (D-012, D-015).
+                        time_interval=TimeInterval(start_min=event.tick_min, end_min=event.tick_min),
                         category=EvidenceCategory.MOTIVE,
                         provenance=ProvenanceClass.WITNESS,
                         reliability=reliability,
@@ -438,10 +436,7 @@ class ObservationModel:
                             subject_id=event.actor_id,
                             target_id=cid,
                             location_id=event.location_id,
-                            time_interval=TimeInterval(
-                                start_min=event.tick_min,
-                                end_min=event.tick_min + config.tick_size_min,
-                            ),
+                            time_interval=TimeInterval(start_min=event.tick_min, end_min=event.tick_min),
                             category=(
                                 EvidenceCategory.MOTIVE
                                 if (sec_obj and sec_obj.is_crime_linked)
@@ -465,10 +460,7 @@ class ObservationModel:
                             ),
                             subject_id=cid,
                             location_id=event.location_id,
-                            time_interval=TimeInterval(
-                                start_min=event.tick_min,
-                                end_min=event.tick_min + config.tick_size_min,
-                            ),
+                            time_interval=TimeInterval(start_min=event.tick_min, end_min=event.tick_min),
                             category=EvidenceCategory.TIMELINE,
                             provenance=ProvenanceClass.WITNESS,
                             reliability=1.0,

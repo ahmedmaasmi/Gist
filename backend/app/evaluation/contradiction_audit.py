@@ -69,11 +69,13 @@ def run(seeds: int = 50) -> dict:
         tpl = get_template(template_id)
         for seed in range(seeds):
             bundle = sample_case_setup_from_template(template=tpl, seed=seed).simulate()
+            case_map = bundle.setting  # this case's map, including its travel-time variation
             flagged = {
-                f.primary_claim_id for f in StructuredConsistencyEngine.evaluate_session(bundle.t1_session, tpl)
+                f.primary_claim_id
+                for f in StructuredConsistencyEngine.evaluate_session(bundle.t1_session, case_map)
             }
             labels = label_claims(bundle)
-            disagreements = StructuredConsistencyEngine.find_disagreements(bundle.t1_session, tpl)
+            disagreements = StructuredConsistencyEngine.find_disagreements(bundle.t1_session, case_map)
             in_disagreement = {cid for d in disagreements for cid in d.claim_ids}
             for d in disagreements:
                 dis["disagreements"] += 1

@@ -25,39 +25,7 @@ from app.engine.solver import CaseSolvabilityValidator, CaseValidationReport
 
 DEFAULT_TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "data" / "templates"
 
-FIRST_NAMES = (
-    "Evelyn",
-    "Marcus",
-    "Clara",
-    "Julian",
-    "Helena",
-    "Victor",
-    "Simone",
-    "Arthur",
-    "Nadia",
-    "Soren",
-    "Beatrice",
-    "Damon",
-    "Lydia",
-    "Gideon",
-)
-
-LAST_NAMES = (
-    "Vance",
-    "Reed",
-    "Mercer",
-    "Cross",
-    "Sterling",
-    "Thorne",
-    "Kestrel",
-    "Ashford",
-    "Locke",
-    "Sinclair",
-    "Harrow",
-    "Kovac",
-    "Duval",
-    "Falk",
-)
+NAMES_PATH = Path(__file__).resolve().parents[3] / "data" / "names.json"
 
 VOICE_NOTES_POOL = (
     "Clipped, formal cadence; avoids contractions when defensive.",
@@ -237,6 +205,36 @@ P_EDGE = 0.6               # a directed relationship edge exists between two cha
 P_SCENE_SLOT = 0.15        # a schedule slot is planned at the crime location
 CULPRIT_TEMPERATURE = 0.5  # softmax temperature for culprit selection (see SimulationConfig)
 
+# Per-case variables (PRD 8.2: noise, deception; the generator is documented with its parameters).
+# Every case draws one value from each range; the drawn values are stored in its SimulationConfig and
+# the ranges in the dataset manifest. Anything outside these ranges is out-of-distribution by definition.
+CASE_VARIABLE_RANGES: dict[str, tuple[float, float]] = {
+    "num_suspects": (3, 6),
+    "murder_window_start_min": (1200, 1380),  # 20:00 to 23:00, on 10-minute ticks
+    "murder_window_length_min": (20, 40),     # on 10-minute ticks
+    "travel_time_factor": (0.8, 1.2),         # per-corridor variation of the map (with_travel_variation)
+    "witness_noise_rate": (0.05, 0.30),
+    "record_drop_rate": (0.10, 0.35),
+    "forensic_trace_rate": (0.50, 0.90),
+    "guilty_lie_rate": (0.60, 1.00),
+    "innocent_lie_rate": (0.10, 0.40),
+}
+
+
+def load_name_pool(path: Path = NAMES_PATH) -> list[str]:
+    """Famous historical and public-domain fictional names (data/names.json). Flavour only (PRD 7A.1)."""
+    return [entry["name"] for entry in json.loads(path.read_text(encoding="utf-8"))["names"]]
+
+
+def _draw(rng: random.Random, variable: str) -> float:
+    low, high = CASE_VARIABLE_RANGES[variable]
+    return round(rng.uniform(low, high), 3)
+
+
+def _draw_tick(rng: random.Random, variable: str, tick_size_min: int = 10) -> int:
+    low, high = CASE_VARIABLE_RANGES[variable]
+    return rng.randrange(int(low), int(high) + 1, tick_size_min)
+
 
 def _sample_traits(rng: random.Random) -> CharacterTraits:
     """Every trait uniform over the full editor range (PRD 8.2 implementation note, CH-04)."""
@@ -280,21 +278,32 @@ def _sample_schedule(
 def sample_case_setup_from_template(
     template: SettingTemplate,
     seed: int,
-    num_suspects: int = 4,
+    num_suspects: int | None = None,
 ) -> SampledCaseSetup:
     """
     PRD Section 7B.2, 7B.4 (CL-06), 8.2, and CH-03/CH-04:
     Procedurally samples a complete case setup (characters, schedules, secrets, goals,
     asymmetric RelationshipGraph, and SimulationConfig) from a `SettingTemplate`
     using an isolated `random.Random(seed)` instance.
+
+    Every variable in CASE_VARIABLE_RANGES is drawn per case (num_suspects only if not given).
     """
+    rng = random.Random(seed)
+    if num_suspects is None:
+        low, high = CASE_VARIABLE_RANGES["num_suspects"]
+        num_suspects = rng.randint(int(low), int(high))
     if num_suspects < 3 or num_suspects > 6:
         raise ValueError(
             f"CL-06 Violation: num_suspects must be between 3 and 6 (got {num_suspects})."
         )
 
-    rng = random.Random(seed)
-    tpl = template.model_copy(deep=True)
+    # This evening's version of the map: corridor times vary a little from case to case.
+    tpl = template.with_travel_variation(rng, *CASE_VARIABLE_RANGES["travel_time_factor"])
+    window_start = _draw_tick(rng, "murder_window_start_min")
+    murder_window = TimeInterval(
+        start_min=window_start,
+        end_min=window_start + _draw_tick(rng, "murder_window_length_min"),
+    )
 
     # 1. Select crime location and social/alibi hubs
     crime_location_id = tpl.default_crime_location_ids[
@@ -319,11 +328,9 @@ def sample_case_setup_from_template(
     )
     social_hub_loc = unrestricted_by_proximity[0]
 
-    # 2. Sample distinct names and occupations for (1 victim + num_suspects suspects)
-    first_pool = list(FIRST_NAMES)
-    last_pool = list(LAST_NAMES)
-    rng.shuffle(first_pool)
-    rng.shuffle(last_pool)
+    # 2. Famous names (historical and public-domain fictional), drawn independently of everything
+    #    else, so no name is more likely to be guilty than another. Occupations fit the setting.
+    names = rng.sample(load_name_pool(), num_suspects + 1)
 
     occupations = list(tpl.archetype_occupations) or [
         "Executive",
@@ -337,18 +344,19 @@ def sample_case_setup_from_template(
     rng.shuffle(occupations)
 
     victim_id = "victim_01"
-    victim_name = f"{first_pool[0]} {last_pool[0]}"
+    victim_name = names[0]
     victim_occupation = occupations[0]
 
     victim_traits = _sample_traits(rng)
 
+    # The victim goes to the crime room 20 minutes before the window and stays there.
     victim_schedule = [
         ScheduleSlot(
-            time_interval=TimeInterval(start_min=1080, end_min=1240),
+            time_interval=TimeInterval(start_min=1080, end_min=murder_window.start_min - 20),
             planned_location_id=social_hub_loc,
         ),
         ScheduleSlot(
-            time_interval=TimeInterval(start_min=1240, end_min=1440),
+            time_interval=TimeInterval(start_min=murder_window.start_min - 20, end_min=1440),
             planned_location_id=crime_location_id,
         ),
     ]
@@ -374,7 +382,7 @@ def sample_case_setup_from_template(
 
     suspect_chars: list[Character] = []
     for idx, suspect_id in enumerate(suspect_ids):
-        full_name = f"{first_pool[(idx + 1) % len(first_pool)]} {last_pool[(idx + 1) % len(last_pool)]}"
+        full_name = names[idx + 1]
         occ = occupations[(idx + 1) % len(occupations)]
         voice = VOICE_NOTES_POOL[(idx + 1) % len(VOICE_NOTES_POOL)]
 
@@ -480,11 +488,12 @@ def sample_case_setup_from_template(
         tick_size_min=10,
         victim_id=victim_id,
         crime_location_id=crime_location_id,
-        murder_window=TimeInterval(start_min=1260, end_min=1280),
-        witness_noise_rate=0.15,
-        record_drop_rate=0.20,
-        guilty_lie_rate=0.90,
-        innocent_lie_rate=0.25,
+        murder_window=murder_window,
+        witness_noise_rate=_draw(rng, "witness_noise_rate"),
+        record_drop_rate=_draw(rng, "record_drop_rate"),
+        forensic_trace_rate=_draw(rng, "forensic_trace_rate"),
+        guilty_lie_rate=_draw(rng, "guilty_lie_rate"),
+        innocent_lie_rate=_draw(rng, "innocent_lie_rate"),
         culprit_temperature=CULPRIT_TEMPERATURE,
     )
 

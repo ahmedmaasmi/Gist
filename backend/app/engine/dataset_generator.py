@@ -12,6 +12,9 @@ from app.engine.reveal_sampler import EvidenceRevealSampler, EvidenceStateSnapsh
 from app.engine.solver import CaseSolvabilityValidator, CaseValidationReport
 from app.engine.templates import TemplateRegistry, sample_case_setup_from_template
 
+# Share of each dev template's cases per split (PRD 8.4); the rest is train.
+DEV_SPLIT_FRACTIONS = {"val": 0.15, "test_in_dist": 0.15}
+
 
 class DatasetManifest(BaseModel):
     """
@@ -173,48 +176,26 @@ class DatasetGenerator:
         for idx, tpl in enumerate(templates_sorted):
             counts_per_tpl[tpl.template_id] = base_per_tpl + (1 if idx < remainder else 0)
 
-        # 2. Build deterministic case plan: (global_idx, template, split)
-        # Templates with split_group == "train" split their cases 85% "train" / 15% "test_in_dist"
-        train_group_templates = [
-            tpl for tpl in templates_sorted if tpl.split_group == "train"
-        ]
-        total_train_group_cases = sum(
-            counts_per_tpl[tpl.template_id] for tpl in train_group_templates
-        )
-        if total_train_group_cases >= 2:
-            target_in_dist_total = max(1, int(round(total_train_group_cases * 0.15)))
-        else:
-            target_in_dist_total = 0
-
-        in_dist_per_train_tpl: dict[str, int] = {
-            tpl.template_id: 0 for tpl in train_group_templates
-        }
-        if train_group_templates and target_in_dist_total > 0:
-            for i in range(target_in_dist_total):
-                tpl_id = train_group_templates[i % len(train_group_templates)].template_id
-                if in_dist_per_train_tpl[tpl_id] < counts_per_tpl[tpl_id]:
-                    in_dist_per_train_tpl[tpl_id] += 1
-
+        # 2. Build deterministic case plan: (global_idx, template, split).
+        # PRD 8.4: held-out templates go entirely to the template-held-out test set; cases on 'dev'
+        # templates are split BY CASE into train / val / test_in_dist (70 / 15 / 15 per template).
         case_specs: list[tuple[int, SettingTemplate, str]] = []
         global_idx = 0
         for tpl in templates_sorted:
             n_cases = counts_per_tpl[tpl.template_id]
-            if tpl.split_group == "test_held_out_template":
-                for _ in range(n_cases):
-                    case_specs.append((global_idx, tpl, "test_held_out_template"))
-                    global_idx += 1
-            elif tpl.split_group == "val":
-                for _ in range(n_cases):
-                    case_specs.append((global_idx, tpl, "val"))
-                    global_idx += 1
-            else:
-                # split_group == "train": first 85% -> "train", last 15% -> "test_in_dist"
-                n_in_dist = in_dist_per_train_tpl.get(tpl.template_id, 0)
-                n_train = n_cases - n_in_dist
-                for i in range(n_cases):
-                    assigned_split = "train" if i < n_train else "test_in_dist"
-                    case_specs.append((global_idx, tpl, assigned_split))
-                    global_idx += 1
+            n_val = int(round(n_cases * DEV_SPLIT_FRACTIONS["val"]))
+            n_test = int(round(n_cases * DEV_SPLIT_FRACTIONS["test_in_dist"]))
+            for i in range(n_cases):
+                if tpl.split_group == "test_held_out_template":
+                    assigned_split = "test_held_out_template"
+                elif i < n_cases - n_val - n_test:
+                    assigned_split = "train"
+                elif i < n_cases - n_test:
+                    assigned_split = "val"
+                else:
+                    assigned_split = "test_in_dist"
+                case_specs.append((global_idx, tpl, assigned_split))
+                global_idx += 1
 
         # 3. Select hard-case slots deterministically for the `hard_case_ratio` slice
         target_hard_cases = int(round(total_cases * hard_case_ratio))
@@ -286,7 +267,8 @@ class DatasetGenerator:
                 "hard_case_ratio": hard_case_ratio,
                 "num_orderings": num_orderings,
                 "num_stages": len(stage_fractions),
-                "train_in_dist_ratio": 0.15,
+                "dev_val_fraction": DEV_SPLIT_FRACTIONS["val"],
+                "dev_test_in_dist_fraction": DEV_SPLIT_FRACTIONS["test_in_dist"],
             },
         )
 

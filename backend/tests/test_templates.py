@@ -23,18 +23,23 @@ EXPECTED_TEMPLATE_IDS = {
     "yacht",
     "warehouse",
     "lodge",
+    "hotel",
+    "theatre",
+    "abbey",
+    "college",
 }
+HELD_OUT_TEMPLATE_IDS = {"train", "lodge", "abbey"}
 
 
-def test_all_eight_templates_load_and_validate() -> None:
+def test_all_templates_load_and_validate() -> None:
     """
-    Task 4.1: Verifies all 8 JSON templates in `data/templates/` load cleanly,
+    Verifies all 12 JSON templates in `data/templates/` load cleanly,
     pass SettingTemplate Pydantic validation, respect CL-06 location caps (3..8),
     and have complete, non-negative travel matrices and valid default_crime_location_ids.
     """
     templates = load_all_templates(force_reload=True)
     assert set(templates.keys()) == EXPECTED_TEMPLATE_IDS
-    assert len(templates) == 8
+    assert len(templates) == 12
 
     for tpl_id, tpl in templates.items():
         assert tpl.template_id == tpl_id
@@ -67,33 +72,13 @@ def test_all_eight_templates_load_and_validate() -> None:
 
 def test_template_split_group_distribution() -> None:
     """
-    Task 4.2 (PRD Section 8.4): Verifies grouped CV & held-out template splits:
-    - 4 templates in 'train' (manor, office, clinic, gallery)
-    - 2 templates in 'val' (yacht, warehouse)
-    - 2 templates in 'test_held_out_template' (train, lodge)
+    PRD 8.4: 3 templates are held out entirely (never trained or tuned on); the other 9 are 'dev'
+    templates whose cases are split train/val/test by case.
     """
-    train_templates = get_templates_by_split("train")
-    val_templates = get_templates_by_split("val")
-    held_out_templates = get_templates_by_split("test_held_out_template")
-
-    train_ids = {t.template_id for t in train_templates}
-    val_ids = {t.template_id for t in val_templates}
-    held_out_ids = {t.template_id for t in held_out_templates}
-
-    assert len(train_ids) >= 4
-    assert train_ids == {"manor", "office", "clinic", "gallery"}
-
-    assert len(val_ids) >= 2
-    assert val_ids == {"yacht", "warehouse"}
-
-    assert len(held_out_ids) >= 2
-    assert held_out_ids == {"train", "lodge"}
-
-    # Disjoint and exhaustive across all 8 templates
-    assert train_ids.isdisjoint(val_ids)
-    assert train_ids.isdisjoint(held_out_ids)
-    assert val_ids.isdisjoint(held_out_ids)
-    assert (train_ids | val_ids | held_out_ids) == EXPECTED_TEMPLATE_IDS
+    held_out_ids = {t.template_id for t in get_templates_by_split("test_held_out_template")}
+    dev_ids = {t.template_id for t in get_templates_by_split("dev")}
+    assert held_out_ids == HELD_OUT_TEMPLATE_IDS
+    assert dev_ids == EXPECTED_TEMPLATE_IDS - HELD_OUT_TEMPLATE_IDS
 
     with pytest.raises(ValueError, match="Invalid split_group"):
         get_templates_by_split("invalid_split")
@@ -264,4 +249,32 @@ def test_full_trait_range_and_variable_suspect_counts() -> None:
         assert len(setup.characters) == n_suspects + 1
         assert len(bundle.t0_public.suspect_ids) == n_suspects
         assert report.is_valid is True
+
+
+@pytest.mark.parametrize("template_id", sorted(EXPECTED_TEMPLATE_IDS))
+def test_map_quality(template_id: str) -> None:
+    """
+    Every map is a proper floor plan: symmetric travel times of 1-15 minutes, no detour shorter
+    than the direct route, 7-8 rooms, and every murder room has a neighbour within one tick
+    (so a culprit can always reach it). Also holds for the per-case travel-time variation.
+    """
+    import random
+
+    base = get_template(template_id)
+    assert 7 <= len(base.locations) <= 8
+    assert all(loc.x is not None and loc.y is not None for loc in base.locations)
+    for tpl in (base, base.with_travel_variation(random.Random(0), 0.8, 1.2)):
+        ids = [loc.location_id for loc in tpl.locations]
+        t = tpl.travel_matrix
+        for a in ids:
+            for b in ids:
+                assert t[a][b] == t[b][a]
+                if a != b:
+                    assert 1 <= t[a][b] <= 18  # <= 15 on the base map, x1.2 at most with variation
+                for c in ids:
+                    assert t[a][c] <= t[a][b] + t[b][c]
+        if tpl is base:
+            assert max(t[a][b] for a in ids for b in ids) <= 15
+        for crime in tpl.default_crime_location_ids:
+            assert min(t[crime][o] for o in ids if o != crime) <= 10
 

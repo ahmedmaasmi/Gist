@@ -1,9 +1,32 @@
 # backend/app/domain/setting.py
+import math
+import random
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-VALID_SPLIT_GROUPS = {"train", "val", "test_held_out_template"}
+# PRD 8.4: templates are either used for development (their cases are split train/val/test by case)
+# or held out entirely as the template-held-out test set.
+VALID_SPLIT_GROUPS = {"dev", "test_held_out_template"}
+
+
+def shortest_paths(nodes: list[str], weights: dict[tuple[str, str], int]) -> dict[str, dict[str, int]]:
+    """
+    Floyd-Warshall over symmetric edge weights. The result is a proper map metric: symmetric,
+    zero on the diagonal, and no detour is ever shorter than the direct route (triangle inequality).
+    Unreachable pairs are left out, so the completeness check below reports them.
+    """
+    inf = math.inf
+    dist = {a: {b: (0 if a == b else inf) for b in nodes} for a in nodes}
+    for (a, b), w in weights.items():
+        dist[a][b] = min(dist[a][b], w)
+        dist[b][a] = min(dist[b][a], w)
+    for k in nodes:
+        for i in nodes:
+            for j in nodes:
+                if dist[i][k] + dist[k][j] < dist[i][j]:
+                    dist[i][j] = dist[i][k] + dist[k][j]
+    return {a: {b: int(d) for b, d in row.items() if d != inf} for a, row in dist.items()}
 
 
 class Location(BaseModel):
@@ -16,6 +39,8 @@ class Location(BaseModel):
         default=False,
         description="True if entry requires specific access/keycard",
     )
+    x: float | None = Field(default=None, description="Floor-plan position, in walking minutes")
+    y: float | None = Field(default=None, description="Floor-plan position, in walking minutes")
 
 
 class SettingTemplate(BaseModel):
@@ -34,8 +59,15 @@ class SettingTemplate(BaseModel):
         description="CL-06: At least 3 and at most 8 locations per setting template",
     )
     travel_matrix: dict[str, dict[str, int]] = Field(
-        ...,
-        description="Symmetric or directed minimum travel time in minutes between location_A and location_B",
+        default_factory=dict,
+        description=(
+            "Minimum travel time in minutes between location_A and location_B. Built from `connections` "
+            "and room positions when omitted."
+        ),
+    )
+    connections: list[tuple[str, str]] = Field(
+        default_factory=list,
+        description="Doorways/corridors between rooms; walking time = straight-line distance between positions",
     )
     default_crime_location_ids: list[str] = Field(
         ...,
@@ -47,8 +79,8 @@ class SettingTemplate(BaseModel):
         description="Pool of setting-appropriate occupations for procedural character generation",
     )
     split_group: str = Field(
-        default="train",
-        description="Default split assignment: 'train', 'val', or 'test_held_out_template' per PRD Section 8.4",
+        default="dev",
+        description="'dev' (cases split train/val/test by case) or 'test_held_out_template' (PRD 8.4)",
     )
 
     @model_validator(mode="before")
@@ -77,6 +109,42 @@ class SettingTemplate(BaseModel):
                 if inferred:
                     data = {**data, "default_crime_location_ids": inferred}
         return data
+
+    @model_validator(mode="before")
+    @classmethod
+    def build_travel_matrix_from_layout(cls, data: Any) -> Any:
+        """
+        Maps are authored as a floor plan: rooms with (x, y) positions plus the corridors between them.
+        Each corridor takes max(1, round(distance)) minutes; travel time is the shortest walk.
+        """
+        if isinstance(data, dict) and not data.get("travel_matrix") and data.get("connections"):
+            locs = [
+                loc if isinstance(loc, dict) else loc.model_dump()
+                for loc in data.get("locations", [])
+            ]
+            pos = {loc["location_id"]: (loc.get("x"), loc.get("y")) for loc in locs}
+            weights: dict[tuple[str, str], int] = {}
+            for a, b in data["connections"]:
+                if a not in pos or b not in pos or None in pos[a] or None in pos[b]:
+                    raise ValueError(f"Connection ({a}, {b}) needs two known rooms with x/y positions.")
+                (xa, ya), (xb, yb) = pos[a], pos[b]
+                weights[(a, b)] = max(1, round(math.hypot(xa - xb, ya - yb)))
+            data = {**data, "travel_matrix": shortest_paths(list(pos), weights)}
+        return data
+
+    def with_travel_variation(self, rng: random.Random, low: float, high: float) -> "SettingTemplate":
+        """
+        A per-case variant of this map: every direct travel time is scaled by a factor in [low, high]
+        (corridors are busier or quieter that evening), then shortest paths are recomputed so the
+        result is still a consistent map.
+        """
+        ids = sorted(loc.location_id for loc in self.locations)
+        weights = {
+            (a, b): max(1, round(self.travel_matrix[a][b] * rng.uniform(low, high)))
+            for i, a in enumerate(ids)
+            for b in ids[i + 1 :]
+        }
+        return self.model_copy(update={"travel_matrix": shortest_paths(ids, weights)}, deep=True)
 
     @model_validator(mode="after")
     def validate_setting_template(self) -> "SettingTemplate":

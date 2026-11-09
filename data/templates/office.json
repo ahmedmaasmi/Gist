@@ -1,102 +1,117 @@
 {
   "template_id": "office",
-  "name": "Veridian Executive Tower",
-  "description": "A late-night corporate headquarters high-rise with badge-controlled executive suites, server infrastructure, and basement parking.",
-  "split_group": "train",
+  "name": "Halcyon Tower Offices",
+  "description": "The top floors of a corporate tower: an open-plan floor between the boardroom and the CEO suite, a locked server room behind the break room, a rooftop terrace and the parking garage below.",
+  "split_group": "dev",
   "default_crime_location_ids": [
     "loc_ceo_suite",
-    "loc_server_room"
+    "loc_server_room",
+    "loc_parking_garage"
   ],
   "archetype_occupations": [
-    "Chief Financial Officer",
-    "Lead Systems Architect",
-    "General Counsel",
-    "VP of Operations",
-    "Venture Partner",
-    "Night Security Supervisor",
-    "Executive Assistant"
+    "CEO",
+    "CFO",
+    "Systems Administrator",
+    "Executive Assistant",
+    "Corporate Lawyer",
+    "Investor",
+    "Security Guard",
+    "Intern"
   ],
   "locations": [
     {
-      "location_id": "loc_ceo_suite",
-      "name": "CEO Corner Suite",
-      "is_restricted": true
-    },
-    {
-      "location_id": "loc_server_room",
-      "name": "Biometric Server Room",
-      "is_restricted": true
+      "location_id": "loc_open_floor",
+      "name": "Open-Plan Floor",
+      "is_restricted": false,
+      "x": 4,
+      "y": 3
     },
     {
       "location_id": "loc_boardroom",
-      "name": "Executive Boardroom",
-      "is_restricted": false
+      "name": "Boardroom",
+      "is_restricted": false,
+      "x": 6,
+      "y": 1
     },
     {
-      "location_id": "loc_open_floor",
-      "name": "Analyst Open Floor",
-      "is_restricted": false
+      "location_id": "loc_ceo_suite",
+      "name": "CEO Suite",
+      "is_restricted": true,
+      "x": 8,
+      "y": 0
+    },
+    {
+      "location_id": "loc_break_room",
+      "name": "Break Room",
+      "is_restricted": false,
+      "x": 2,
+      "y": 2
+    },
+    {
+      "location_id": "loc_server_room",
+      "name": "Server Room",
+      "is_restricted": true,
+      "x": 0,
+      "y": 0
     },
     {
       "location_id": "loc_rooftop_terrace",
-      "name": "Rooftop Sky Terrace",
-      "is_restricted": false
+      "name": "Rooftop Terrace",
+      "is_restricted": false,
+      "x": 8,
+      "y": 6
+    },
+    {
+      "location_id": "loc_mail_room",
+      "name": "Mail Room",
+      "is_restricted": false,
+      "x": 1,
+      "y": 5
     },
     {
       "location_id": "loc_parking_garage",
-      "name": "Sub-Level Parking Garage",
-      "is_restricted": false
+      "name": "Parking Garage",
+      "is_restricted": true,
+      "x": 2,
+      "y": 10
     }
   ],
-  "travel_matrix": {
-    "loc_ceo_suite": {
-      "loc_ceo_suite": 0,
-      "loc_boardroom": 3,
-      "loc_open_floor": 5,
-      "loc_rooftop_terrace": 5,
-      "loc_server_room": 7,
-      "loc_parking_garage": 11
-    },
-    "loc_server_room": {
-      "loc_ceo_suite": 7,
-      "loc_server_room": 0,
-      "loc_boardroom": 6,
-      "loc_open_floor": 3,
-      "loc_rooftop_terrace": 9,
-      "loc_parking_garage": 8
-    },
-    "loc_boardroom": {
-      "loc_ceo_suite": 3,
-      "loc_server_room": 6,
-      "loc_boardroom": 0,
-      "loc_open_floor": 4,
-      "loc_rooftop_terrace": 4,
-      "loc_parking_garage": 10
-    },
-    "loc_open_floor": {
-      "loc_ceo_suite": 5,
-      "loc_server_room": 3,
-      "loc_boardroom": 4,
-      "loc_open_floor": 0,
-      "loc_rooftop_terrace": 7,
-      "loc_parking_garage": 7
-    },
-    "loc_rooftop_terrace": {
-      "loc_ceo_suite": 5,
-      "loc_server_room": 9,
-      "loc_boardroom": 4,
-      "loc_open_floor": 7,
-      "loc_rooftop_terrace": 0,
-      "loc_parking_garage": 12
-    },
-    "loc_parking_garage": {
-      "loc_ceo_suite": 11,
-      "loc_server_room": 8,
-      "loc_boardroom": 10,
-      "loc_open_floor": 7,
-      "loc_rooftop_terrace": 12,
-      "loc_parking_garage": 0
-    }
-  }
+  "connections": [
+    [
+      "loc_open_floor",
+      "loc_boardroom"
+    ],
+    [
+      "loc_boardroom",
+      "loc_ceo_suite"
+    ],
+    [
+      "loc_open_floor",
+      "loc_break_room"
+    ],
+    [
+      "loc_break_room",
+      "loc_server_room"
+    ],
+    [
+      "loc_open_floor",
+      "loc_rooftop_terrace"
+    ],
+    [
+      "loc_open_floor",
+      "loc_mail_room"
+    ],
+    [
+      "loc_mail_room",
+      "loc_parking_garage"
+    ],
+    [
+      "loc_server_room",
+      "loc_mail_room"
+    ],
+    [
+      "loc_ceo_suite",
+      "loc_rooftop_terrace"
+    ]
+  ]
 }
-

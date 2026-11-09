@@ -1,84 +1,121 @@
 {
   "template_id": "gallery",
-  "name": "Vance Modern Art Gallery",
-  "description": "A prestigious contemporary art space during an after-hours private auction preview, housing a climate-controlled restoration vault.",
-  "split_group": "train",
+  "name": "The Vermeer Gallery",
+  "description": "A private art gallery: exhibition halls around a central atrium, a locked restoration vault and archive, a security room overlooking the director's office.",
+  "split_group": "dev",
   "default_crime_location_ids": [
     "loc_restoration_vault",
-    "loc_directors_office"
+    "loc_directors_office",
+    "loc_archive"
   ],
   "archetype_occupations": [
     "Gallery Director",
-    "Chief Art Restorer",
-    "Private Collector",
-    "Fine Art Appraiser",
-    "Featured Sculptor",
-    "Insurance Underwriter",
-    "Auctioneer"
+    "Art Restorer",
+    "Wealthy Collector",
+    "Security Chief",
+    "Art Critic",
+    "Curator",
+    "Insurance Assessor",
+    "Sculptor"
   ],
   "locations": [
     {
+      "location_id": "loc_main_exhibit",
+      "name": "Main Exhibition Atrium",
+      "is_restricted": false,
+      "x": 4,
+      "y": 3
+    },
+    {
+      "location_id": "loc_archive",
+      "name": "Archive",
+      "is_restricted": true,
+      "x": 2,
+      "y": 0
+    },
+    {
       "location_id": "loc_restoration_vault",
-      "name": "Climate-Controlled Restoration Vault",
-      "is_restricted": true
+      "name": "Restoration Vault",
+      "is_restricted": true,
+      "x": 0,
+      "y": 1
+    },
+    {
+      "location_id": "loc_security_room",
+      "name": "Security Room",
+      "is_restricted": true,
+      "x": 6,
+      "y": 0
     },
     {
       "location_id": "loc_directors_office",
-      "name": "Gallery Director's Office",
-      "is_restricted": true
-    },
-    {
-      "location_id": "loc_main_exhibit",
-      "name": "Main Exhibition Rotunda",
-      "is_restricted": false
+      "name": "Director's Office",
+      "is_restricted": true,
+      "x": 8,
+      "y": 1
     },
     {
       "location_id": "loc_sculpture_garden",
-      "name": "Outdoor Sculpture Garden",
-      "is_restricted": false
+      "name": "Sculpture Garden",
+      "is_restricted": false,
+      "x": 4,
+      "y": 8
     },
     {
       "location_id": "loc_loading_bay",
-      "name": "Crate & Loading Bay",
-      "is_restricted": false
+      "name": "Loading Bay",
+      "is_restricted": false,
+      "x": 0,
+      "y": 5
+    },
+    {
+      "location_id": "loc_cafe",
+      "name": "Gallery Café",
+      "is_restricted": false,
+      "x": 7,
+      "y": 5
     }
   ],
-  "travel_matrix": {
-    "loc_restoration_vault": {
-      "loc_restoration_vault": 0,
-      "loc_directors_office": 4,
-      "loc_main_exhibit": 3,
-      "loc_sculpture_garden": 8,
-      "loc_loading_bay": 6
-    },
-    "loc_directors_office": {
-      "loc_restoration_vault": 4,
-      "loc_directors_office": 0,
-      "loc_main_exhibit": 3,
-      "loc_sculpture_garden": 7,
-      "loc_loading_bay": 9
-    },
-    "loc_main_exhibit": {
-      "loc_restoration_vault": 3,
-      "loc_directors_office": 3,
-      "loc_main_exhibit": 0,
-      "loc_sculpture_garden": 4,
-      "loc_loading_bay": 6
-    },
-    "loc_sculpture_garden": {
-      "loc_restoration_vault": 8,
-      "loc_directors_office": 7,
-      "loc_main_exhibit": 4,
-      "loc_sculpture_garden": 0,
-      "loc_loading_bay": 10
-    },
-    "loc_loading_bay": {
-      "loc_restoration_vault": 6,
-      "loc_directors_office": 9,
-      "loc_main_exhibit": 6,
-      "loc_sculpture_garden": 10,
-      "loc_loading_bay": 0
-    }
-  }
+  "connections": [
+    [
+      "loc_main_exhibit",
+      "loc_archive"
+    ],
+    [
+      "loc_archive",
+      "loc_restoration_vault"
+    ],
+    [
+      "loc_main_exhibit",
+      "loc_security_room"
+    ],
+    [
+      "loc_security_room",
+      "loc_directors_office"
+    ],
+    [
+      "loc_main_exhibit",
+      "loc_sculpture_garden"
+    ],
+    [
+      "loc_main_exhibit",
+      "loc_loading_bay"
+    ],
+    [
+      "loc_loading_bay",
+      "loc_restoration_vault"
+    ],
+    [
+      "loc_main_exhibit",
+      "loc_cafe"
+    ],
+    [
+      "loc_cafe",
+      "loc_sculpture_garden"
+    ],
+    [
+      "loc_cafe",
+      "loc_directors_office"
+    ]
+  ]
 }
-

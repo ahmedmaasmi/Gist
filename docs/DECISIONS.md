@@ -141,3 +141,27 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
   - Reading `unverified_claim_share` from status: rejected, because it would be constant.
 - **Reason:** The PRD lists illustrative features and makes the full spec a required deliverable. Grouping by E1 variant now means the ablation needs no feature re-engineering later. The signature guarantee is stronger than a review rule, because it's checked by a test rather than by memory.
 - **What I should learn from this:** Leakage prevention is best done by construction (what a function *can* see), not by convention (what it *promises* not to use). And a feature that is constant by design (status-based "unverified") is a spec bug worth catching before training, not after.
+
+## D-018 (2026-11-09): 12 floor-plan maps and per-case variables
+
+- **Decision:**
+  - **Maps.** 12 setting templates, each with 8 rooms, authored as floor plans: rooms with (x, y) positions plus corridors. Travel time is the shortest walk, computed by `SettingTemplate` (Floyd–Warshall). A test checks every map is symmetric, 1–15 minutes, has no shortcuts and has a reachable murder room.
+  - **Per-case variety.** Every case draws: number of suspects (3–6), murder window start (20:00–23:00) and length (20–40 min), corridor-time variation (×0.8–1.2), and the noise and lie rates. The ranges live in `CASE_VARIABLE_RANGES` (`templates.py`); each case's values are in its config, and its map in `bundle.setting`.
+  - **Splits.** Templates are `dev` (9) or `test_held_out_template` (3: train, lodge, abbey), per PRD 8.4.
+- **Alternatives considered:** Hand-typed travel tables; one map (the v0.1 roadmap's "manor"); fixed variables.
+- **Reason:** The user asked for as many variables and as good maps as is doable. Floor plans make 12 maps feasible to author and impossible to get inconsistent. Varied lie rates make E2 meaningful. Re-run audits: the best trivial rule is 0.63 overall (chance 0.24) and **0.53–0.71 on every map**. The contradiction false-positive rate stays at 0% (CI 0–0.5%) once argument-witness facts were also made point-in-time (third instance of D-012).
+- **What I should learn from this:** Generate structured data from a model of the thing (a floor plan), not by hand, and let validation tests enforce its invariants. Also: when the same class of bug appears three times, write the test that forbids the class (`test_t1_observations_are_points_in_time`), not just a fix for the instance.
+
+## D-019 (2026-11-09): Famous character names, flavour only
+
+- **Decision:** Characters are named from `data/names.json`, a pool of 31 names, each with provenance. It has historical murderers and suspects from cases more than 100 years old (e.g. Jack the Ripper, Lizzie Borden, Dr Crippen) and public-domain fictional characters whose authors died more than 70 years ago (e.g. Sherlock Holmes, Moriarty, Dracula). Names are drawn at random, independently of guilt.
+- **Alternatives considered:** Generic invented names; real crime scenes; modern cases; Agatha Christie's characters (still copyrighted, excluded).
+- **Reason:** User request (names only, mix of historical and fictional). The age limits avoid modern victims' families and copyright. A test checks that no name predicts guilt, and names were already excluded from features (PRD 7A.1).
+- **What I should learn from this:** Flavour data must be *statistically independent* of the label, or it becomes a shortcut. Testing that independence is cheap insurance.
+
+## D-020 (2026-11-09): No hand-written cases (deviation from PRD 8.1)
+
+- **Decision:** No hand-authored OOD cases (user decision). Generalisation is measured on (a) 3 held-out templates never used in training or tuning, and (b) a generated "shifted" set with variables outside `CASE_VARIABLE_RANGES` (step 5b). Every report must say that generalisation claims rest only on these.
+- **Alternatives considered:** The PRD's minimum of 3 hand-authored cases.
+- **Reason:** User preference. Held-out templates plus out-of-range parameters still test generalisation, though only *within the generator's family*. That limitation must be stated.
+- **What I should learn from this:** Out-of-distribution means outside the *training* distribution. Without independent hand-made data, every test set shares the generator's assumptions, so "generalises" can only mean "to unseen maps and parameter ranges of the same generator".
