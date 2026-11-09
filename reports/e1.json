@@ -1,0 +1,844 @@
+{
+  "bootstrap": {
+    "resamples": 2000,
+    "seed": 0,
+    "unit": "case"
+  },
+  "dataset_version": "0.3.0",
+  "experiment": "E1 feature ablation (PRD 9.1); pre-registered in docs/EXPERIMENTS.md",
+  "family": "lightgbm",
+  "git_commit": "331a11f",
+  "groups": {
+    "A": [
+      "motive_evidence",
+      "victim_relationship_records",
+      "access_evidence",
+      "opportunity_overlap"
+    ],
+    "B": [
+      "scene_presence_in_window",
+      "alibi_strength",
+      "claimed_corroboration_share"
+    ],
+    "C": [
+      "claim_fact_conflicts",
+      "claim_claim_conflicts",
+      "disagreement_count",
+      "unverified_claim_share"
+    ],
+    "context": [
+      "evidence_coverage"
+    ]
+  },
+  "note": "Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020).",
+  "results": {
+    "test_held_out_template": {
+      "cases": 375,
+      "comparisons": {
+        "A - rule": {
+          "log_loss": {
+            "high": -0.0505,
+            "low": -0.1801,
+            "mean": -0.1152
+          },
+          "top1": {
+            "high": 0.0554,
+            "low": -0.0232,
+            "mean": 0.0164
+          }
+        },
+        "A - solver": {
+          "log_loss": {
+            "high": -0.4239,
+            "low": -0.536,
+            "mean": -0.4808
+          },
+          "top1": {
+            "high": 0.4247,
+            "low": 0.3617,
+            "mean": 0.3938
+          }
+        },
+        "A+B - A": {
+          "log_loss": {
+            "high": -0.2874,
+            "low": -0.3829,
+            "mean": -0.3348
+          },
+          "top1": {
+            "high": 0.1787,
+            "low": 0.1236,
+            "mean": 0.1499
+          }
+        },
+        "A+B - rule": {
+          "log_loss": {
+            "high": -0.3965,
+            "low": -0.5029,
+            "mean": -0.45
+          },
+          "top1": {
+            "high": 0.196,
+            "low": 0.135,
+            "mean": 0.1663
+          }
+        },
+        "A+B - solver": {
+          "log_loss": {
+            "high": -0.7509,
+            "low": -0.8776,
+            "mean": -0.8156
+          },
+          "top1": {
+            "high": 0.5711,
+            "low": 0.516,
+            "mean": 0.5437
+          }
+        },
+        "A+B+C - A": {
+          "log_loss": {
+            "high": -0.2888,
+            "low": -0.3898,
+            "mean": -0.3388
+          },
+          "top1": {
+            "high": 0.1764,
+            "low": 0.1208,
+            "mean": 0.147
+          }
+        },
+        "A+B+C - A+B": {
+          "log_loss": {
+            "high": 0.0101,
+            "low": -0.0184,
+            "mean": -0.004
+          },
+          "top1": {
+            "high": 0.008,
+            "low": -0.0134,
+            "mean": -0.0028
+          }
+        },
+        "A+B+C - A+B+C without A": {
+          "log_loss": {
+            "high": -0.0702,
+            "low": -0.1315,
+            "mean": -0.1027
+          },
+          "top1": {
+            "high": 0.0844,
+            "low": 0.0424,
+            "mean": 0.0634
+          }
+        },
+        "A+B+C - A+B+C without B": {
+          "log_loss": {
+            "high": -0.1087,
+            "low": -0.165,
+            "mean": -0.1363
+          },
+          "top1": {
+            "high": 0.0768,
+            "low": 0.0384,
+            "mean": 0.0565
+          }
+        },
+        "A+B+C - rule": {
+          "log_loss": {
+            "high": -0.3988,
+            "low": -0.5113,
+            "mean": -0.454
+          },
+          "top1": {
+            "high": 0.1942,
+            "low": 0.1309,
+            "mean": 0.1635
+          }
+        },
+        "A+B+C - solver": {
+          "log_loss": {
+            "high": -0.752,
+            "low": -0.8829,
+            "mean": -0.8196
+          },
+          "top1": {
+            "high": 0.5668,
+            "low": 0.5138,
+            "mean": 0.5409
+          }
+        }
+      },
+      "metrics": {
+        "A": {
+          "log_loss": {
+            "high": 1.0069,
+            "low": 0.8871,
+            "mean": 0.9456
+          },
+          "top1": {
+            "high": 0.6764,
+            "low": 0.6112,
+            "mean": 0.6439
+          }
+        },
+        "A+B": {
+          "log_loss": {
+            "high": 0.678,
+            "low": 0.5456,
+            "mean": 0.6107
+          },
+          "top1": {
+            "high": 0.8215,
+            "low": 0.7665,
+            "mean": 0.7938
+          }
+        },
+        "A+B+C": {
+          "log_loss": {
+            "high": 0.6764,
+            "low": 0.5417,
+            "mean": 0.6067
+          },
+          "top1": {
+            "high": 0.8173,
+            "low": 0.7643,
+            "mean": 0.7909
+          }
+        },
+        "A+B+C without A": {
+          "log_loss": {
+            "high": 0.7807,
+            "low": 0.6397,
+            "mean": 0.7095
+          },
+          "top1": {
+            "high": 0.7581,
+            "low": 0.6971,
+            "mean": 0.7276
+          }
+        },
+        "A+B+C without B": {
+          "log_loss": {
+            "high": 0.8047,
+            "low": 0.6852,
+            "mean": 0.743
+          },
+          "top1": {
+            "high": 0.7632,
+            "low": 0.7037,
+            "mean": 0.7344
+          }
+        },
+        "A+B+C without C": {
+          "log_loss": {
+            "high": 0.678,
+            "low": 0.5456,
+            "mean": 0.6107
+          },
+          "top1": {
+            "high": 0.8215,
+            "low": 0.7665,
+            "mean": 0.7938
+          }
+        },
+        "rule": {
+          "log_loss": {
+            "high": 1.1358,
+            "low": 0.9862,
+            "mean": 1.0608
+          },
+          "top1": {
+            "high": 0.6673,
+            "low": 0.5878,
+            "mean": 0.6275
+          }
+        },
+        "solver": {
+          "log_loss": {
+            "high": 1.4535,
+            "low": 1.3991,
+            "mean": 1.4264
+          },
+          "top1": {
+            "high": 0.2571,
+            "low": 0.2432,
+            "mean": 0.2501
+          }
+        }
+      },
+      "templates": [
+        "abbey",
+        "lodge",
+        "train"
+      ]
+    },
+    "test_ood_shifted": {
+      "cases": 150,
+      "comparisons": {
+        "A - rule": {
+          "log_loss": {
+            "high": 0.035,
+            "low": -0.169,
+            "mean": -0.07
+          },
+          "top1": {
+            "high": 0.067,
+            "low": -0.0377,
+            "mean": 0.015
+          }
+        },
+        "A - solver": {
+          "log_loss": {
+            "high": -0.2737,
+            "low": -0.5145,
+            "mean": -0.3977
+          },
+          "top1": {
+            "high": 0.4224,
+            "low": 0.3066,
+            "mean": 0.363
+          }
+        },
+        "A+B - A": {
+          "log_loss": {
+            "high": -0.091,
+            "low": -0.2843,
+            "mean": -0.1896
+          },
+          "top1": {
+            "high": 0.1287,
+            "low": 0.0393,
+            "mean": 0.0827
+          }
+        },
+        "A+B - rule": {
+          "log_loss": {
+            "high": -0.1743,
+            "low": -0.3497,
+            "mean": -0.2597
+          },
+          "top1": {
+            "high": 0.141,
+            "low": 0.0587,
+            "mean": 0.0977
+          }
+        },
+        "A+B - solver": {
+          "log_loss": {
+            "high": -0.4528,
+            "low": -0.7193,
+            "mean": -0.5873
+          },
+          "top1": {
+            "high": 0.5025,
+            "low": 0.3913,
+            "mean": 0.4456
+          }
+        },
+        "A+B+C - A": {
+          "log_loss": {
+            "high": -0.0845,
+            "low": -0.2831,
+            "mean": -0.1873
+          },
+          "top1": {
+            "high": 0.1293,
+            "low": 0.0313,
+            "mean": 0.08
+          }
+        },
+        "A+B+C - A+B": {
+          "log_loss": {
+            "high": 0.025,
+            "low": -0.0211,
+            "mean": 0.0023
+          },
+          "top1": {
+            "high": 0.0173,
+            "low": -0.0213,
+            "mean": -0.0027
+          }
+        },
+        "A+B+C - A+B+C without A": {
+          "log_loss": {
+            "high": -0.0079,
+            "low": -0.1117,
+            "mean": -0.0615
+          },
+          "top1": {
+            "high": 0.1044,
+            "low": 0.0178,
+            "mean": 0.0598
+          }
+        },
+        "A+B+C - A+B+C without B": {
+          "log_loss": {
+            "high": -0.0038,
+            "low": -0.1366,
+            "mean": -0.073
+          },
+          "top1": {
+            "high": 0.0833,
+            "low": 0.0113,
+            "mean": 0.0467
+          }
+        },
+        "A+B+C - rule": {
+          "log_loss": {
+            "high": -0.1674,
+            "low": -0.3488,
+            "mean": -0.2573
+          },
+          "top1": {
+            "high": 0.1403,
+            "low": 0.0523,
+            "mean": 0.095
+          }
+        },
+        "A+B+C - solver": {
+          "log_loss": {
+            "high": -0.4473,
+            "low": -0.7223,
+            "mean": -0.585
+          },
+          "top1": {
+            "high": 0.5012,
+            "low": 0.3856,
+            "mean": 0.443
+          }
+        }
+      },
+      "metrics": {
+        "A": {
+          "log_loss": {
+            "high": 1.1713,
+            "low": 0.9117,
+            "mean": 1.0416
+          },
+          "top1": {
+            "high": 0.6693,
+            "low": 0.5507,
+            "mean": 0.6093
+          }
+        },
+        "A+B": {
+          "log_loss": {
+            "high": 0.9911,
+            "low": 0.7128,
+            "mean": 0.852
+          },
+          "top1": {
+            "high": 0.7507,
+            "low": 0.6353,
+            "mean": 0.692
+          }
+        },
+        "A+B+C": {
+          "log_loss": {
+            "high": 1.0003,
+            "low": 0.7113,
+            "mean": 0.8543
+          },
+          "top1": {
+            "high": 0.748,
+            "low": 0.6307,
+            "mean": 0.6893
+          }
+        },
+        "A+B+C without A": {
+          "log_loss": {
+            "high": 1.0516,
+            "low": 0.7787,
+            "mean": 0.9158
+          },
+          "top1": {
+            "high": 0.6882,
+            "low": 0.572,
+            "mean": 0.6296
+          }
+        },
+        "A+B+C without B": {
+          "log_loss": {
+            "high": 1.056,
+            "low": 0.8002,
+            "mean": 0.9274
+          },
+          "top1": {
+            "high": 0.6993,
+            "low": 0.586,
+            "mean": 0.6427
+          }
+        },
+        "A+B+C without C": {
+          "log_loss": {
+            "high": 0.9911,
+            "low": 0.7128,
+            "mean": 0.852
+          },
+          "top1": {
+            "high": 0.7507,
+            "low": 0.6353,
+            "mean": 0.692
+          }
+        },
+        "rule": {
+          "log_loss": {
+            "high": 1.223,
+            "low": 1.0061,
+            "mean": 1.1117
+          },
+          "top1": {
+            "high": 0.659,
+            "low": 0.529,
+            "mean": 0.5943
+          }
+        },
+        "solver": {
+          "log_loss": {
+            "high": 1.4817,
+            "low": 1.3948,
+            "mean": 1.4394
+          },
+          "top1": {
+            "high": 0.2575,
+            "low": 0.2357,
+            "mean": 0.2464
+          }
+        }
+      },
+      "templates": [
+        "abbey",
+        "lodge",
+        "train"
+      ]
+    },
+    "val": {
+      "cases": 171,
+      "comparisons": {
+        "A - rule": {
+          "log_loss": {
+            "high": -0.0367,
+            "low": -0.2316,
+            "mean": -0.1323
+          },
+          "top1": {
+            "high": 0.0819,
+            "low": -0.0398,
+            "mean": 0.0205
+          }
+        },
+        "A - solver": {
+          "log_loss": {
+            "high": -0.3532,
+            "low": -0.5172,
+            "mean": -0.4347
+          },
+          "top1": {
+            "high": 0.4076,
+            "low": 0.3137,
+            "mean": 0.3599
+          }
+        },
+        "A+B - A": {
+          "log_loss": {
+            "high": -0.2747,
+            "low": -0.4121,
+            "mean": -0.3473
+          },
+          "top1": {
+            "high": 0.2,
+            "low": 0.1228,
+            "mean": 0.162
+          }
+        },
+        "A+B - rule": {
+          "log_loss": {
+            "high": -0.3974,
+            "low": -0.563,
+            "mean": -0.4797
+          },
+          "top1": {
+            "high": 0.2263,
+            "low": 0.1392,
+            "mean": 0.1825
+          }
+        },
+        "A+B - solver": {
+          "log_loss": {
+            "high": -0.689,
+            "low": -0.8723,
+            "mean": -0.782
+          },
+          "top1": {
+            "high": 0.5615,
+            "low": 0.4808,
+            "mean": 0.5219
+          }
+        },
+        "A+B+C - A": {
+          "log_loss": {
+            "high": -0.296,
+            "low": -0.4371,
+            "mean": -0.3725
+          },
+          "top1": {
+            "high": 0.2123,
+            "low": 0.1327,
+            "mean": 0.1737
+          }
+        },
+        "A+B+C - A+B": {
+          "log_loss": {
+            "high": -0.0062,
+            "low": -0.0449,
+            "mean": -0.0252
+          },
+          "top1": {
+            "high": 0.0246,
+            "low": -0.0012,
+            "mean": 0.0117
+          }
+        },
+        "A+B+C - A+B+C without A": {
+          "log_loss": {
+            "high": -0.0546,
+            "low": -0.13,
+            "mean": -0.0918
+          },
+          "top1": {
+            "high": 0.083,
+            "low": 0.0259,
+            "mean": 0.0536
+          }
+        },
+        "A+B+C - A+B+C without B": {
+          "log_loss": {
+            "high": -0.1028,
+            "low": -0.2008,
+            "mean": -0.1542
+          },
+          "top1": {
+            "high": 0.0924,
+            "low": 0.0312,
+            "mean": 0.0616
+          }
+        },
+        "A+B+C - rule": {
+          "log_loss": {
+            "high": -0.4222,
+            "low": -0.5893,
+            "mean": -0.5048
+          },
+          "top1": {
+            "high": 0.241,
+            "low": 0.1485,
+            "mean": 0.1942
+          }
+        },
+        "A+B+C - solver": {
+          "log_loss": {
+            "high": -0.7136,
+            "low": -0.894,
+            "mean": -0.8072
+          },
+          "top1": {
+            "high": 0.5724,
+            "low": 0.4923,
+            "mean": 0.5336
+          }
+        }
+      },
+      "metrics": {
+        "A": {
+          "log_loss": {
+            "high": 1.1027,
+            "low": 0.9198,
+            "mean": 1.0107
+          },
+          "top1": {
+            "high": 0.6556,
+            "low": 0.5579,
+            "mean": 0.6058
+          }
+        },
+        "A+B": {
+          "log_loss": {
+            "high": 0.7607,
+            "low": 0.5735,
+            "mean": 0.6634
+          },
+          "top1": {
+            "high": 0.807,
+            "low": 0.7269,
+            "mean": 0.7678
+          }
+        },
+        "A+B+C": {
+          "log_loss": {
+            "high": 0.7305,
+            "low": 0.551,
+            "mean": 0.6382
+          },
+          "top1": {
+            "high": 0.8181,
+            "low": 0.738,
+            "mean": 0.7795
+          }
+        },
+        "A+B+C without A": {
+          "log_loss": {
+            "high": 0.839,
+            "low": 0.6301,
+            "mean": 0.73
+          },
+          "top1": {
+            "high": 0.7694,
+            "low": 0.6801,
+            "mean": 0.7259
+          }
+        },
+        "A+B+C without B": {
+          "log_loss": {
+            "high": 0.8809,
+            "low": 0.7085,
+            "mean": 0.7924
+          },
+          "top1": {
+            "high": 0.7589,
+            "low": 0.6752,
+            "mean": 0.7179
+          }
+        },
+        "A+B+C without C": {
+          "log_loss": {
+            "high": 0.7607,
+            "low": 0.5735,
+            "mean": 0.6634
+          },
+          "top1": {
+            "high": 0.807,
+            "low": 0.7269,
+            "mean": 0.7678
+          }
+        },
+        "rule": {
+          "log_loss": {
+            "high": 1.2656,
+            "low": 1.0316,
+            "mean": 1.143
+          },
+          "top1": {
+            "high": 0.645,
+            "low": 0.5251,
+            "mean": 0.5854
+          }
+        },
+        "solver": {
+          "log_loss": {
+            "high": 1.4866,
+            "low": 1.4041,
+            "mean": 1.4454
+          },
+          "top1": {
+            "high": 0.2563,
+            "low": 0.2355,
+            "mean": 0.2459
+          }
+        }
+      },
+      "templates": [
+        "clinic",
+        "college",
+        "gallery",
+        "hotel",
+        "manor",
+        "office",
+        "theatre",
+        "warehouse",
+        "yacht"
+      ]
+    }
+  },
+  "tuning": {
+    "A": {
+      "best_params": {
+        "learning_rate": 0.1,
+        "min_child_samples": 50,
+        "n_estimators": 100,
+        "num_leaves": 7
+      },
+      "cv_log_loss": 0.997324
+    },
+    "A+B": {
+      "best_params": {
+        "learning_rate": 0.03,
+        "min_child_samples": 20,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "cv_log_loss": 0.720416
+    },
+    "A+B+C": {
+      "best_params": {
+        "learning_rate": 0.1,
+        "min_child_samples": 20,
+        "n_estimators": 100,
+        "num_leaves": 15
+      },
+      "cv_log_loss": 0.704979
+    },
+    "A+B+C without A": {
+      "best_params": {
+        "learning_rate": 0.03,
+        "min_child_samples": 20,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "cv_log_loss": 0.790796
+    },
+    "A+B+C without B": {
+      "best_params": {
+        "learning_rate": 0.03,
+        "min_child_samples": 20,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "cv_log_loss": 0.827372
+    },
+    "A+B+C without C": {
+      "best_params": {
+        "learning_rate": 0.03,
+        "min_child_samples": 20,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "cv_log_loss": 0.720416
+    }
+  },
+  "variants": {
+    "A": [
+      "A"
+    ],
+    "A+B": [
+      "A",
+      "B"
+    ],
+    "A+B+C": [
+      "A",
+      "B",
+      "C"
+    ],
+    "A+B+C without A": [
+      "B",
+      "C"
+    ],
+    "A+B+C without B": [
+      "A",
+      "C"
+    ],
+    "A+B+C without C": [
+      "A",
+      "B"
+    ]
+  }
+}

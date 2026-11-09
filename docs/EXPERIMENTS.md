@@ -38,3 +38,41 @@ Hypotheses are written and committed **before** each experiment runs (PRD 9). Re
 ### Results
 
 *(added after running; the hypotheses above are not edited)*
+
+**Run:** `make e1`, 2026-11-09. Full tables are in `reports/e1.md`.
+
+**Held-out templates (375 cases, 3 unseen maps), top-1 with 95% CI:**
+
+| Variant | Top-1 |
+|---|---|
+| A | 0.644 [0.611, 0.676] |
+| A+B | **0.794** [0.766, 0.822] |
+| A+B+C | 0.791 [0.764, 0.817] |
+| Rule | 0.627 |
+| Solver | 0.250 |
+
+**Shifted OOD set (150 cases):**
+
+| Variant | Top-1 |
+|---|---|
+| A | 0.609 |
+| A+B | 0.692 |
+| A+B+C | 0.689 |
+| Rule | 0.594 |
+| Solver | 0.246 |
+
+**Verdicts** (paired top-1 differences; "real" means the 95% CI excludes 0):
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| H1: A+B > A | **Confirmed** | +0.150 [0.124, 0.179] (held-out); +0.083 [0.039, 0.129] (OOD) |
+| H2: A+B+C > A+B | **Refuted** | −0.003 [−0.013, 0.008] (held-out); −0.003 [−0.021, 0.017] (OOD). Only on val does log loss improve slightly (−0.025). |
+| H3: every variant > solver | **Confirmed** | +0.39 to +0.54 (held-out) |
+| H4: A does not beat the rule (top-1) | **Confirmed** | +0.016 [−0.023, 0.055]; but A has the better log loss on held-out (−0.115), i.e. it is better calibrated |
+| H5: dropping B hurts most | **Mixed** | top-1: dropping A −0.063 vs dropping B −0.057 (CIs overlap: not supported). Log loss: dropping B +0.136 vs dropping A +0.103 (supported). |
+| H6: ordering holds on OOD; all lower | **Partly** | all lower than held-out (0.69 vs 0.79), but A+B ≈ A+B+C as in H2 |
+
+**Interpretation.**
+- **Why C adds nothing:** in this generator, a statement is refuted mostly *by the very badge record in the murder room* that group B already counts as presence at the scene. So contradiction features are informative on their own (0.50 top-1 in the leakage audit) but redundant once presence is known. The learned model is not "reasoning about lies" beyond what opportunity evidence shows.
+- **Two directions this suggests:** contradictions that come from sources *other* than scene records (independent witnesses, cross-checks between suspects), or E3, where the question policy *elicits* new claims that could be refuted in new ways.
+- **Generalisation:** the gains carry over to unseen maps. On the shifted set they shrink by about 10 points, but they stay above the rule and the solver.
