@@ -311,3 +311,32 @@ case generator (simulation)  ->  hidden truth (T3) + evidence the player can fin
   - **Expected information gain** = current entropy − expected entropy after the answer. The answer is unknown, so you average over possible answers, weighted by how likely each is.
   - **Surrogate model for decisions.** A cheap Bayesian update is good enough for *choosing*; the real model does the *updating*.
   - **Train–use mismatch.** The ranker was trained on single-statement states, so states with many answers are out of its experience, and it ignores what it never learned to use.
+
+## Step 9b: trying to make interview answers matter (and what it revealed)
+
+- **What:**
+  - **Dataset 0.4.0** with simulated interviews.
+  - **Feature spec 1.1.0** with three interview features.
+  - **Per-state balanced training** for every model.
+  - **A stronger leakage control.**
+  - **E3b** (pre-registered), and a one-time test evaluation of the new model.
+- **Why:** E3 showed the Machine Detective ignores interview answers, while the game's premise is that *your* answers matter.
+- **How:**
+  1. **Simulated interviews.** Random questions and record requests in every case, answered by players who lie consistently or dodge 20% of the time. *Everyone* dodges at that rate, culprit included, so dodging isn't a giveaway (the lesson from step 7a). A dodge is recorded as "I don't remember", so the model can see it.
+  2. **New features:** answers given, share dodged, answers refuted by records.
+  3. **A bug caught on the way:** answers were timestamped with the computer's clock, so the dataset wasn't reproducible. The checksum test caught it.
+- **What the audit found:** this is the most important lesson of the step.
+  - **The first audit failed narrowly.** With the new data, the shuffled-label control was just over its limit (+0.006, upper bound 0.032).
+  - **Pooling exposed a real bias.** I didn't loosen the limit. I pooled 5 independent shuffles to get more evidence, and the result jumped to **+0.106**: models trained on *random* answers were finding the culprit.
+  - **The cause:** each case has one culprit among n suspects, so the base rate is 1/n. Small casts give each suspect more evidence, and so do culprits. A per-suspect model learned "lots of evidence = small case = more likely positive", and that happens to point at culprits.
+  - **The fix:** weight each case so its one positive balances its negatives. The shuffled control then drops to chance (−0.005).
+  - **The old model had the same issue** (+0.084 pooled), so its earlier test result is superseded. Measured like-for-like, the inflation was small (0.687 → 0.684 at 35% of the evidence on unseen maps).
+- **E3b result:**
+  - **No change from interview training.** Questions alone still gain nothing (−0.027).
+  - **The reason:** an answer can only be checked against a record, and the model already uses that record. You can't learn information that isn't there.
+  - **The next fix** has to add a new source of truth: questions about *other* suspects, so honest witnesses can contradict the culprit.
+- **New model, tested once (top-1):** held-out maps 0.728 (+0.13 vs rule), in-dist 0.720 (+0.16), shifted 0.646 (+0.06).
+- **Concepts:**
+  - **Base-rate confounding.** When the label rate differs between groups (here, case sizes) and features can tell the groups apart, a model learns the group, not the target. Per-group balancing removes it.
+  - **Statistical power of controls.** One random shuffle is one noisy draw. Replicating it is how a hidden 8–10 point bias became visible.
+  - **Information vs representation.** Better features or more training data can't extract information the signal doesn't contain. When an experiment says "no effect", ask whether the *data source* can carry the effect at all.

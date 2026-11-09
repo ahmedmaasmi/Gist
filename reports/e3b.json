@@ -1,0 +1,1005 @@
+{
+  "cases": 300,
+  "experiment": "E3 question policies (PRD 9.3); pre-registered in docs/EXPERIMENTS.md",
+  "git_commit": "cdca526",
+  "model_version": "lightgbm-0a9d150890",
+  "note": "Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020).",
+  "outcome_model": {
+    "ask": {
+      "culprit": {
+        "consistent": 803,
+        "evasive": 0,
+        "refuted": 66,
+        "self_contradiction": 31
+      },
+      "innocent": {
+        "consistent": 2239,
+        "evasive": 765,
+        "refuted": 45,
+        "self_contradiction": 35
+      }
+    },
+    "check": {
+      "culprit": {
+        "nothing": 0,
+        "other_record": 39,
+        "scene_record": 261
+      },
+      "innocent": {
+        "nothing": 11,
+        "other_record": 847,
+        "scene_record": 170
+      }
+    }
+  },
+  "results": {
+    "evasive_innocents": {
+      "entropy_minus": {
+        "fixed_order": {
+          "actions_to_reach_and_hold": {
+            "high": -1.79,
+            "low": -2.61,
+            "mean": -2.1967
+          },
+          "top1_after_3": {
+            "high": 0.3033,
+            "low": 0.1933,
+            "mean": 0.25
+          },
+          "top1_after_5": {
+            "high": 0.41,
+            "low": 0.2967,
+            "mean": 0.3533
+          },
+          "top1_after_8": {
+            "high": 0.4267,
+            "low": 0.3067,
+            "mean": 0.3667
+          }
+        },
+        "random": {
+          "actions_to_reach_and_hold": {
+            "high": -1.0233,
+            "low": -1.8468,
+            "mean": -1.4433
+          },
+          "top1_after_3": {
+            "high": 0.2434,
+            "low": 0.1333,
+            "mean": 0.19
+          },
+          "top1_after_5": {
+            "high": 0.3033,
+            "low": 0.1867,
+            "mean": 0.2467
+          },
+          "top1_after_8": {
+            "high": 0.2533,
+            "low": 0.1367,
+            "mean": 0.1967
+          }
+        },
+        "top_two": {
+          "actions_to_reach_and_hold": {
+            "high": -0.13,
+            "low": -0.5401,
+            "mean": -0.34
+          },
+          "top1_after_3": {
+            "high": 0.0967,
+            "low": 0.0367,
+            "mean": 0.0667
+          },
+          "top1_after_5": {
+            "high": 0.1267,
+            "low": 0.0467,
+            "mean": 0.0867
+          },
+          "top1_after_8": {
+            "high": 0.14,
+            "low": 0.06,
+            "mean": 0.1
+          }
+        }
+      },
+      "policies": {
+        "entropy": {
+          "actions_to_reach_and_hold": {
+            "high": 3.2233,
+            "low": 2.4499,
+            "mean": 2.8267
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_01",
+              "check records of suspect_03",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:50?",
+              "check records of suspect_04",
+              "ask suspect_03: where were you at 21:10?",
+              "check records of suspect_05"
+            ],
+            "first_decision": [
+              [
+                "check records of suspect_01",
+                0.1743
+              ],
+              [
+                "check records of suspect_05",
+                0.1135
+              ],
+              [
+                "ask suspect_01: where were you at 21:10?",
+                0.0838
+              ],
+              [
+                "ask suspect_01: where were you at 21:30?",
+                0.0838
+              ],
+              [
+                "ask suspect_01: where were you at 21:50?",
+                0.0838
+              ]
+            ],
+            "outcomes": [
+              "scene_record",
+              "other_record",
+              "consistent",
+              "consistent",
+              "consistent",
+              "other_record",
+              "consistent",
+              "other_record"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.4067,
+            "low": 0.2833,
+            "mean": 0.3433
+          },
+          "reached_within_budget": 0.8533,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.8,
+            "low": 0.6967,
+            "mean": 0.75
+          },
+          "top1_after_5": {
+            "high": 0.8733,
+            "low": 0.7867,
+            "mean": 0.83
+          },
+          "top1_after_8": {
+            "high": 0.8933,
+            "low": 0.81,
+            "mean": 0.8533
+          }
+        },
+        "fixed_order": {
+          "actions_to_reach_and_hold": {
+            "high": 5.5002,
+            "low": 4.5165,
+            "mean": 5.0233
+          },
+          "example_episode": {
+            "actions": [
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_02: where were you at 21:30?",
+              "ask suspect_03: where were you at 21:30?",
+              "ask suspect_04: where were you at 21:30?",
+              "ask suspect_05: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_02: where were you at 21:10?",
+              "ask suspect_03: where were you at 21:10?"
+            ],
+            "first_decision": [],
+            "outcomes": [
+              "consistent",
+              "consistent",
+              "consistent",
+              "evasive",
+              "evasive",
+              "consistent",
+              "consistent",
+              "evasive"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.0133,
+            "low": -0.06,
+            "mean": -0.0233
+          },
+          "reached_within_budget": 0.4867,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.5567,
+            "low": 0.4433,
+            "mean": 0.5
+          },
+          "top1_after_5": {
+            "high": 0.5367,
+            "low": 0.42,
+            "mean": 0.4767
+          },
+          "top1_after_8": {
+            "high": 0.5467,
+            "low": 0.4333,
+            "mean": 0.4867
+          }
+        },
+        "random": {
+          "actions_to_reach_and_hold": {
+            "high": 4.7267,
+            "low": 3.7966,
+            "mean": 4.27
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_02",
+              "ask suspect_04: where were you at 21:30?",
+              "check records of suspect_04",
+              "ask suspect_02: where were you at 21:50?",
+              "ask suspect_03: where were you at 21:10?",
+              "ask suspect_04: where were you at 21:10?",
+              "ask suspect_05: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:50?"
+            ],
+            "first_decision": [],
+            "outcomes": [
+              "other_record",
+              "consistent",
+              "other_record",
+              "consistent",
+              "evasive",
+              "evasive",
+              "consistent",
+              "consistent"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.2067,
+            "low": 0.09,
+            "mean": 0.1467
+          },
+          "reached_within_budget": 0.6567,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.6134,
+            "low": 0.5066,
+            "mean": 0.56
+          },
+          "top1_after_5": {
+            "high": 0.64,
+            "low": 0.53,
+            "mean": 0.5833
+          },
+          "top1_after_8": {
+            "high": 0.7133,
+            "low": 0.6033,
+            "mean": 0.6567
+          }
+        },
+        "top_two": {
+          "actions_to_reach_and_hold": {
+            "high": 3.5933,
+            "low": 2.74,
+            "mean": 3.1667
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_01",
+              "check records of suspect_03",
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_03: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_03: where were you at 21:10?",
+              "ask suspect_01: where were you at 21:50?",
+              "ask suspect_03: where were you at 21:50?"
+            ],
+            "first_decision": [
+              [
+                "check records of suspect_01",
+                0.811213
+              ]
+            ],
+            "outcomes": [
+              "scene_record",
+              "other_record",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "evasive"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.3,
+            "low": 0.19,
+            "mean": 0.2433
+          },
+          "reached_within_budget": 0.7533,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.7367,
+            "low": 0.63,
+            "mean": 0.6833
+          },
+          "top1_after_5": {
+            "high": 0.7901,
+            "low": 0.69,
+            "mean": 0.7433
+          },
+          "top1_after_8": {
+            "high": 0.8,
+            "low": 0.7,
+            "mean": 0.7533
+          }
+        }
+      }
+    },
+    "honest_innocents": {
+      "entropy_minus": {
+        "fixed_order": {
+          "actions_to_reach_and_hold": {
+            "high": -1.6967,
+            "low": -2.47,
+            "mean": -2.08
+          },
+          "top1_after_3": {
+            "high": 0.3033,
+            "low": 0.1967,
+            "mean": 0.25
+          },
+          "top1_after_5": {
+            "high": 0.4001,
+            "low": 0.29,
+            "mean": 0.3467
+          },
+          "top1_after_8": {
+            "high": 0.4133,
+            "low": 0.2933,
+            "mean": 0.3567
+          }
+        },
+        "random": {
+          "actions_to_reach_and_hold": {
+            "high": -0.9699,
+            "low": -1.75,
+            "mean": -1.36
+          },
+          "top1_after_3": {
+            "high": 0.24,
+            "low": 0.13,
+            "mean": 0.1867
+          },
+          "top1_after_5": {
+            "high": 0.3,
+            "low": 0.1833,
+            "mean": 0.2433
+          },
+          "top1_after_8": {
+            "high": 0.2267,
+            "low": 0.1133,
+            "mean": 0.17
+          }
+        },
+        "top_two": {
+          "actions_to_reach_and_hold": {
+            "high": -0.1833,
+            "low": -0.59,
+            "mean": -0.39
+          },
+          "top1_after_3": {
+            "high": 0.0967,
+            "low": 0.0333,
+            "mean": 0.0633
+          },
+          "top1_after_5": {
+            "high": 0.1433,
+            "low": 0.0667,
+            "mean": 0.1033
+          },
+          "top1_after_8": {
+            "high": 0.13,
+            "low": 0.0533,
+            "mean": 0.09
+          }
+        }
+      },
+      "policies": {
+        "entropy": {
+          "actions_to_reach_and_hold": {
+            "high": 3.1834,
+            "low": 2.4267,
+            "mean": 2.8033
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_01",
+              "check records of suspect_03",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:50?",
+              "check records of suspect_04",
+              "ask suspect_03: where were you at 21:10?",
+              "check records of suspect_05"
+            ],
+            "first_decision": [
+              [
+                "check records of suspect_01",
+                0.1743
+              ],
+              [
+                "check records of suspect_05",
+                0.1135
+              ],
+              [
+                "ask suspect_01: where were you at 21:10?",
+                0.0838
+              ],
+              [
+                "ask suspect_01: where were you at 21:30?",
+                0.0838
+              ],
+              [
+                "ask suspect_01: where were you at 21:50?",
+                0.0838
+              ]
+            ],
+            "outcomes": [
+              "scene_record",
+              "other_record",
+              "consistent",
+              "consistent",
+              "consistent",
+              "other_record",
+              "consistent",
+              "other_record"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.39,
+            "low": 0.2699,
+            "mean": 0.33
+          },
+          "reached_within_budget": 0.84,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.8,
+            "low": 0.6967,
+            "mean": 0.75
+          },
+          "top1_after_5": {
+            "high": 0.8833,
+            "low": 0.7967,
+            "mean": 0.84
+          },
+          "top1_after_8": {
+            "high": 0.88,
+            "low": 0.8,
+            "mean": 0.84
+          }
+        },
+        "fixed_order": {
+          "actions_to_reach_and_hold": {
+            "high": 5.3467,
+            "low": 4.3632,
+            "mean": 4.8833
+          },
+          "example_episode": {
+            "actions": [
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_02: where were you at 21:30?",
+              "ask suspect_03: where were you at 21:30?",
+              "ask suspect_04: where were you at 21:30?",
+              "ask suspect_05: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_02: where were you at 21:10?",
+              "ask suspect_03: where were you at 21:10?"
+            ],
+            "first_decision": [],
+            "outcomes": [
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.0,
+            "low": -0.0567,
+            "mean": -0.0267
+          },
+          "reached_within_budget": 0.4833,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.5567,
+            "low": 0.4433,
+            "mean": 0.5
+          },
+          "top1_after_5": {
+            "high": 0.55,
+            "low": 0.44,
+            "mean": 0.4933
+          },
+          "top1_after_8": {
+            "high": 0.5433,
+            "low": 0.43,
+            "mean": 0.4833
+          }
+        },
+        "random": {
+          "actions_to_reach_and_hold": {
+            "high": 4.6267,
+            "low": 3.6799,
+            "mean": 4.1633
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_02",
+              "ask suspect_04: where were you at 21:30?",
+              "check records of suspect_04",
+              "ask suspect_02: where were you at 21:50?",
+              "ask suspect_03: where were you at 21:10?",
+              "ask suspect_04: where were you at 21:10?",
+              "ask suspect_05: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:50?"
+            ],
+            "first_decision": [],
+            "outcomes": [
+              "other_record",
+              "consistent",
+              "other_record",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.2167,
+            "low": 0.1067,
+            "mean": 0.16
+          },
+          "reached_within_budget": 0.67,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.6233,
+            "low": 0.51,
+            "mean": 0.5633
+          },
+          "top1_after_5": {
+            "high": 0.6533,
+            "low": 0.5433,
+            "mean": 0.5967
+          },
+          "top1_after_8": {
+            "high": 0.7267,
+            "low": 0.6133,
+            "mean": 0.67
+          }
+        },
+        "top_two": {
+          "actions_to_reach_and_hold": {
+            "high": 3.61,
+            "low": 2.7667,
+            "mean": 3.1933
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_01",
+              "check records of suspect_03",
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_03: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_03: where were you at 21:10?",
+              "ask suspect_01: where were you at 21:50?",
+              "ask suspect_03: where were you at 21:50?"
+            ],
+            "first_decision": [
+              [
+                "check records of suspect_01",
+                0.811213
+              ]
+            ],
+            "outcomes": [
+              "scene_record",
+              "other_record",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.2967,
+            "low": 0.1867,
+            "mean": 0.24
+          },
+          "reached_within_budget": 0.75,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.74,
+            "low": 0.6333,
+            "mean": 0.6867
+          },
+          "top1_after_5": {
+            "high": 0.7867,
+            "low": 0.6867,
+            "mean": 0.7367
+          },
+          "top1_after_8": {
+            "high": 0.8,
+            "low": 0.6999,
+            "mean": 0.75
+          }
+        }
+      }
+    },
+    "mixed": {
+      "entropy_minus": {
+        "fixed_order": {
+          "actions_to_reach_and_hold": {
+            "high": -1.6567,
+            "low": -2.43,
+            "mean": -2.04
+          },
+          "top1_after_3": {
+            "high": 0.3067,
+            "low": 0.1933,
+            "mean": 0.25
+          },
+          "top1_after_5": {
+            "high": 0.4,
+            "low": 0.2833,
+            "mean": 0.3433
+          },
+          "top1_after_8": {
+            "high": 0.3967,
+            "low": 0.2767,
+            "mean": 0.34
+          }
+        },
+        "random": {
+          "actions_to_reach_and_hold": {
+            "high": -0.8867,
+            "low": -1.6768,
+            "mean": -1.2767
+          },
+          "top1_after_3": {
+            "high": 0.23,
+            "low": 0.1167,
+            "mean": 0.1733
+          },
+          "top1_after_5": {
+            "high": 0.29,
+            "low": 0.1767,
+            "mean": 0.2367
+          },
+          "top1_after_8": {
+            "high": 0.22,
+            "low": 0.1067,
+            "mean": 0.1633
+          }
+        },
+        "top_two": {
+          "actions_to_reach_and_hold": {
+            "high": -0.1433,
+            "low": -0.5467,
+            "mean": -0.3467
+          },
+          "top1_after_3": {
+            "high": 0.1,
+            "low": 0.04,
+            "mean": 0.07
+          },
+          "top1_after_5": {
+            "high": 0.1467,
+            "low": 0.0633,
+            "mean": 0.1033
+          },
+          "top1_after_8": {
+            "high": 0.1133,
+            "low": 0.0367,
+            "mean": 0.0767
+          }
+        }
+      },
+      "policies": {
+        "entropy": {
+          "actions_to_reach_and_hold": {
+            "high": 3.2067,
+            "low": 2.4333,
+            "mean": 2.8133
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_01",
+              "check records of suspect_03",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:50?",
+              "check records of suspect_05",
+              "check records of suspect_04",
+              "ask suspect_03: where were you at 21:10?"
+            ],
+            "first_decision": [
+              [
+                "check records of suspect_01",
+                0.1743
+              ],
+              [
+                "check records of suspect_05",
+                0.1135
+              ],
+              [
+                "ask suspect_01: where were you at 21:10?",
+                0.0838
+              ],
+              [
+                "ask suspect_01: where were you at 21:30?",
+                0.0838
+              ],
+              [
+                "ask suspect_01: where were you at 21:50?",
+                0.0838
+              ]
+            ],
+            "outcomes": [
+              "scene_record",
+              "other_record",
+              "self_contradiction",
+              "consistent",
+              "self_contradiction",
+              "other_record",
+              "other_record",
+              "consistent"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.3967,
+            "low": 0.2767,
+            "mean": 0.3367
+          },
+          "reached_within_budget": 0.8467,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.7967,
+            "low": 0.6967,
+            "mean": 0.75
+          },
+          "top1_after_5": {
+            "high": 0.8867,
+            "low": 0.8,
+            "mean": 0.8433
+          },
+          "top1_after_8": {
+            "high": 0.8867,
+            "low": 0.8033,
+            "mean": 0.8467
+          }
+        },
+        "fixed_order": {
+          "actions_to_reach_and_hold": {
+            "high": 5.3367,
+            "low": 4.3433,
+            "mean": 4.8533
+          },
+          "example_episode": {
+            "actions": [
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_02: where were you at 21:30?",
+              "ask suspect_03: where were you at 21:30?",
+              "ask suspect_04: where were you at 21:30?",
+              "ask suspect_05: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_02: where were you at 21:10?",
+              "ask suspect_03: where were you at 21:10?"
+            ],
+            "first_decision": [],
+            "outcomes": [
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "self_contradiction",
+              "consistent",
+              "consistent"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.0333,
+            "low": -0.04,
+            "mean": -0.0033
+          },
+          "reached_within_budget": 0.5067,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.56,
+            "low": 0.4467,
+            "mean": 0.5
+          },
+          "top1_after_5": {
+            "high": 0.56,
+            "low": 0.4467,
+            "mean": 0.5
+          },
+          "top1_after_8": {
+            "high": 0.5633,
+            "low": 0.45,
+            "mean": 0.5067
+          }
+        },
+        "random": {
+          "actions_to_reach_and_hold": {
+            "high": 4.5535,
+            "low": 3.6332,
+            "mean": 4.09
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_02",
+              "ask suspect_04: where were you at 21:30?",
+              "check records of suspect_04",
+              "ask suspect_02: where were you at 21:50?",
+              "ask suspect_03: where were you at 21:10?",
+              "ask suspect_04: where were you at 21:10?",
+              "ask suspect_05: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:50?"
+            ],
+            "first_decision": [],
+            "outcomes": [
+              "other_record",
+              "consistent",
+              "other_record",
+              "consistent",
+              "consistent",
+              "consistent",
+              "consistent",
+              "self_contradiction"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.2267,
+            "low": 0.12,
+            "mean": 0.1733
+          },
+          "reached_within_budget": 0.6833,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.6333,
+            "low": 0.5233,
+            "mean": 0.5767
+          },
+          "top1_after_5": {
+            "high": 0.6633,
+            "low": 0.5533,
+            "mean": 0.6067
+          },
+          "top1_after_8": {
+            "high": 0.74,
+            "low": 0.6267,
+            "mean": 0.6833
+          }
+        },
+        "top_two": {
+          "actions_to_reach_and_hold": {
+            "high": 3.5734,
+            "low": 2.73,
+            "mean": 3.16
+          },
+          "example_episode": {
+            "actions": [
+              "check records of suspect_01",
+              "check records of suspect_03",
+              "ask suspect_01: where were you at 21:30?",
+              "ask suspect_03: where were you at 21:30?",
+              "ask suspect_01: where were you at 21:10?",
+              "ask suspect_03: where were you at 21:10?",
+              "ask suspect_01: where were you at 21:50?",
+              "ask suspect_03: where were you at 21:50?"
+            ],
+            "first_decision": [
+              [
+                "check records of suspect_01",
+                0.811213
+              ]
+            ],
+            "outcomes": [
+              "scene_record",
+              "other_record",
+              "consistent",
+              "consistent",
+              "self_contradiction",
+              "consistent",
+              "self_contradiction",
+              "consistent"
+            ]
+          },
+          "gain_after_8_vs_start": {
+            "high": 0.3167,
+            "low": 0.2067,
+            "mean": 0.26
+          },
+          "reached_within_budget": 0.77,
+          "top1_after_0": {
+            "high": 0.5667,
+            "low": 0.4567,
+            "mean": 0.51
+          },
+          "top1_after_3": {
+            "high": 0.7333,
+            "low": 0.6267,
+            "mean": 0.68
+          },
+          "top1_after_5": {
+            "high": 0.79,
+            "low": 0.69,
+            "mean": 0.74
+          },
+          "top1_after_8": {
+            "high": 0.8167,
+            "low": 0.72,
+            "mean": 0.77
+          }
+        }
+      }
+    }
+  },
+  "start_fraction": 0.15,
+  "templates": "test_held_out_template (train, lodge, abbey)"
+}

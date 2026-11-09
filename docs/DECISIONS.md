@@ -311,3 +311,27 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **What I should learn from this:**
   - **An information-seeking policy helps most when it can choose *which* evidence to look at.** Here the big wins come from requesting the right records.
   - **A model that has only seen single-statement states can't exploit interviews.** If the product's core loop is interrogation, the *training data* must contain interrogations. Otherwise answers are decorative.
+
+## D-029 (2026-11-09): Interview training data, interview features, balanced training; E3b refutes the fix
+
+- **Decision** (user request after E3: "do the suggestion"):
+  - **(a) Interview evidence states in the dataset (0.4.0).** Random 6-action interviews from the 15% and 35% states, answered by "training" players: liars keep their story, and *everyone* dodges 20% (no tell). Dodges are recorded as claims without a location.
+  - **(c) Interview features (spec 1.1.0, group D):** `interview_answers`, `evasive_answer_share`, `answers_refuted`.
+  - **Per-state balanced sample weights for all training (`fit_model`).** Required after the leakage audit's shuffled-label control, once pooled over 5 shuffles, found models trained on *random* labels ranking the culprit +0.106 above chance. Cause: the base rate 1/n varies with case size, and smaller casts accumulate more evidence per suspect, so case size leaks a guilt-like signal. With balanced weights: −0.005 [−0.029, +0.019].
+  - **Audit amendment, made *after* a failed run and documented as such:** the shuffled control pools 5 independent shuffles. The bar (upper bound ≤ +0.03) is unchanged.
+- **Consequences reported, not hidden:**
+  - **The step 8 audit was underpowered.** The step 7 model's setup shows the same confound when pooled (+0.084 [0.046, 0.122]), so its final result (`lightgbm-6d50342630`, 0.79 on held-out maps) is **superseded**. Like-for-like on plain evidence stages, the new model is nearly identical (held-out 0.684 / 0.822 / 0.915 vs 0.687 / 0.831 / 0.917), so the inflation was small in practice.
+  - **E1 was run with unbalanced training.** Its relative conclusions are probably robust, since all variants share the confound, but it should be re-run (open question).
+- **E3b (pre-registered):** the questions-only script still gains nothing (−0.027 [−0.057, 0.000]). **The fix did not make answers matter.** Entropy still wins (0.84 after 8 actions).
+- **New model** `lightgbm-0a9d150890`, final test evaluation run once:
+
+  | Split | Top-1 | vs rule |
+  |---|---|---|
+  | Held-out maps | 0.728 | +0.125 [0.098, 0.150] |
+  | In-dist | 0.720 | +0.162 [0.119, 0.208] |
+  | Shifted OOD | 0.646 | +0.058 [0.021, 0.096] |
+
+  The overall numbers include the harder interview states. Abstention is ≥ 80% accurate in-dist and on held-out maps; 77% on OOD.
+- **What I should learn from this:**
+  - **A control that passes with one random draw can still be hiding a bias.** Pool replicates before trusting a "no leak" result.
+  - **Training a model to read a signal cannot create information the signal doesn't carry.** Answers that can only be verified by records the model already sees are redundant by construction. The fix must add a new *source* of truth (witnesses about others), not a new feature.

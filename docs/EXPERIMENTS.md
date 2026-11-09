@@ -161,3 +161,25 @@ The secondary 35% start shows the same pattern: entropy 0.853 vs random 0.747 af
 ### Results
 
 *(added after running; the hypotheses above are not edited)*
+
+**Run:** `make e3b`, 2026-11-09. Same 300 held-out-map cases as E3; ranker `lightgbm-0a9d150890`. Full tables are in `reports/e3b.md`.
+
+**Top-1 after 8 actions (honest / evasive / mixed innocents):**
+
+| Policy | Top-1 | Paired gain over start (honest) |
+|---|---|---|
+| Entropy | 0.84 / 0.85 / 0.85 | +0.33 [0.27, 0.39] |
+| Top-two | 0.75 / 0.75 / 0.77 | |
+| Random | 0.67 / 0.66 / 0.68 | |
+| Fixed order (questions only) | 0.48 / 0.49 / 0.51 | **−0.027 [−0.057, 0.000]** |
+
+**Verdicts:**
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| H1: questions-only script now gains | **Refuted** | −0.027 [−0.057, 0.000] (honest); −0.023 and −0.003 for the other populations |
+| H2: entropy > random after 5 | **Confirmed** | 0.84 vs 0.60 (honest); similar for the other populations |
+| H3: dodging now lowers fixed_order accuracy | **Refuted** | 0.483 (honest) vs 0.487 (evasive) |
+| H4: entropy at least as good as in E3 | **Consistent** | 0.840 [0.800, 0.880] vs 0.847 in E3 (within noise) |
+
+**Interpretation.** Interview training data and interview features did **not** make answers matter. An answer to "where were you" can only be checked against a record, and when that record exists, the ranker already uses it directly. So answers add little *information*, however well the model reads them. Answers would only matter with a source of truth that isn't a record. The proposed next step: questions about *others* ("who did you see at 21:30?"), so honest witnesses can contradict the culprit through cross-suspect disagreements (D-016).

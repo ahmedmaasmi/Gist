@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 10. API and minimal web UI (not started; waiting for the user's OK, and for a decision on the Mode 1 interview problem below)
+- **Current step:** 10. API and minimal web UI (starting)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -61,10 +61,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09, **step 8a done:** leakage audit PASSED, all 7 checks (D-026). The model relies mostly on scene presence (alone 0.684 vs full 0.779). Tests 174 → 176.
 - 2026-11-09, **step 8 done:** E1 pre-registered and run (H1, H3, H4 confirmed; H2 refuted; H5 mixed; H6 partly); final test evaluation run once through the deployed Ranker (D-027).
 - 2026-11-09, **step 9 done:** Machine Detective policies and pre-registered E3. Entropy beats every other policy; interview answers barely matter to the current ranker (D-028). Tests 178 → 184.
+- 2026-11-09, **step 9b:** interview training data (dataset 0.4.0), interview features (spec 1.1.0), per-state balanced training (case-size confound found by the pooled shuffled control). E3b: answers still don't matter (refuted). New model evaluated once (D-029). Tests 184 → 188.
 
 ## Next action
 
-Decide how to make interview answers matter in Mode 1 (open question below). Then step 10: the FastAPI endpoints and a minimal web UI (case page, claim builder, live ranking with explanations, verdict, results) in the pixel-art style.
+Step 10: FastAPI endpoints (sessions, claims, evidence, ranking with explanations, next question, verdict, results after the verdict) with T3 contract and canary tests, then the minimal pixel-art web UI.
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 
@@ -111,17 +112,21 @@ Scores measure recovery of the generator's logic, not real-world skill.
 
 Evasive players make no difference, because answers barely move the ranker.
 
-## Final test results (`make final-eval`, run once; top-1, 95% CI)
+## Final test results: current model `lightgbm-0a9d150890` (D-029; `make final-eval`, run once; top-1, 95% CI)
+
+All evidence states, including interview states:
 
 | Split | Model | Rule | Paired difference |
 |---|---|---|---|
-| test_in_dist (171) | 0.796 | 0.583 | +0.213 [0.163, 0.264] |
-| Held-out maps (375) | 0.791 | 0.627 | +0.164 [0.131, 0.194] |
-| Shifted OOD (150) | 0.689 | 0.594 | +0.095 [0.052, 0.140] |
+| test_in_dist (171) | 0.720 | 0.558 | +0.162 [0.119, 0.208] |
+| Held-out maps (375) | 0.728 | 0.603 | +0.125 [0.098, 0.150] |
+| Shifted OOD (150) | 0.646 | 0.589 | +0.058 [0.021, 0.096] |
 
-**Abstention (target 80%):** met on in-dist (82.6%) and held-out maps (81.5%); **not met on OOD (71.9%)**.
+- **Plain evidence stages, held-out maps:** 0.684 / 0.822 / 0.915. The superseded model had 0.687 / 0.831 / 0.917.
+- **Abstention (target 80%):** 81.7% in-dist; 82.8% held-out; 77.3% OOD.
+- **Superseded:** `lightgbm-6d50342630` (0.79 overall on held-out maps, plain states only). It had a case-size confound (D-029).
 
-**E1:** A 0.644 → A+B 0.794 → A+B+C 0.791 on held-out maps. H2 is refuted: contradictions add nothing beyond scene presence.
+**E3b:** interview training did not make answers matter. The questions-only script gains −0.027 [−0.057, 0.000]; entropy reaches 0.84 after 8 actions.
 
 ## Models (`make models`, val only; top-1 with 95% CI)
 
@@ -171,12 +176,8 @@ Evasive players make no difference, because answers barely move the ranker.
 
 ## Open questions / blockers
 
-- **Mode 1 interviews barely influence the ranker (E3).** Options:
-  - (a) Generate *interactive* training data: simulate question-and-answer rounds in the dataset, so the ranker learns from answers (refuted answers, changed stories, evasion).
-  - (b) Add questions about *others* ("who did you see at 21:30?"), which create cross-checks between suspects that don't depend on scene records.
-  - (c) Add answer-specific features (e.g. "story changed under questioning").
-
-  My recommendation is (a) + (c) before the UI, so the player's answers matter in the game. This is the user's call.
+- **Mode 1 interviews still barely influence the ranker** (E3 and E3b). Options (a) and (c) were done and did not help (D-029). The remaining fix is (b): questions about *others* ("who did you see at 21:30?"), whose answers create cross-suspect disagreements that don't depend on records. Recommended next ML work (v0.2 or a v0.1 follow-up).
+- **Re-run E1** with balanced training on dataset 0.4.0. The original E1 used unbalanced training (D-029).
 
 - **Next model version:** E1 shows A+B is as good as A+B+C and simpler. Decide on **val** whether to drop group C (never on the test results already seen).
 - **OOD calibration:** abstention reaches only 72% accuracy on shifted cases. Consider OOD warnings (CL-05), and analyse this in E4 (v1.0).
