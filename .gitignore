@@ -94,3 +94,20 @@ playwright-report/
 # OS files
 # ==========================================
 Thumbs.db
+# ==========================================
+# ML / generated data and artefacts
+# (data/templates/ and data/hand_authored/ stay tracked)
+# ==========================================
+data/generated/
+ml/artifacts/
+artifacts/
+mlruns/
+*.parquet
+*.joblib
+*.pkl
+*.onnx
+
+# ==========================================
+# Claude Code local settings
+# ==========================================
+.claude/settings.local.json
