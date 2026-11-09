@@ -50,6 +50,7 @@ d. When a step (or sub-step) is done: run tests, update `docs/STATUS.md`, append
 - Play-time ranking: `app/ml/ranker.Ranker` (`load()`, `rank(t0, t1, setting)`, `counterfactual(...)`); falls back to the rule if no model loads.
 - Art: style reference and portrait prompts in `docs/art/`.
 - `make up` / `make down`: Postgres + backend in Docker Compose; API on http://localhost:8000 (`/health`, `/cases`, `/sessions…`, interactive docs at `/docs`). The image bundles `ml/artifacts`, so run `make models` before building.
+- Frontend: `frontend/` (Next.js 16 + TypeScript 5.9 + Tailwind 4). `make frontend-check` (type-check, vitest, build). In Docker on http://localhost:3000; it proxies `/api/*` to the backend (`BACKEND_URL`).
 - API code: `app/api/` (game logic in `game.py`; **only `views.py` turns server state into client data**).
 - Storage is **PostgreSQL in Docker** (user decision D-005, deviates from PRD's JSON/SQLite):
   role `casemind_gameplay` has no access to schema `t3_canonical`; only `casemind_vault` does.

@@ -12,6 +12,7 @@ from app.api.schemas import (
     CaseSummary,
     ClaimRequest,
     CreateSessionRequest,
+    PlayerBrief,
     ResultsView,
     SessionCreated,
     SessionView,
@@ -67,6 +68,17 @@ def create_session(body: CreateSessionRequest, request: Request) -> SessionCreat
 @router.get("/sessions/{session_id}", response_model=SessionView)
 def get_session(session_id: str, request: Request) -> SessionView:
     return session_view(_session(request, session_id))
+
+
+@router.get("/sessions/{session_id}/you", response_model=PlayerBrief)
+def get_brief(session_id: str, request: Request) -> PlayerBrief:
+    """Your own character brief again (e.g. after a page reload)."""
+    return player_brief(_session(request, session_id))
+
+
+@router.get("/sessions/{session_id}/case", response_model=CaseSummary)
+def get_case(session_id: str, request: Request) -> CaseSummary:
+    return case_summary(_session(request, session_id).bundle)
 
 
 @router.get("/sessions/{session_id}/ranking", response_model=RankingResult)

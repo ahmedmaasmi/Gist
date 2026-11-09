@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/* Retro investigation desk (docs/art/style_reference.png): dark navy panels, amber accents, cream case-file paper. */
+@theme {
+  --color-desk: #0a1120;
+  --color-panel: #111b30;
+  --color-edge: #2b3d63;
+  --color-ink: #d9e1f0;
+  --color-dim: #8fa0bf;
+  --color-amber: #f2a93b;
+  --color-amber-deep: #b8761d;
+  --color-paper: #efe4c8;
+  --color-paper-ink: #2a2418;
+  --color-stamp-red: #b3362b;
+  --color-stamp-green: #2f7d4f;
+  --font-pixel: var(--font-vt323), ui-monospace, monospace;
+  --font-title: var(--font-press-start), ui-monospace, monospace;
+}
+
+html,
+body {
+  background: var(--color-desk);
+  color: var(--color-ink);
+  font-family: var(--font-pixel);
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+/* Chunky pixel borders and focus rings that stay visible for keyboard users */
+.pixel-panel {
+  background: var(--color-panel);
+  border: 3px solid var(--color-edge);
+  box-shadow: 4px 4px 0 #050a14;
+}
+.pixel-paper {
+  background: var(--color-paper);
+  color: var(--color-paper-ink);
+  border: 3px solid var(--color-amber-deep);
+  box-shadow: 4px 4px 0 #050a14;
+}
+.pixel-button {
+  border: 3px solid var(--color-amber-deep);
+  background: var(--color-amber);
+  color: #1a1206;
+  padding: 2px 12px;
+  box-shadow: 3px 3px 0 #050a14;
+  cursor: pointer;
+}
+.pixel-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pixel-button.secondary {
+  background: var(--color-panel);
+  color: var(--color-ink);
+  border-color: var(--color-edge);
+}
+:focus-visible {
+  outline: 3px dashed var(--color-amber);
+  outline-offset: 2px;
+}
+img.pixelated {
+  image-rendering: pixelated;
+}

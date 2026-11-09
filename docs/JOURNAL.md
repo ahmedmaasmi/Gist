@@ -357,3 +357,24 @@ case generator (simulation)  ->  hidden truth (T3) + evidence the player can fin
 - **Concepts:**
   - **A single secrecy boundary.** Only `views.py` turns server state into client data, and contract tests check the response *types*. If someone adds an endpoint that could leak the solution, the test fails before any data exists.
   - **Idempotency.** Networks retry requests. An idempotency key turns "do it again" into "give me the same answer again".
+
+## Step 10b: the pixel-art web UI (Next.js + TypeScript)
+
+- **What:** `frontend/`, a Next.js app.
+  - **Case list:** play the culprit or an innocent.
+  - **Game screen, three panels:**
+    - **Dossier:** your character, where you really were, your secrets, what you told the police, the evidence found and all statements.
+    - **Inquiry:** the detective's moves, each with "why this question" (the alternatives and their expected uncertainty drop); the claim builder when you're asked; the contradictions and disagreements found.
+    - **Machine detective:** probabilities ("model estimate of who did it"), how they changed, and per-suspect reasons with evidence links. A "without this?" button shows how the ranking would change without one piece of evidence. Then the verdict and the truth.
+  - **Docker:** a `frontend` service in Compose.
+- **Why:** PRD 11 (UI), 12 (Next.js, TypeScript, Tailwind) and the v0.1 exit gate: a stranger must be able to play a case locally.
+- **How:**
+  - **One origin for the browser.** The browser only talks to the frontend. The frontend's `/api/...` route forwards requests to the backend, so there are no cross-origin issues and the backend stays private.
+  - **Readable text.** Server text uses IDs and minutes ("suspect_02 … loc_cellar … minute 1300"); the UI turns them into names, rooms and times ("Count Dracula … Wine Cellar … 21:40").
+  - **Retries are safe.** Every action carries an idempotency key, so a double click can't make the detective act twice.
+  - **Portraits** are looked up by the same file names as `docs/art/portraits.csv`, with a placeholder until the images exist.
+- **Numbers:** a full game through the UI's proxy, playing Sherlock Holmes (innocent): the detective named Count Dracula, which was correct.
+- **Concepts:**
+  - **Backend-for-frontend proxy.** The frontend server forwards API calls. It hides the backend, avoids CORS, and keeps secrets server-side.
+  - **Typed API contract on both sides.** Pydantic models in Python mirror TypeScript interfaces. The backend tests that hidden data can't appear in responses; the frontend simply never receives it.
+- **Blocked:** the Docker run. The Mac's disk is 99% full, and Docker Desktop can't write. Free space first.

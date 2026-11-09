@@ -357,3 +357,19 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 
   Tests: the contract check (no pre-verdict response type can hold hidden types or fields), full games in both roles scanned for canaries and `culprit_id`, idempotency, and input validation.
 - **What I should learn from this:** Put the secrecy boundary in *one* place (the view layer) and test the *types*, not just the outputs. A new endpoint then can't leak the solution by accident, because its response model wouldn't pass the contract test.
+
+## D-031 (2026-11-09): Next.js + TypeScript frontend, in the Docker stack (step 10b)
+
+- **Decision:**
+  - **Stack.** `frontend/` is a Next.js 16 (App Router) + TypeScript 5.9 + Tailwind 4 app, as in PRD 12. The user chose this over a single page served by the backend.
+  - **Proxy.** It talks to the backend only through its own server-side proxy (`app/api/[...path]/route.ts`, `BACKEND_URL`), so the browser never needs the backend address and no CORS is required.
+  - **Screens:**
+    - **case selection**, with the role choice;
+    - **game screen.** Left, your dossier (your own brief, the evidence found, statements with status stamps). Middle, the inquiry: the detective's moves with "why this question", the claim builder, and the consistency engine. Right, the Machine Detective: probabilities labelled as a *model estimate*, previous vs current values, per-suspect explanations with evidence links and "without this?" counterfactuals, then the verdict and results.
+  - **Style and accessibility.** Pixel-art style from `docs/art/style_reference.png` (VT323 and Press Start 2P fonts). Status is always spelled out in text, never colour alone; focus outlines are visible.
+  - **Portraits** load from `public/portraits/<slug>.png`, with a pixel monogram until the art exists.
+  - **Docker.** A multi-stage image (standalone output) and a `frontend` service in Compose on port 3000.
+  - **TypeScript pinned to 5.9.3.** npm installed 7.0, the native rewrite, and Next.js type-checks through TypeScript's JS API.
+- **Verification:** type-check clean, `next build` succeeds, vitest checks the formatting helpers (including portrait file names matching `docs/art/portraits.csv`). A full game was played through the frontend's proxy against a locally running backend.
+  - **Not verified:** the Docker run, because the Mac's disk is 99% full (258 MB free) and Docker Desktop fails with "read-only file system".
+- **What I should learn from this:** A thin server-side proxy in the frontend keeps one origin for the browser and lets the backend stay private. It's simpler and safer than configuring CORS. Separately: verify what you can without the blocked tool, and report precisely what remains unverified.

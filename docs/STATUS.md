@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 10. API and minimal web UI (10a API done; 10b next: the pixel-art web UI)
+- **Current step:** 10. API and minimal web UI (10a and 10b built; **Docker run blocked: Mac disk 99% full**)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -63,10 +63,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09, **step 9 done:** Machine Detective policies and pre-registered E3. Entropy beats every other policy; interview answers barely matter to the current ranker (D-028). Tests 178 → 184.
 - 2026-11-09, **step 9b:** interview training data (dataset 0.4.0), interview features (spec 1.1.0), per-state balanced training (case-size confound found by the pooled shuffled control). E3b: answers still don't matter (refuted). New model evaluated once (D-029). Tests 184 → 188.
 - 2026-11-09, **step 10a done:** Mode 1 game API. Cases, sessions, detective steps, your answers, ranking with explanations and counterfactuals, verdict, results after the verdict; contract and canary tests; runs in Docker with the trained model (D-030). Tests 188 → 198.
+- 2026-11-09, **step 10b (code):** Next.js + TypeScript pixel-art UI (dossier, inquiry with claim builder, machine detective with explanations and counterfactuals, verdict, results); server-side API proxy; Docker image and Compose service (D-031). Played end to end through the proxy locally; the Docker run is not yet verified.
 
 ## Next action
 
-Step 10b: the minimal web UI in the pixel-art style (`docs/art/style_reference.png`): case page, your dossier, claim builder, live ranking with explanations and counterfactuals, verdict and results, talking to the API.
+Free disk space (the user's decision), restart Docker Desktop, then `make up` and check http://localhost:3000 in a browser. After that, step 11.
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 
@@ -176,6 +177,8 @@ All evidence states, including interview states:
 - **Lie rate.** The culprit lie rate is 0.820 observed against 0.806 sampled (z = 1.75, not significant); re-check.
 
 ## Open questions / blockers
+
+- **BLOCKER: disk full** (258 MB free; Docker reports "read-only file system"). Regenerable project outputs: old datasets v0.2.0 and v0.3.0 (372 MB, superseded, rebuildable from their commits), frontend `.next` (73 MB), the old root `.venv` (92 MB, unused since uv). Docker Desktop data is 4.5 GB. Needs the user's decision.
 
 - **Mode 1 interviews still barely influence the ranker** (E3 and E3b). Options (a) and (c) were done and did not help (D-029). The remaining fix is (b): questions about *others* ("who did you see at 21:30?"), whose answers create cross-suspect disagreements that don't depend on records. Recommended next ML work (v0.2 or a v0.1 follow-up).
 - **Re-run E1** with balanced training on dataset 0.4.0. The original E1 used unbalanced training (D-029).

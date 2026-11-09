@@ -1,5 +1,5 @@
 # CaseMind — one entry point per task. Python tooling runs through uv inside backend/.
-.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset baselines models audit-leakage e1 final-eval e3 e3b
+.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset baselines models audit-leakage e1 final-eval e3 e3b frontend-check
 
 install:  ## Install locked dependencies (incl. dev tools) into backend/.venv
 	cd backend && uv sync
@@ -13,7 +13,7 @@ lint:     ## Lint (ruff)
 fmt:      ## Auto-fix lint issues and format code
 	cd backend && uv run ruff check --fix . && uv run ruff format .
 
-up:       ## Build and start Postgres + backend in Docker
+up:       ## Build and start Postgres + backend + frontend in Docker (game on http://localhost:3000)
 	docker compose up --build -d
 
 down:     ## Stop the Docker stack (data volume is kept)
@@ -51,3 +51,6 @@ e3:  ## E3 question policies (PRD 9.3; pre-registered in docs/EXPERIMENTS.md) ->
 
 e3b:  ## E3b: E3 re-run with the interview-trained ranker (pre-registered) -> reports/e3b.{json,md}
 	cd backend && uv run python -m app.evaluation.e3_policies --tag b
+
+frontend-check:  ## Type-check, unit-test and build the Next.js frontend
+	cd frontend && npm ci && npx tsc --noEmit && npx vitest run && npx next build

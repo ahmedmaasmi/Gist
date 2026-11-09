@@ -47,7 +47,9 @@ def _reachable(model) -> tuple[set, set]:
     return seen, names
 
 
-@pytest.mark.parametrize("model", [schemas.CaseSummary, schemas.SessionCreated, schemas.SessionView, schemas.VerdictView])
+@pytest.mark.parametrize(
+    "model", [schemas.CaseSummary, schemas.SessionCreated, schemas.SessionView, schemas.VerdictView, schemas.PlayerBrief]
+)
 def test_responses_before_the_verdict_cannot_hold_hidden_data(model):
     reachable, names = _reachable(model)
     assert not reachable & HIDDEN_TYPES
@@ -83,6 +85,8 @@ def _play(client, role: str):
             bodies.append(a.text)
     bodies.append(client.get(f"/sessions/{sid}").text)
     bodies.append(client.get(f"/sessions/{sid}/ranking").text)
+    bodies.append(client.get(f"/sessions/{sid}/you").text)
+    bodies.append(client.get(f"/sessions/{sid}/case").text)
     bodies.append(client.post(f"/sessions/{sid}/verdict").text)
     return bodies, sid
 
