@@ -292,3 +292,22 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **What I should learn from this:**
   - **Pre-registering turns "the model works" into falsifiable claims,** and the refuted one (H2) taught the most.
   - **Calibration is a property of a data distribution, not of a model.** Thresholds set on val held on unseen maps but not under shifted noise. That is the case for OOD warnings (CL-05) and for E4.
+
+## D-028 (2026-11-09): Question policies and E3
+
+- **Decision:**
+  - **Machine Detective components** (`app/modes/mode1_detective/`):
+    - a question bank from public data only: "where were you at" start, middle or end of the window, plus "request records", per suspect;
+    - scripted players answering from the truth (honest, lying, evasive; three populations);
+    - four policies;
+    - an episode loop with the fixed ranker.
+  - **Entropy policy.** Picks the question with the largest expected entropy drop, using P(outcome | culprit or innocent, question type) estimated by simulation on **dev** maps (mixed players). It logs its top alternatives and their expected gains (MD-03).
+  - **E3** was pre-registered (`e078413`), then run once on 300 fresh held-out-map cases from 15% of the evidence (35% as a secondary analysis).
+- **Alternatives considered:**
+  - A full Bayesian or Monte-Carlo look-ahead with the ranker: too slow, and not needed for v0.1. The surrogate only *chooses*; the real ranker *updates*.
+  - Giving the policy the true population: rejected, because a real detective doesn't know who is evasive.
+  - Starting at 35% of the evidence: a ceiling, so it's the secondary analysis.
+- **Results** (after 8 actions, top-1): entropy **0.85** vs top-two 0.71, random 0.65, fixed order 0.48. H1, H2, H3 and H6 are confirmed. H4 is refuted for fixed_order and H5 is refuted (evasion doesn't matter).
+- **What I should learn from this:**
+  - **An information-seeking policy helps most when it can choose *which* evidence to look at.** Here the big wins come from requesting the right records.
+  - **A model that has only seen single-statement states can't exploit interviews.** If the product's core loop is interrogation, the *training data* must contain interrogations. Otherwise answers are decorative.

@@ -270,3 +270,44 @@ case generator (simulation)  ->  hidden truth (T3) + evidence the player can fin
 - **Concepts:**
   - **Why "once".** Every look at test data that influences a decision leaks information into the model choice. That's why E1's lesson (use A+B, which is simpler) waits for the next version, decided on val.
   - **Distribution shift breaks calibration before it breaks ranking.** Under shift the model still beats the baselines, but its confidence is too high. This motivates OOD warnings (PRD CL-05) and E4.
+
+## Step 9: the Machine Detective asks questions (E3)
+
+- **What:**
+  - `app/modes/mode1_detective/` (question bank, simulated players, four policies, episode loop);
+  - `app/evaluation/e3_policies.py` and `make e3` → `reports/e3.md`;
+  - E3 hypotheses in `docs/EXPERIMENTS.md`.
+- **Why:** PRD 6.3, 6.4.D and 9.3. The detective should choose good questions, and we must measure whether a smart policy beats simple ones, using simulated players at scale (human play is only a demo).
+- **How:**
+  1. **Question bank.** Per suspect: "where were you at" the start, middle or end of the window, and "request their records". It is built from public information only.
+  2. **Simulated players** answer from the hidden truth, as a human playing that character would:
+     - **honest:** says where they really were;
+     - **lying culprit:** repeats their cover story during the window;
+     - **evasive:** sometimes "I don't remember".
+  3. **Entropy policy.**
+     - **Entropy** measures how spread out the probabilities are (high = unsure).
+     - For each possible question, it estimates the probability of each answer type if this suspect is guilty vs innocent. Those numbers are learned from simulations on *training* maps.
+     - It computes the expected entropy after the answer (Bayes' rule) and picks the question with the largest expected drop.
+     - It logs the alternatives and their expected gains (MD-03).
+  4. **The loop.** Policy picks → player answers or records are revealed → the contradiction checker runs → the real ranker re-ranks. Eight actions per case.
+  5. **Pre-registered**, then run once on 300 fresh cases from unseen maps.
+- **Numbers (top-1 after 8 actions, start 0.47):**
+
+  | Policy | Top-1 | Actions to reach and hold the right answer |
+  |---|---|---|
+  | Entropy | **0.85** | 2.8 |
+  | Top-two | 0.71 | 3.2 |
+  | Random | 0.65 | 4.2 |
+  | Fixed script | 0.48 | 4.8 |
+
+- **The big lesson:**
+  - **Interviews don't help the current model.** The fixed script asks only "where were you" questions and gains nothing. Even the entropy policy wins by choosing *which records* to request.
+  - **Evasive players change nothing,** because answers barely matter.
+  - **Two causes:**
+    - a lie is caught only by a record the model already counts (E1);
+    - the ranker never saw multi-statement interviews in training.
+  - **Why it matters:** Mode 1's core idea is that *your* answers matter, so this is a design problem to fix, not just a number.
+- **Concepts:**
+  - **Expected information gain** = current entropy − expected entropy after the answer. The answer is unknown, so you average over possible answers, weighted by how likely each is.
+  - **Surrogate model for decisions.** A cheap Bayesian update is good enough for *choosing*; the real model does the *updating*.
+  - **Train–use mismatch.** The ranker was trained on single-statement states, so states with many answers are out of its experience, and it ignores what it never learned to use.

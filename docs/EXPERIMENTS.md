@@ -112,3 +112,33 @@ Hypotheses are written and committed **before** each experiment runs (PRD 9). Re
 ### Results
 
 *(added after running; the hypotheses above are not edited)*
+
+**Run:** `make e3`, 2026-11-09, on 300 fresh held-out-map cases, starting from 15% of the evidence (start top-1 0.467). Full tables are in `reports/e3.md`; the secondary 35% start is in `reports/e3_start35.md`.
+
+**Top-1 after 8 actions (honest / evasive / mixed innocents):**
+
+| Policy | Top-1 | Actions to reach and hold (honest) |
+|---|---|---|
+| Random | 0.65 / 0.65 / 0.65 | 4.2 |
+| Fixed order | 0.48 / 0.49 / 0.50 | 4.8 |
+| Top-two | 0.71 / 0.71 / 0.71 | 3.2 |
+| **Entropy** | **0.85 / 0.84 / 0.85** | **2.8** |
+
+**Verdicts** (paired 95% CIs over the same cases):
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| H1: entropy > random after 5, every population | **Confirmed** | +0.18 to +0.19 (all CIs exclude 0) |
+| H2: entropy > fixed_order after 3 and 5 | **Confirmed** | +0.20 to +0.21 after 3; +0.27 after 5 |
+| H3: entropy not worse than top_two | **Confirmed** | tie after 3 (+0.013 [−0.013, 0.040]); better after 5 (+0.05 to +0.06) and after 8 (+0.13 to +0.14) |
+| H4: every policy improves on the start by 8 actions | **Refuted for fixed_order** | 0.467 → 0.480 [0.420, 0.540]; random, top_two and entropy improve clearly |
+| H5: evasive innocents lower accuracy | **Refuted** | differences ≤ 0.01 for every policy |
+| H6: entropy needs fewer actions than random | **Confirmed** | −1.4 [−1.8, −1.0] |
+
+The secondary 35% start shows the same pattern: entropy 0.853 vs random 0.747 after 8; fixed_order flat (0.630 → 0.627).
+
+**Interpretation: the answers carry almost no information.**
+- **Fixed_order shows it most clearly.** It only asks "where were you" (480 questions, no record checks) and gains nothing. The entropy policy wins mainly by **requesting records** (185 of 480 actions), and by asking the right suspect at the right time.
+- **The cause is the same as E1's refuted H2.** A lie is only caught when a record contradicts it, and the ranker already counts that record as presence at the scene. Also, the ranker was trained on states with a single statement per suspect.
+- **That's why evasiveness doesn't matter (H5):** if answers barely move the model, refusing to answer barely matters either.
+- **Product consequence for Mode 1:** the player is the suspect being questioned, so at present their answers barely influence the Machine Detective. Possible fixes are listed in `docs/STATUS.md` (open questions).

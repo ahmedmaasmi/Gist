@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 9. Question policy and E3 (not started; waiting for the user's OK)
+- **Current step:** 10. API and minimal web UI (not started; waiting for the user's OK, and for a decision on the Mode 1 interview problem below)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -16,7 +16,7 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - [x] **6. Baselines and evaluation harness.** `app/ml/metrics.py` (case-level metrics, case bootstrap, paired differences); uniform, motive+opportunity rule and timeline solver; `make baselines` → `reports/baselines.{json,md}`, reproducible. *(Done 2026-11-09.)*
 - [x] **7. Models.** LR and LightGBM (grouped-CV tuning, val calibration, LightGBM selected, 0.78 val top-1, +0.19 over the rule); the `Ranker` with evidence-linked explanations, a counterfactual, the rule fallback and abstention (96% coverage at 80% accuracy on val). *(Done 2026-11-09; test splits still sealed.)*
 - [x] **8. Leakage audit and E1.** Audit passed (7 checks); E1 pre-registered and run (B +0.15; C adds nothing); one-time test evaluation: model 0.79 top-1 on held-out maps (+0.16 vs rule), 0.69 on shifted OOD (+0.10). *(Done 2026-11-09.)*
-- [ ] **9. Question policy and E3.** Slot-based question bank, scripted player simulator (honest innocent, lying guilty, evasive innocent, mixed), entropy policy vs random, fixed-order and top-two; budgets 3, 5 and 8.
+- [x] **9. Question policy and E3.** Question bank, simulated players (3 populations), 4 policies, pre-registered E3 on 300 held-out-map cases: entropy 0.85 top-1 after 8 actions vs random 0.65 (+0.19), fixed 0.48, top-two 0.71. Finding: interview answers barely move the ranker (D-028). *(Done 2026-11-09.)*
 - [ ] **10. API and minimal web UI.** FastAPI endpoints (reading through the `casemind_gameplay` role only); case page, claim builder, live ranking with explanations, verdict, results; contract and canary tests on every response.
 - [ ] **11. Docker and README.** Compose stack already runs Postgres and a backend with `/health` (`make up`). Still to do: persistence layer, frontend container, README, `make` targets that reproduce every reported table.
 - [ ] **12. Exit-gate check.** A stranger plays one case locally; one command reproduces the baseline table with CIs; the leakage audit passes; tag v0.1.0; README update; two-minute demo clip.
@@ -60,10 +60,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - 2026-11-09, **step 7b done:** `Ranker` with evidence-linked explanations (LR coefficients, LightGBM TreeSHAP), a 'remove this evidence' counterfactual, the rule fallback and val-chosen abstention (D-025); import cycle fixed. Tests 166 → 174.
 - 2026-11-09, **step 8a done:** leakage audit PASSED, all 7 checks (D-026). The model relies mostly on scene presence (alone 0.684 vs full 0.779). Tests 174 → 176.
 - 2026-11-09, **step 8 done:** E1 pre-registered and run (H1, H3, H4 confirmed; H2 refuted; H5 mixed; H6 partly); final test evaluation run once through the deployed Ranker (D-027).
+- 2026-11-09, **step 9 done:** Machine Detective policies and pre-registered E3. Entropy beats every other policy; interview answers barely matter to the current ranker (D-028). Tests 178 → 184.
 
 ## Next action
 
-Step 9 (E3): a slot-based question bank; a scripted player simulator (honest innocent, lying guilty, evasive innocent, mixed); an entropy-based question policy against random, fixed-order and top-two policies; budgets of 3, 5 and 8 questions.
+Decide how to make interview answers matter in Mode 1 (open question below). Then step 10: the FastAPI endpoints and a minimal web UI (case page, claim builder, live ranking with explanations, verdict, results) in the pixel-art style.
 
 ## Generator audit (current numbers, `make audit-generator`, 600 cases, 12 maps)
 
@@ -98,6 +99,17 @@ Scores measure recovery of the generator's logic, not real-world skill.
 | Accurate claims | 0% |
 
 **Disagreements (D-016):** 1.25 per case; 100% involve a false claim. False claims caught by a flag *or* a disagreement: **85%**. 37% of accurate innocents are involved in a disagreement (the honest counterpart), so it is never treated as blame.
+
+## E3 (`make e3`; 300 held-out-map cases, start 15% of evidence, top-1 after 8 actions)
+
+| Policy | Top-1 | Actions to reach and hold |
+|---|---|---|
+| Entropy | 0.85 | 2.8 |
+| Top-two | 0.71 | 3.2 |
+| Random | 0.65 | 4.2 |
+| Fixed script (questions only) | 0.48 | 4.8 |
+
+Evasive players make no difference, because answers barely move the ranker.
 
 ## Final test results (`make final-eval`, run once; top-1, 95% CI)
 
@@ -158,6 +170,13 @@ Scores measure recovery of the generator's logic, not real-world skill.
 - **Lie rate.** The culprit lie rate is 0.820 observed against 0.806 sampled (z = 1.75, not significant); re-check.
 
 ## Open questions / blockers
+
+- **Mode 1 interviews barely influence the ranker (E3).** Options:
+  - (a) Generate *interactive* training data: simulate question-and-answer rounds in the dataset, so the ranker learns from answers (refuted answers, changed stories, evasion).
+  - (b) Add questions about *others* ("who did you see at 21:30?"), which create cross-checks between suspects that don't depend on scene records.
+  - (c) Add answer-specific features (e.g. "story changed under questioning").
+
+  My recommendation is (a) + (c) before the UI, so the player's answers matter in the game. This is the user's call.
 
 - **Next model version:** E1 shows A+B is as good as A+B+C and simpler. Decide on **val** whether to drop group C (never on the test results already seen).
 - **OOD calibration:** abstention reaches only 72% accuracy on shifted cases. Consider OOD warnings (CL-05), and analyse this in E4 (v1.0).
