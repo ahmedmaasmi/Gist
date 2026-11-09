@@ -6,7 +6,7 @@ import numpy as np
 
 from app.ml.data import MODEL_FEATURE_NAMES, Table
 from app.ml.metrics import Distribution
-from app.ml.models import distributions, fit_temperature, make_model, positive_scores
+from app.ml.models import distributions, fit_model, fit_temperature, positive_scores
 
 
 def columns_for(base_features: Sequence[str]) -> list[int]:
@@ -29,6 +29,6 @@ def fit_predict(
     temperature on `val`, and return calibrated distributions for each table in `evaluate_on`.
     """
     cols = list(columns)
-    model = make_model(family, params).fit(train.X[:, cols], train.y if y_train is None else y_train)
+    model = fit_model(family, params, train.X[:, cols], train.y if y_train is None else y_train, train)
     temperature = fit_temperature(val, positive_scores(model, val.X[:, cols]))
     return [distributions(t, positive_scores(model, t.X[:, cols]), temperature) for t in evaluate_on]

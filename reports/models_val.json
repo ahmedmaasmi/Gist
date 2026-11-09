@@ -4,320 +4,326 @@
     "seed": 0,
     "unit": "case"
   },
-  "dataset_checksum_features_csv": "44ceeea3223b82a2ff6ca1e9a164bbe7003e747923c67279b9987163e565aa29",
-  "dataset_version": "0.3.0",
+  "dataset_checksum_features_csv": "de67dcf8c723a48f536f304d33d9f6de32cbdc75be3efa825137c75a7a2af0e9",
+  "dataset_version": "0.4.0",
   "families": {
     "lightgbm": {
       "abstention": {
-        "accuracy": 0.8,
-        "coverage": 0.9591,
-        "min_margin": 0.0,
+        "accuracy": 0.8064,
+        "coverage": 0.7661,
+        "min_margin": 0.1,
         "min_top_probability": 0.35,
         "target_accuracy": 0.8
       },
       "best_params": {
         "learning_rate": 0.1,
         "min_child_samples": 20,
-        "n_estimators": 100,
+        "n_estimators": 300,
         "num_leaves": 15
       },
       "cv_log_loss_all": {
-        "{'num_leaves': 15, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 20}": 0.733313,
-        "{'num_leaves': 15, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 50}": 0.732073,
-        "{'num_leaves': 15, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 20}": 0.705303,
-        "{'num_leaves': 15, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 50}": 0.705099,
-        "{'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 20}": 0.704979,
-        "{'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 50}": 0.708041,
-        "{'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 20}": 0.721017,
-        "{'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 50}": 0.730452,
-        "{'num_leaves': 31, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 20}": 0.723324,
-        "{'num_leaves': 31, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 50}": 0.724652,
-        "{'num_leaves': 31, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 20}": 0.706411,
-        "{'num_leaves': 31, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 50}": 0.710284,
-        "{'num_leaves': 31, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 20}": 0.709441,
-        "{'num_leaves': 31, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 50}": 0.714591,
-        "{'num_leaves': 31, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 20}": 0.76201,
-        "{'num_leaves': 31, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 50}": 0.767341,
-        "{'num_leaves': 7, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 20}": 0.754994,
-        "{'num_leaves': 7, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 50}": 0.754952,
-        "{'num_leaves': 7, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 20}": 0.711921,
-        "{'num_leaves': 7, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 50}": 0.711054,
-        "{'num_leaves': 7, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 20}": 0.710449,
-        "{'num_leaves': 7, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 50}": 0.709941,
-        "{'num_leaves': 7, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 20}": 0.706025,
-        "{'num_leaves': 7, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 50}": 0.708639
+        "{'num_leaves': 15, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 20}": 0.950735,
+        "{'num_leaves': 15, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 50}": 0.951094,
+        "{'num_leaves': 15, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 20}": 0.90424,
+        "{'num_leaves': 15, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 50}": 0.903281,
+        "{'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 20}": 0.902138,
+        "{'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 50}": 0.899016,
+        "{'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 20}": 0.884699,
+        "{'num_leaves': 15, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 50}": 0.885366,
+        "{'num_leaves': 31, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 20}": 0.933527,
+        "{'num_leaves': 31, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 50}": 0.931936,
+        "{'num_leaves': 31, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 20}": 0.889562,
+        "{'num_leaves': 31, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 50}": 0.888845,
+        "{'num_leaves': 31, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 20}": 0.888486,
+        "{'num_leaves': 31, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 50}": 0.886708,
+        "{'num_leaves': 31, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 20}": 0.884951,
+        "{'num_leaves': 31, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 50}": 0.890232,
+        "{'num_leaves': 7, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 20}": 0.981998,
+        "{'num_leaves': 7, 'learning_rate': 0.03, 'n_estimators': 100, 'min_child_samples': 50}": 0.981934,
+        "{'num_leaves': 7, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 20}": 0.926352,
+        "{'num_leaves': 7, 'learning_rate': 0.03, 'n_estimators': 300, 'min_child_samples': 50}": 0.925884,
+        "{'num_leaves': 7, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 20}": 0.921737,
+        "{'num_leaves': 7, 'learning_rate': 0.1, 'n_estimators': 100, 'min_child_samples': 50}": 0.920465,
+        "{'num_leaves': 7, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 20}": 0.89503,
+        "{'num_leaves': 7, 'learning_rate': 0.1, 'n_estimators': 300, 'min_child_samples': 50}": 0.894382
       },
-      "cv_log_loss_best": 0.704979,
+      "cv_log_loss_best": 0.884699,
       "risk_coverage_val": [
         {
-          "accuracy": 0.7789,
+          "accuracy": 0.6932,
           "coverage": 1.0,
           "min_top_probability": 0.0
         },
         {
-          "accuracy": 0.7789,
+          "accuracy": 0.6932,
           "coverage": 1.0,
           "min_top_probability": 0.05
         },
         {
-          "accuracy": 0.7789,
+          "accuracy": 0.6932,
           "coverage": 1.0,
           "min_top_probability": 0.1
         },
         {
-          "accuracy": 0.7789,
+          "accuracy": 0.6932,
           "coverage": 1.0,
           "min_top_probability": 0.15
         },
         {
-          "accuracy": 0.7789,
-          "coverage": 1.0,
+          "accuracy": 0.6972,
+          "coverage": 0.992,
           "min_top_probability": 0.2
         },
         {
-          "accuracy": 0.7805,
-          "coverage": 0.9965,
-          "min_top_probability": 0.25
-        },
-        {
-          "accuracy": 0.7867,
-          "coverage": 0.9813,
-          "min_top_probability": 0.3
-        },
-        {
-          "accuracy": 0.8,
+          "accuracy": 0.7151,
           "coverage": 0.9591,
-          "min_top_probability": 0.35
-        },
-        {
-          "accuracy": 0.817,
-          "coverage": 0.9333,
-          "min_top_probability": 0.4
-        },
-        {
-          "accuracy": 0.8353,
-          "coverage": 0.9018,
-          "min_top_probability": 0.45
-        },
-        {
-          "accuracy": 0.8521,
-          "coverage": 0.8538,
-          "min_top_probability": 0.5
-        },
-        {
-          "accuracy": 0.8651,
-          "coverage": 0.7977,
-          "min_top_probability": 0.55
-        },
-        {
-          "accuracy": 0.8772,
-          "coverage": 0.7427,
-          "min_top_probability": 0.6
-        },
-        {
-          "accuracy": 0.8902,
-          "coverage": 0.6924,
-          "min_top_probability": 0.65
-        },
-        {
-          "accuracy": 0.9066,
-          "coverage": 0.6386,
-          "min_top_probability": 0.7
-        },
-        {
-          "accuracy": 0.9249,
-          "coverage": 0.5766,
-          "min_top_probability": 0.75
-        },
-        {
-          "accuracy": 0.9386,
-          "coverage": 0.5146,
-          "min_top_probability": 0.8
-        },
-        {
-          "accuracy": 0.9547,
-          "coverage": 0.4386,
-          "min_top_probability": 0.85
-        },
-        {
-          "accuracy": 0.9781,
-          "coverage": 0.3205,
-          "min_top_probability": 0.9
-        },
-        {
-          "accuracy": 0.9846,
-          "coverage": 0.152,
-          "min_top_probability": 0.95
-        }
-      ],
-      "val_temperature": 0.85,
-      "version": "lightgbm-6d50342630"
-    },
-    "logistic_regression": {
-      "abstention": {
-        "accuracy": 0.8048,
-        "coverage": 0.7368,
-        "min_margin": 0.0,
-        "min_top_probability": 0.55,
-        "target_accuracy": 0.8
-      },
-      "best_params": {
-        "C": 1.0
-      },
-      "coefficients_standardised": {
-        "access_evidence": 0.0949,
-        "access_evidence_rel": -0.6535,
-        "alibi_strength": 0.0186,
-        "alibi_strength_rel": -0.1363,
-        "claim_claim_conflicts": 0.0,
-        "claim_claim_conflicts_rel": 0.0,
-        "claim_fact_conflicts": -0.063,
-        "claim_fact_conflicts_rel": 1.137,
-        "claimed_corroboration_share": -0.1546,
-        "claimed_corroboration_share_rel": 0.1635,
-        "disagreement_count": -0.1423,
-        "disagreement_count_rel": 0.3788,
-        "evidence_coverage": -0.133,
-        "motive_evidence": -0.0666,
-        "motive_evidence_rel": 0.6154,
-        "opportunity_overlap": 0.1537,
-        "opportunity_overlap_rel": 0.4813,
-        "scene_presence_in_window": -0.2685,
-        "scene_presence_in_window_rel": 1.1136,
-        "unverified_claim_share": -0.0289,
-        "unverified_claim_share_rel": -0.6565,
-        "victim_relationship_records": -0.0116,
-        "victim_relationship_records_rel": 0.1623
-      },
-      "cv_log_loss_all": {
-        "{'C': 0.01}": 0.921213,
-        "{'C': 0.1}": 0.915962,
-        "{'C': 1.0}": 0.9159,
-        "{'C': 10.0}": 0.916003
-      },
-      "cv_log_loss_best": 0.9159,
-      "risk_coverage_val": [
-        {
-          "accuracy": 0.7018,
-          "coverage": 1.0,
-          "min_top_probability": 0.0
-        },
-        {
-          "accuracy": 0.7018,
-          "coverage": 1.0,
-          "min_top_probability": 0.05
-        },
-        {
-          "accuracy": 0.7018,
-          "coverage": 1.0,
-          "min_top_probability": 0.1
-        },
-        {
-          "accuracy": 0.7018,
-          "coverage": 1.0,
-          "min_top_probability": 0.15
-        },
-        {
-          "accuracy": 0.7018,
-          "coverage": 1.0,
-          "min_top_probability": 0.2
-        },
-        {
-          "accuracy": 0.7034,
-          "coverage": 0.9977,
           "min_top_probability": 0.25
         },
         {
-          "accuracy": 0.7055,
-          "coverage": 0.993,
+          "accuracy": 0.7326,
+          "coverage": 0.9325,
           "min_top_probability": 0.3
         },
         {
-          "accuracy": 0.7167,
-          "coverage": 0.9661,
+          "accuracy": 0.7479,
+          "coverage": 0.8921,
           "min_top_probability": 0.35
         },
         {
-          "accuracy": 0.7301,
-          "coverage": 0.9275,
+          "accuracy": 0.7857,
+          "coverage": 0.8262,
           "min_top_probability": 0.4
         },
         {
-          "accuracy": 0.7424,
-          "coverage": 0.8807,
+          "accuracy": 0.814,
+          "coverage": 0.7661,
           "min_top_probability": 0.45
         },
         {
-          "accuracy": 0.7638,
-          "coverage": 0.8269,
+          "accuracy": 0.8441,
+          "coverage": 0.689,
           "min_top_probability": 0.5
         },
         {
-          "accuracy": 0.8048,
-          "coverage": 0.7368,
+          "accuracy": 0.8655,
+          "coverage": 0.6167,
           "min_top_probability": 0.55
         },
         {
-          "accuracy": 0.8254,
-          "coverage": 0.6632,
+          "accuracy": 0.8755,
+          "coverage": 0.5593,
           "min_top_probability": 0.6
         },
         {
-          "accuracy": 0.8403,
-          "coverage": 0.586,
+          "accuracy": 0.8969,
+          "coverage": 0.5003,
           "min_top_probability": 0.65
         },
         {
-          "accuracy": 0.8626,
-          "coverage": 0.5193,
+          "accuracy": 0.9197,
+          "coverage": 0.4434,
           "min_top_probability": 0.7
         },
         {
-          "accuracy": 0.8756,
-          "coverage": 0.4515,
+          "accuracy": 0.9466,
+          "coverage": 0.378,
           "min_top_probability": 0.75
         },
         {
-          "accuracy": 0.9082,
-          "coverage": 0.3567,
+          "accuracy": 0.9571,
+          "coverage": 0.3344,
           "min_top_probability": 0.8
         },
         {
-          "accuracy": 0.9412,
-          "coverage": 0.2585,
+          "accuracy": 0.9635,
+          "coverage": 0.2764,
           "min_top_probability": 0.85
         },
         {
-          "accuracy": 0.9722,
-          "coverage": 0.1684,
+          "accuracy": 0.9772,
+          "coverage": 0.2095,
           "min_top_probability": 0.9
         },
         {
-          "accuracy": 0.9859,
-          "coverage": 0.083,
+          "accuracy": 0.9848,
+          "coverage": 0.1398,
           "min_top_probability": 0.95
         }
       ],
       "val_temperature": 0.7,
-      "version": "logistic_regression-de4cc305f0"
+      "version": "lightgbm-0a9d150890"
+    },
+    "logistic_regression": {
+      "abstention": {
+        "accuracy": 0.8012,
+        "coverage": 0.4599,
+        "min_margin": 0.35,
+        "min_top_probability": 0.0,
+        "target_accuracy": 0.8
+      },
+      "best_params": {
+        "C": 10.0
+      },
+      "coefficients_standardised": {
+        "access_evidence": 0.1484,
+        "access_evidence_rel": -0.7133,
+        "alibi_strength": -0.143,
+        "alibi_strength_rel": -0.1255,
+        "answers_refuted": 0.1176,
+        "answers_refuted_rel": -0.3336,
+        "claim_claim_conflicts": 0.0085,
+        "claim_claim_conflicts_rel": 0.0973,
+        "claim_fact_conflicts": -0.1953,
+        "claim_fact_conflicts_rel": 0.8775,
+        "claimed_corroboration_share": 0.0081,
+        "claimed_corroboration_share_rel": 0.0529,
+        "disagreement_count": -0.0802,
+        "disagreement_count_rel": 0.2873,
+        "evasive_answer_share": -0.0157,
+        "evasive_answer_share_rel": -0.0631,
+        "evidence_coverage": -0.0187,
+        "interview_answers": 0.0926,
+        "interview_answers_rel": 0.0764,
+        "motive_evidence": -0.0775,
+        "motive_evidence_rel": 0.476,
+        "opportunity_overlap": 0.0953,
+        "opportunity_overlap_rel": 0.3178,
+        "scene_presence_in_window": -0.0997,
+        "scene_presence_in_window_rel": 1.2507,
+        "unverified_claim_share": -0.1339,
+        "unverified_claim_share_rel": -0.2945,
+        "victim_relationship_records": -0.065,
+        "victim_relationship_records_rel": 0.178
+      },
+      "cv_log_loss_all": {
+        "{'C': 0.01}": 1.094917,
+        "{'C': 0.1}": 1.090103,
+        "{'C': 1.0}": 1.089528,
+        "{'C': 10.0}": 1.089465
+      },
+      "cv_log_loss_best": 1.089465,
+      "risk_coverage_val": [
+        {
+          "accuracy": 0.6236,
+          "coverage": 1.0,
+          "min_top_probability": 0.0
+        },
+        {
+          "accuracy": 0.6236,
+          "coverage": 1.0,
+          "min_top_probability": 0.05
+        },
+        {
+          "accuracy": 0.6236,
+          "coverage": 1.0,
+          "min_top_probability": 0.1
+        },
+        {
+          "accuracy": 0.6236,
+          "coverage": 1.0,
+          "min_top_probability": 0.15
+        },
+        {
+          "accuracy": 0.6236,
+          "coverage": 1.0,
+          "min_top_probability": 0.2
+        },
+        {
+          "accuracy": 0.6321,
+          "coverage": 0.9856,
+          "min_top_probability": 0.25
+        },
+        {
+          "accuracy": 0.6485,
+          "coverage": 0.9468,
+          "min_top_probability": 0.3
+        },
+        {
+          "accuracy": 0.6678,
+          "coverage": 0.8995,
+          "min_top_probability": 0.35
+        },
+        {
+          "accuracy": 0.6926,
+          "coverage": 0.8267,
+          "min_top_probability": 0.4
+        },
+        {
+          "accuracy": 0.7114,
+          "coverage": 0.7533,
+          "min_top_probability": 0.45
+        },
+        {
+          "accuracy": 0.7461,
+          "coverage": 0.6491,
+          "min_top_probability": 0.5
+        },
+        {
+          "accuracy": 0.7785,
+          "coverage": 0.5401,
+          "min_top_probability": 0.55
+        },
+        {
+          "accuracy": 0.7974,
+          "coverage": 0.4567,
+          "min_top_probability": 0.6
+        },
+        {
+          "accuracy": 0.8274,
+          "coverage": 0.3759,
+          "min_top_probability": 0.65
+        },
+        {
+          "accuracy": 0.8492,
+          "coverage": 0.3068,
+          "min_top_probability": 0.7
+        },
+        {
+          "accuracy": 0.8698,
+          "coverage": 0.2451,
+          "min_top_probability": 0.75
+        },
+        {
+          "accuracy": 0.8781,
+          "coverage": 0.1919,
+          "min_top_probability": 0.8
+        },
+        {
+          "accuracy": 0.9091,
+          "coverage": 0.1404,
+          "min_top_probability": 0.85
+        },
+        {
+          "accuracy": 0.9211,
+          "coverage": 0.0808,
+          "min_top_probability": 0.9
+        },
+        {
+          "accuracy": 0.9467,
+          "coverage": 0.0399,
+          "min_top_probability": 0.95
+        }
+      ],
+      "val_temperature": 0.5,
+      "version": "logistic_regression-d23da4c960"
     }
   },
-  "feature_spec_version": "1.0.0",
-  "git_commit": "7b9acdc",
+  "feature_spec_version": "1.1.0",
+  "git_commit": "1d207b4-dirty",
   "note": "Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020). Test splits are not evaluated until the leakage audit (step 8) passes.",
   "selected": "lightgbm",
   "split_evaluated": "val",
   "top1_by_stage": {
     "35% of evidence": {
       "lightgbm": {
-        "high": 0.7135,
-        "low": 0.5994,
-        "mean": 0.6564
+        "high": 0.7018,
+        "low": 0.5863,
+        "mean": 0.6447
       },
       "logistic_regression": {
-        "high": 0.6374,
-        "low": 0.5249,
-        "mean": 0.5833
+        "high": 0.652,
+        "low": 0.538,
+        "mean": 0.5965
       },
       "motive_opportunity_rule": {
         "high": 0.5965,
@@ -332,14 +338,14 @@
     },
     "65% of evidence": {
       "lightgbm": {
-        "high": 0.8684,
-        "low": 0.7778,
-        "mean": 0.8246
+        "high": 0.8538,
+        "low": 0.7573,
+        "mean": 0.807
       },
       "logistic_regression": {
-        "high": 0.7836,
-        "low": 0.6784,
-        "mean": 0.731
+        "high": 0.7924,
+        "low": 0.6813,
+        "mean": 0.7368
       },
       "motive_opportunity_rule": {
         "high": 0.6637,
@@ -352,16 +358,38 @@
         "mean": 0.2379
       }
     },
-    "all evidence": {
+    "after interview questions": {
       "lightgbm": {
-        "high": 0.9708,
-        "low": 0.8947,
-        "mean": 0.9357
+        "high": 0.691,
+        "low": 0.5781,
+        "mean": 0.6348
       },
       "logistic_regression": {
-        "high": 0.9298,
-        "low": 0.8304,
-        "mean": 0.883
+        "high": 0.6183,
+        "low": 0.5024,
+        "mean": 0.5616
+      },
+      "motive_opportunity_rule": {
+        "high": 0.5546,
+        "low": 0.4264,
+        "mean": 0.4912
+      },
+      "uniform": {
+        "high": 0.2478,
+        "low": 0.228,
+        "mean": 0.2379
+      }
+    },
+    "all evidence": {
+      "lightgbm": {
+        "high": 0.9649,
+        "low": 0.8889,
+        "mean": 0.9298
+      },
+      "logistic_regression": {
+        "high": 0.8772,
+        "low": 0.7661,
+        "mean": 0.8246
       },
       "motive_opportunity_rule": {
         "high": 0.7368,
@@ -380,83 +408,83 @@
   "val_results": {
     "lightgbm": {
       "brier": {
-        "high": 0.3724,
-        "low": 0.2733,
-        "mean": 0.3212
+        "high": 0.4616,
+        "low": 0.363,
+        "mean": 0.4114
       },
       "log_loss": {
-        "high": 0.7305,
-        "low": 0.551,
-        "mean": 0.6382
+        "high": 0.9189,
+        "low": 0.725,
+        "mean": 0.8218
       },
       "mrr": {
-        "high": 0.8903,
-        "low": 0.8408,
-        "mean": 0.866
+        "high": 0.8366,
+        "low": 0.78,
+        "mean": 0.8087
       },
       "top1": {
-        "high": 0.8181,
-        "low": 0.738,
-        "mean": 0.7795
+        "high": 0.7383,
+        "low": 0.6501,
+        "mean": 0.6948
       },
       "top2": {
-        "high": 0.914,
-        "low": 0.8614,
-        "mean": 0.8889
+        "high": 0.8572,
+        "low": 0.794,
+        "mean": 0.8265
       }
     },
     "logistic_regression": {
       "brier": {
-        "high": 0.4653,
-        "low": 0.367,
-        "mean": 0.415
+        "high": 0.5549,
+        "low": 0.4615,
+        "mean": 0.5084
       },
       "log_loss": {
-        "high": 0.9115,
-        "low": 0.7194,
-        "mean": 0.8103
+        "high": 1.092,
+        "low": 0.9025,
+        "mean": 0.9952
       },
       "mrr": {
-        "high": 0.8497,
-        "low": 0.7984,
-        "mean": 0.8245
+        "high": 0.8012,
+        "low": 0.7395,
+        "mean": 0.7706
       },
       "top1": {
-        "high": 0.7439,
-        "low": 0.6602,
-        "mean": 0.7023
+        "high": 0.6712,
+        "low": 0.5739,
+        "mean": 0.6237
       },
       "top2": {
-        "high": 0.9053,
-        "low": 0.8468,
-        "mean": 0.8772
+        "high": 0.8498,
+        "low": 0.7811,
+        "mean": 0.8162
       }
     },
     "motive_opportunity_rule": {
       "brier": {
-        "high": 0.6699,
-        "low": 0.5436,
-        "mean": 0.6048
+        "high": 0.6834,
+        "low": 0.5912,
+        "mean": 0.6363
       },
       "log_loss": {
-        "high": 1.2656,
-        "low": 1.0316,
-        "mean": 1.143
+        "high": 1.3118,
+        "low": 1.1359,
+        "mean": 1.2187
       },
       "mrr": {
-        "high": 0.7904,
-        "low": 0.7175,
-        "mean": 0.7548
+        "high": 0.7525,
+        "low": 0.6778,
+        "mean": 0.716
       },
       "top1": {
-        "high": 0.645,
-        "low": 0.5251,
-        "mean": 0.5854
+        "high": 0.5928,
+        "low": 0.4763,
+        "mean": 0.534
       },
       "top2": {
-        "high": 0.8571,
-        "low": 0.7758,
-        "mean": 0.8185
+        "high": 0.8095,
+        "low": 0.7235,
+        "mean": 0.7664
       }
     },
     "uniform": {
@@ -501,56 +529,56 @@
   "vs_rule": {
     "lightgbm": {
       "brier": {
-        "high": -0.236,
-        "low": -0.3316,
-        "mean": -0.2836
+        "high": -0.1878,
+        "low": -0.2613,
+        "mean": -0.225
       },
       "log_loss": {
-        "high": -0.4222,
-        "low": -0.5893,
-        "mean": -0.5048
+        "high": -0.3302,
+        "low": -0.4638,
+        "mean": -0.3969
       },
       "mrr": {
-        "high": 0.1379,
-        "low": 0.086,
-        "mean": 0.1112
+        "high": 0.1174,
+        "low": 0.0681,
+        "mean": 0.0928
       },
       "top1": {
-        "high": 0.241,
-        "low": 0.1485,
-        "mean": 0.1942
+        "high": 0.2022,
+        "low": 0.1177,
+        "mean": 0.1607
       },
       "top2": {
-        "high": 0.0996,
-        "low": 0.0429,
-        "mean": 0.0704
+        "high": 0.0863,
+        "low": 0.0356,
+        "mean": 0.0601
       }
     },
     "logistic_regression": {
       "brier": {
-        "high": -0.1477,
-        "low": -0.2347,
-        "mean": -0.1898
+        "high": -0.0997,
+        "low": -0.1556,
+        "mean": -0.1279
       },
       "log_loss": {
-        "high": -0.2497,
-        "low": -0.4181,
-        "mean": -0.3327
+        "high": -0.1498,
+        "low": -0.2871,
+        "mean": -0.2236
       },
       "mrr": {
-        "high": 0.0951,
-        "low": 0.0434,
-        "mean": 0.0697
+        "high": 0.0776,
+        "low": 0.032,
+        "mean": 0.0546
       },
       "top1": {
-        "high": 0.1602,
-        "low": 0.0748,
-        "mean": 0.117
+        "high": 0.1255,
+        "low": 0.0545,
+        "mean": 0.0897
       },
       "top2": {
-        "high": 0.0916,
-        "low": 0.0248,
-        "mean": 0.0587
+        "high": 0.0828,
+        "low": 0.0172,
+        "mean": 0.0498
       }
     }
   }

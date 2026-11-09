@@ -95,6 +95,8 @@ def run_e3(n_cases: int = 300, start_fraction: float | None = None, n_boot: int 
             block["policies"][name] = {
                 **{f"top1_after_{k}": _ci(d["correct"][:, k], n_boot, seed) for k in (0, *BUDGETS)},
                 "actions_to_reach_and_hold": _ci(d["reach_hold"], n_boot, seed),
+                # paired gain over the policy's own starting state (same cases): do its actions help at all?
+                "gain_after_8_vs_start": _ci(d["correct"][:, MAX_BUDGET] - d["correct"][:, 0], n_boot, seed),
                 "reached_within_budget": round(float((d["reach_hold"] <= MAX_BUDGET).mean()), 4),
                 "example_episode": d["example"],
             }
@@ -130,11 +132,12 @@ def to_markdown(r: dict) -> str:
              f"ranker `{r['model_version']}`, commit `{r['git_commit']}`. Top-1 = the leading suspect is the "
              "culprit. 95% CIs over cases; differences are paired (same cases).", ""]
     for pop, block in r["results"].items():
-        lines += [f"## {pop}", "", "| Policy | start | after 3 | after 5 | after 8 | actions to reach & hold |",
-                  "|---|---|---|---|---|---|"]
+        lines += [f"## {pop}", "",
+                  "| Policy | start | after 3 | after 5 | after 8 | gain after 8 (paired) | actions to reach & hold |",
+                  "|---|---|---|---|---|---|---|"]
         for name, m in block["policies"].items():
             lines.append(f"| {name} | {m['top1_after_0']['mean']:.3f} | {_f(m['top1_after_3'])} | {_f(m['top1_after_5'])} | "
-                         f"{_f(m['top1_after_8'])} | {_f(m['actions_to_reach_and_hold'])} |")
+                         f"{_f(m['top1_after_8'])} | {_f(m['gain_after_8_vs_start'])} | {_f(m['actions_to_reach_and_hold'])} |")
         lines += ["", "Entropy minus other policy (top-1: positive = entropy better; actions: negative = entropy faster):", ""]
         for name, d in block["entropy_minus"].items():
             lines.append(f"- vs {name}: after 3 {_f(d['top1_after_3'])}, after 5 {_f(d['top1_after_5'])}, "
@@ -148,9 +151,10 @@ def main() -> None:
     parser.add_argument("--cases", type=int, default=300)
     parser.add_argument("--start", type=float, default=None, help="starting evidence fraction (default 0.15)")
     parser.add_argument("--out", type=Path, default=Path("../reports"))
+    parser.add_argument("--tag", default="", help="suffix for the report file name, e.g. b for E3b")
     args = parser.parse_args()
     result = run_e3(args.cases, args.start)
-    suffix = "" if args.start is None else f"_start{int(args.start * 100)}"
+    suffix = ("" if args.start is None else f"_start{int(args.start * 100)}") + args.tag
     (args.out / f"e3{suffix}.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (args.out / f"e3{suffix}.md").write_text(to_markdown(result), encoding="utf-8")
     print(to_markdown(result))

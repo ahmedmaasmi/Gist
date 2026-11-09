@@ -5,14 +5,14 @@
     "seed": 0,
     "unit": "case"
   },
-  "dataset_checksum_features_csv": "44ceeea3223b82a2ff6ca1e9a164bbe7003e747923c67279b9987163e565aa29",
-  "dataset_version": "0.3.0",
-  "feature_spec_version": "1.0.0",
+  "dataset_checksum_features_csv": "de67dcf8c723a48f536f304d33d9f6de32cbdc75be3efa825137c75a7a2af0e9",
+  "dataset_version": "0.4.0",
+  "feature_spec_version": "1.1.0",
   "fitted_on_val": {
-    "rule_softmax_temperature": 1.5,
+    "rule_softmax_temperature": 2.0,
     "solver_uniform_epsilon": 0.001
   },
-  "git_commit": "f891111",
+  "git_commit": "1d207b4",
   "note": "Scores on synthetic cases measure how well a method recovers the case generator's logic. They are not evidence of real-world investigative ability. Generalisation claims rest only on the held-out templates and the shifted OOD set (no hand-authored cases, D-020).",
   "results": {
     "test_held_out_template": {
@@ -20,14 +20,14 @@
         "35% of evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6184,
-              "low": 0.5519,
-              "mean": 0.5846
+              "high": 0.6304,
+              "low": 0.5771,
+              "mean": 0.6035
             },
             "log_loss": {
-              "high": 1.19,
-              "low": 1.0648,
-              "mean": 1.1264
+              "high": 1.2125,
+              "low": 1.111,
+              "mean": 1.1619
             },
             "mrr": {
               "high": 0.7845,
@@ -103,14 +103,14 @@
         "65% of evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.581,
-              "low": 0.4948,
-              "mean": 0.5375
+              "high": 0.5844,
+              "low": 0.5138,
+              "mean": 0.5491
             },
             "log_loss": {
-              "high": 1.1098,
-              "low": 0.9476,
-              "mean": 1.029
+              "high": 1.1148,
+              "low": 0.986,
+              "mean": 1.0505
             },
             "mrr": {
               "high": 0.8162,
@@ -183,17 +183,100 @@
             }
           }
         },
+        "after interview questions": {
+          "motive_opportunity_rule": {
+            "brier": {
+              "high": 0.6502,
+              "low": 0.5889,
+              "mean": 0.6194
+            },
+            "log_loss": {
+              "high": 1.2575,
+              "low": 1.1373,
+              "mean": 1.1971
+            },
+            "mrr": {
+              "high": 0.7691,
+              "low": 0.715,
+              "mean": 0.7415
+            },
+            "top1": {
+              "high": 0.6247,
+              "low": 0.5409,
+              "mean": 0.5819
+            },
+            "top2": {
+              "high": 0.8045,
+              "low": 0.736,
+              "mean": 0.7713
+            }
+          },
+          "timeline_solver": {
+            "brier": {
+              "high": 0.76,
+              "low": 0.7464,
+              "mean": 0.7532
+            },
+            "log_loss": {
+              "high": 1.4642,
+              "low": 1.4113,
+              "mean": 1.4376
+            },
+            "mrr": {
+              "high": 0.5172,
+              "low": 0.5015,
+              "mean": 0.5095
+            },
+            "top1": {
+              "high": 0.2536,
+              "low": 0.24,
+              "mean": 0.2468
+            },
+            "top2": {
+              "high": 0.5073,
+              "low": 0.48,
+              "mean": 0.4936
+            }
+          },
+          "uniform": {
+            "brier": {
+              "high": 0.7657,
+              "low": 0.7534,
+              "mean": 0.7595
+            },
+            "log_loss": {
+              "high": 1.4839,
+              "low": 1.4327,
+              "mean": 1.458
+            },
+            "mrr": {
+              "high": 0.5105,
+              "low": 0.4956,
+              "mean": 0.5031
+            },
+            "top1": {
+              "high": 0.2466,
+              "low": 0.2343,
+              "mean": 0.2405
+            },
+            "top2": {
+              "high": 0.4932,
+              "low": 0.4685,
+              "mean": 0.481
+            }
+          }
+        },
         "all evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.5771,
-              "low": 0.4708,
-              "mean": 0.5236
+              "high": 0.5702,
+              "low": 0.4824,
+              "mean": 0.5257
             },
             "log_loss": {
-              "high": 1.0962,
-              "low": 0.8909,
-              "mean": 0.9931
+              "high": 1.0659,
+              "low": 0.9073,
+              "mean": 0.9865
             },
             "mrr": {
               "high": 0.8457,
@@ -268,60 +351,60 @@
         }
       },
       "cases": 375,
-      "evidence_states": 1875,
+      "evidence_states": 4125,
       "overall": {
         "motive_opportunity_rule": {
           "brier": {
-            "high": 0.5934,
-            "low": 0.5141,
-            "mean": 0.5536
+            "high": 0.6256,
+            "low": 0.5654,
+            "mean": 0.5952
           },
           "log_loss": {
-            "high": 1.1358,
-            "low": 0.9862,
-            "mean": 1.0608
+            "high": 1.2025,
+            "low": 1.0886,
+            "mean": 1.1449
           },
           "mrr": {
-            "high": 0.8075,
-            "low": 0.759,
-            "mean": 0.7831
+            "high": 0.7851,
+            "low": 0.7361,
+            "mean": 0.7604
           },
           "top1": {
-            "high": 0.6673,
-            "low": 0.5878,
-            "mean": 0.6275
+            "high": 0.6407,
+            "low": 0.5646,
+            "mean": 0.6026
           },
           "top2": {
-            "high": 0.8768,
-            "low": 0.8201,
-            "mean": 0.8485
+            "high": 0.8353,
+            "low": 0.7774,
+            "mean": 0.8064
           }
         },
         "timeline_solver": {
           "brier": {
-            "high": 0.7568,
-            "low": 0.7429,
-            "mean": 0.7499
+            "high": 0.7585,
+            "low": 0.7449,
+            "mean": 0.7517
           },
           "log_loss": {
-            "high": 1.4535,
-            "low": 1.3991,
-            "mean": 1.4264
+            "high": 1.4593,
+            "low": 1.4059,
+            "mean": 1.4325
           },
           "mrr": {
-            "high": 0.5211,
-            "low": 0.505,
-            "mean": 0.5129
+            "high": 0.519,
+            "low": 0.5031,
+            "mean": 0.511
           },
           "top1": {
-            "high": 0.2571,
-            "low": 0.2432,
-            "mean": 0.2501
+            "high": 0.2551,
+            "low": 0.2415,
+            "mean": 0.2483
           },
           "top2": {
-            "high": 0.5142,
-            "low": 0.4865,
-            "mean": 0.5001
+            "high": 0.5102,
+            "low": 0.483,
+            "mean": 0.4966
           }
         },
         "uniform": {
@@ -360,56 +443,56 @@
       "vs_uniform": {
         "motive_opportunity_rule": {
           "brier": {
-            "high": -0.1682,
-            "low": -0.2445,
-            "mean": -0.2059
+            "high": -0.1358,
+            "low": -0.1919,
+            "mean": -0.1643
           },
           "log_loss": {
-            "high": -0.3259,
-            "low": -0.4675,
-            "mean": -0.3973
+            "high": -0.2614,
+            "low": -0.3639,
+            "mean": -0.3131
           },
           "mrr": {
-            "high": 0.3029,
-            "low": 0.257,
-            "mean": 0.28
+            "high": 0.281,
+            "low": 0.2345,
+            "mean": 0.2574
           },
           "top1": {
-            "high": 0.426,
-            "low": 0.3491,
-            "mean": 0.387
+            "high": 0.3996,
+            "low": 0.3253,
+            "mean": 0.3621
           },
           "top2": {
-            "high": 0.395,
-            "low": 0.3409,
-            "mean": 0.3675
+            "high": 0.3526,
+            "low": 0.2973,
+            "mean": 0.3254
           }
         },
         "timeline_solver": {
           "brier": {
-            "high": -0.007,
-            "low": -0.0125,
-            "mean": -0.0096
+            "high": -0.0055,
+            "low": -0.0104,
+            "mean": -0.0078
           },
           "log_loss": {
-            "high": -0.0238,
-            "low": -0.0405,
-            "mean": -0.0317
+            "high": -0.0187,
+            "low": -0.0331,
+            "mean": -0.0256
           },
           "mrr": {
-            "high": 0.0127,
-            "low": 0.0074,
-            "mean": 0.0099
+            "high": 0.0104,
+            "low": 0.0058,
+            "mean": 0.008
           },
           "top1": {
-            "high": 0.0125,
-            "low": 0.007,
-            "mean": 0.0096
+            "high": 0.0104,
+            "low": 0.0055,
+            "mean": 0.0078
           },
           "top2": {
-            "high": 0.025,
-            "low": 0.0139,
-            "mean": 0.0191
+            "high": 0.0208,
+            "low": 0.0111,
+            "mean": 0.0156
           }
         }
       }
@@ -419,14 +502,14 @@
         "35% of evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6524,
-              "low": 0.5568,
-              "mean": 0.6038
+              "high": 0.6599,
+              "low": 0.5857,
+              "mean": 0.6221
             },
             "log_loss": {
-              "high": 1.2599,
-              "low": 1.076,
-              "mean": 1.165
+              "high": 1.2746,
+              "low": 1.1294,
+              "mean": 1.1999
             },
             "mrr": {
               "high": 0.7689,
@@ -502,14 +585,14 @@
         "65% of evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6353,
-              "low": 0.5051,
-              "mean": 0.5685
+              "high": 0.6321,
+              "low": 0.5287,
+              "mean": 0.5794
             },
             "log_loss": {
-              "high": 1.2041,
-              "low": 0.9641,
-              "mean": 1.0824
+              "high": 1.1971,
+              "low": 1.0098,
+              "mean": 1.0998
             },
             "mrr": {
               "high": 0.8086,
@@ -582,17 +665,100 @@
             }
           }
         },
+        "after interview questions": {
+          "motive_opportunity_rule": {
+            "brier": {
+              "high": 0.7072,
+              "low": 0.6141,
+              "mean": 0.6609
+            },
+            "log_loss": {
+              "high": 1.3641,
+              "low": 1.1848,
+              "mean": 1.2741
+            },
+            "mrr": {
+              "high": 0.7522,
+              "low": 0.6726,
+              "mean": 0.7132
+            },
+            "top1": {
+              "high": 0.596,
+              "low": 0.4771,
+              "mean": 0.5374
+            },
+            "top2": {
+              "high": 0.8009,
+              "low": 0.6995,
+              "mean": 0.7509
+            }
+          },
+          "timeline_solver": {
+            "brier": {
+              "high": 0.7697,
+              "low": 0.7509,
+              "mean": 0.7606
+            },
+            "log_loss": {
+              "high": 1.5008,
+              "low": 1.4267,
+              "mean": 1.4647
+            },
+            "mrr": {
+              "high": 0.5125,
+              "low": 0.4905,
+              "mean": 0.5012
+            },
+            "top1": {
+              "high": 0.2491,
+              "low": 0.2303,
+              "mean": 0.2394
+            },
+            "top2": {
+              "high": 0.4982,
+              "low": 0.4606,
+              "mean": 0.4788
+            }
+          },
+          "uniform": {
+            "brier": {
+              "high": 0.7754,
+              "low": 0.7578,
+              "mean": 0.7668
+            },
+            "log_loss": {
+              "high": 1.5229,
+              "low": 1.4496,
+              "mean": 1.4868
+            },
+            "mrr": {
+              "high": 0.5055,
+              "low": 0.4841,
+              "mean": 0.4945
+            },
+            "top1": {
+              "high": 0.2422,
+              "low": 0.2246,
+              "mean": 0.2332
+            },
+            "top2": {
+              "high": 0.4844,
+              "low": 0.4491,
+              "mean": 0.4665
+            }
+          }
+        },
         "all evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6463,
-              "low": 0.4879,
-              "mean": 0.5662
+              "high": 0.628,
+              "low": 0.4961,
+              "mean": 0.5621
             },
             "log_loss": {
-              "high": 1.2122,
-              "low": 0.9089,
-              "mean": 1.0569
+              "high": 1.1621,
+              "low": 0.9285,
+              "mean": 1.0412
             },
             "mrr": {
               "high": 0.8275,
@@ -667,60 +833,60 @@
         }
       },
       "cases": 171,
-      "evidence_states": 855,
+      "evidence_states": 1881,
       "overall": {
         "motive_opportunity_rule": {
           "brier": {
-            "high": 0.6404,
-            "low": 0.5246,
-            "mean": 0.5821
+            "high": 0.6751,
+            "low": 0.5851,
+            "mean": 0.63
           },
           "log_loss": {
-            "high": 1.2212,
-            "low": 1.0029,
-            "mean": 1.1104
+            "high": 1.2939,
+            "low": 1.1248,
+            "mean": 1.2078
           },
           "mrr": {
-            "high": 0.7943,
-            "low": 0.719,
-            "mean": 0.7567
+            "high": 0.7699,
+            "low": 0.6965,
+            "mean": 0.733
           },
           "top1": {
-            "high": 0.6453,
-            "low": 0.5213,
-            "mean": 0.5833
+            "high": 0.6168,
+            "low": 0.4994,
+            "mean": 0.5583
           },
           "top2": {
-            "high": 0.8667,
-            "low": 0.7779,
-            "mean": 0.8252
+            "high": 0.8275,
+            "low": 0.7401,
+            "mean": 0.7847
           }
         },
         "timeline_solver": {
           "brier": {
-            "high": 0.7674,
-            "low": 0.7485,
-            "mean": 0.7581
+            "high": 0.7687,
+            "low": 0.7499,
+            "mean": 0.7595
           },
           "log_loss": {
-            "high": 1.4904,
-            "low": 1.4159,
-            "mean": 1.4541
+            "high": 1.496,
+            "low": 1.4221,
+            "mean": 1.4599
           },
           "mrr": {
-            "high": 0.5155,
-            "low": 0.4936,
-            "mean": 0.5043
+            "high": 0.5138,
+            "low": 0.4919,
+            "mean": 0.5026
           },
           "top1": {
-            "high": 0.2515,
-            "low": 0.2326,
-            "mean": 0.2419
+            "high": 0.2501,
+            "low": 0.2313,
+            "mean": 0.2405
           },
           "top2": {
-            "high": 0.503,
-            "low": 0.4651,
-            "mean": 0.4837
+            "high": 0.5002,
+            "low": 0.4627,
+            "mean": 0.481
           }
         },
         "uniform": {
@@ -765,56 +931,56 @@
       "vs_uniform": {
         "motive_opportunity_rule": {
           "brier": {
-            "high": -0.126,
-            "low": -0.2417,
-            "mean": -0.1846
+            "high": -0.0923,
+            "low": -0.18,
+            "mean": -0.1367
           },
           "log_loss": {
-            "high": -0.2654,
-            "low": -0.4823,
-            "mean": -0.3764
+            "high": -0.1985,
+            "low": -0.3559,
+            "mean": -0.279
           },
           "mrr": {
-            "high": 0.2978,
-            "low": 0.2242,
-            "mean": 0.2622
+            "high": 0.2744,
+            "low": 0.2019,
+            "mean": 0.2385
           },
           "top1": {
-            "high": 0.4107,
-            "low": 0.2893,
-            "mean": 0.3501
+            "high": 0.3822,
+            "low": 0.2687,
+            "mean": 0.325
           },
           "top2": {
-            "high": 0.4014,
-            "low": 0.3096,
-            "mean": 0.3588
+            "high": 0.3618,
+            "low": 0.2725,
+            "mean": 0.3182
           }
         },
         "timeline_solver": {
           "brier": {
-            "high": -0.006,
-            "low": -0.0112,
-            "mean": -0.0086
+            "high": -0.0049,
+            "low": -0.0098,
+            "mean": -0.0073
           },
           "log_loss": {
-            "high": -0.0235,
-            "low": -0.0421,
-            "mean": -0.0327
+            "high": -0.019,
+            "low": -0.0348,
+            "mean": -0.0269
           },
           "mrr": {
-            "high": 0.0126,
-            "low": 0.007,
-            "mean": 0.0098
+            "high": 0.0106,
+            "low": 0.0057,
+            "mean": 0.0081
           },
           "top1": {
-            "high": 0.0112,
-            "low": 0.006,
-            "mean": 0.0086
+            "high": 0.0098,
+            "low": 0.0049,
+            "mean": 0.0073
           },
           "top2": {
-            "high": 0.0225,
-            "low": 0.012,
-            "mean": 0.0173
+            "high": 0.0195,
+            "low": 0.0098,
+            "mean": 0.0146
           }
         }
       }
@@ -824,14 +990,14 @@
         "35% of evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6524,
-              "low": 0.5533,
-              "mean": 0.6021
+              "high": 0.6619,
+              "low": 0.5859,
+              "mean": 0.6238
             },
             "log_loss": {
-              "high": 1.238,
-              "low": 1.0615,
-              "mean": 1.1514
+              "high": 1.2623,
+              "low": 1.1182,
+              "mean": 1.1919
             },
             "mrr": {
               "high": 0.7873,
@@ -907,14 +1073,14 @@
         "65% of evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6392,
-              "low": 0.5118,
-              "mean": 0.5746
+              "high": 0.6403,
+              "low": 0.5389,
+              "mean": 0.5894
             },
             "log_loss": {
-              "high": 1.2121,
-              "low": 0.9783,
-              "mean": 1.0933
+              "high": 1.2157,
+              "low": 1.027,
+              "mean": 1.1193
             },
             "mrr": {
               "high": 0.7959,
@@ -987,17 +1153,100 @@
             }
           }
         },
+        "after interview questions": {
+          "motive_opportunity_rule": {
+            "brier": {
+              "high": 0.6537,
+              "low": 0.5738,
+              "mean": 0.6141
+            },
+            "log_loss": {
+              "high": 1.2669,
+              "low": 1.109,
+              "mean": 1.1884
+            },
+            "mrr": {
+              "high": 0.785,
+              "low": 0.6963,
+              "mean": 0.7407
+            },
+            "top1": {
+              "high": 0.649,
+              "low": 0.5191,
+              "mean": 0.584
+            },
+            "top2": {
+              "high": 0.8202,
+              "low": 0.7061,
+              "mean": 0.7639
+            }
+          },
+          "timeline_solver": {
+            "brier": {
+              "high": 0.7657,
+              "low": 0.7427,
+              "mean": 0.7546
+            },
+            "log_loss": {
+              "high": 1.4874,
+              "low": 1.3997,
+              "mean": 1.4449
+            },
+            "mrr": {
+              "high": 0.521,
+              "low": 0.4948,
+              "mean": 0.5075
+            },
+            "top1": {
+              "high": 0.2573,
+              "low": 0.2343,
+              "mean": 0.2454
+            },
+            "top2": {
+              "high": 0.5146,
+              "low": 0.4686,
+              "mean": 0.4907
+            }
+          },
+          "uniform": {
+            "brier": {
+              "high": 0.7679,
+              "low": 0.7471,
+              "mean": 0.7579
+            },
+            "log_loss": {
+              "high": 1.4939,
+              "low": 1.4099,
+              "mean": 1.4536
+            },
+            "mrr": {
+              "high": 0.5175,
+              "low": 0.4927,
+              "mean": 0.5046
+            },
+            "top1": {
+              "high": 0.2529,
+              "low": 0.2321,
+              "mean": 0.2421
+            },
+            "top2": {
+              "high": 0.5058,
+              "low": 0.4642,
+              "mean": 0.4842
+            }
+          }
+        },
         "all evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6328,
-              "low": 0.4769,
-              "mean": 0.554
+              "high": 0.6313,
+              "low": 0.5025,
+              "mean": 0.5669
             },
             "log_loss": {
-              "high": 1.2256,
-              "low": 0.9192,
-              "mean": 1.0689
+              "high": 1.1926,
+              "low": 0.9595,
+              "mean": 1.0728
             },
             "mrr": {
               "high": 0.8361,
@@ -1072,60 +1321,60 @@
         }
       },
       "cases": 150,
-      "evidence_states": 750,
+      "evidence_states": 1650,
       "overall": {
         "motive_opportunity_rule": {
           "brier": {
-            "high": 0.6409,
-            "low": 0.524,
-            "mean": 0.5815
+            "high": 0.6488,
+            "low": 0.5653,
+            "mean": 0.6071
           },
           "log_loss": {
-            "high": 1.223,
-            "low": 1.0061,
-            "mean": 1.1117
+            "high": 1.2455,
+            "low": 1.0853,
+            "mean": 1.166
           },
           "mrr": {
-            "high": 0.7966,
-            "low": 0.7134,
-            "mean": 0.7558
+            "high": 0.7884,
+            "low": 0.7075,
+            "mean": 0.7476
           },
           "top1": {
-            "high": 0.659,
-            "low": 0.529,
-            "mean": 0.5943
+            "high": 0.6514,
+            "low": 0.5294,
+            "mean": 0.5887
           },
           "top2": {
-            "high": 0.8603,
-            "low": 0.7617,
-            "mean": 0.812
+            "high": 0.8362,
+            "low": 0.7339,
+            "mean": 0.7857
           }
         },
         "timeline_solver": {
           "brier": {
-            "high": 0.7643,
-            "low": 0.7425,
-            "mean": 0.7536
+            "high": 0.7649,
+            "low": 0.7427,
+            "mean": 0.7542
           },
           "log_loss": {
-            "high": 1.4817,
-            "low": 1.3948,
-            "mean": 1.4394
+            "high": 1.4845,
+            "low": 1.3977,
+            "mean": 1.4424
           },
           "mrr": {
-            "high": 0.5223,
-            "low": 0.4966,
-            "mean": 0.509
+            "high": 0.5215,
+            "low": 0.4956,
+            "mean": 0.5082
           },
           "top1": {
-            "high": 0.2575,
-            "low": 0.2357,
-            "mean": 0.2464
+            "high": 0.2573,
+            "low": 0.2351,
+            "mean": 0.2458
           },
           "top2": {
-            "high": 0.5149,
-            "low": 0.4714,
-            "mean": 0.4927
+            "high": 0.5145,
+            "low": 0.4702,
+            "mean": 0.4916
           }
         },
         "uniform": {
@@ -1164,56 +1413,56 @@
       "vs_uniform": {
         "motive_opportunity_rule": {
           "brier": {
-            "high": -0.1185,
-            "low": -0.2317,
-            "mean": -0.1764
+            "high": -0.1108,
+            "low": -0.1889,
+            "mean": -0.1508
           },
           "log_loss": {
-            "high": -0.2389,
-            "low": -0.4398,
-            "mean": -0.3419
+            "high": -0.2181,
+            "low": -0.3557,
+            "mean": -0.2876
           },
           "mrr": {
-            "high": 0.2913,
-            "low": 0.2121,
-            "mean": 0.2512
+            "high": 0.282,
+            "low": 0.2043,
+            "mean": 0.243
           },
           "top1": {
-            "high": 0.4155,
-            "low": 0.2889,
-            "mean": 0.3522
+            "high": 0.4054,
+            "low": 0.2893,
+            "mean": 0.3466
           },
           "top2": {
-            "high": 0.3765,
-            "low": 0.2781,
-            "mean": 0.3278
+            "high": 0.3499,
+            "low": 0.2517,
+            "mean": 0.3015
           }
         },
         "timeline_solver": {
           "brier": {
-            "high": -0.0022,
-            "low": -0.0067,
-            "mean": -0.0042
+            "high": -0.0016,
+            "low": -0.0063,
+            "mean": -0.0037
           },
           "log_loss": {
-            "high": -0.008,
-            "low": -0.0216,
-            "mean": -0.0142
+            "high": -0.0058,
+            "low": -0.0181,
+            "mean": -0.0112
           },
           "mrr": {
-            "high": 0.0067,
-            "low": 0.0024,
-            "mean": 0.0044
+            "high": 0.0059,
+            "low": 0.0018,
+            "mean": 0.0036
           },
           "top1": {
-            "high": 0.0067,
-            "low": 0.0022,
-            "mean": 0.0042
+            "high": 0.0063,
+            "low": 0.0016,
+            "mean": 0.0037
           },
           "top2": {
-            "high": 0.0135,
-            "low": 0.0044,
-            "mean": 0.0085
+            "high": 0.0126,
+            "low": 0.0033,
+            "mean": 0.0074
           }
         }
       }
@@ -1223,14 +1472,14 @@
         "35% of evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6979,
-              "low": 0.5925,
-              "mean": 0.6454
+              "high": 0.6924,
+              "low": 0.6108,
+              "mean": 0.6515
             },
             "log_loss": {
-              "high": 1.3473,
-              "low": 1.1459,
-              "mean": 1.2446
+              "high": 1.3362,
+              "low": 1.1769,
+              "mean": 1.2544
             },
             "mrr": {
               "high": 0.7482,
@@ -1306,14 +1555,14 @@
         "65% of evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6616,
-              "low": 0.5256,
-              "mean": 0.5909
+              "high": 0.6447,
+              "low": 0.5358,
+              "mean": 0.5883
             },
             "log_loss": {
-              "high": 1.2388,
-              "low": 0.986,
-              "mean": 1.1052
+              "high": 1.2112,
+              "low": 1.0132,
+              "mean": 1.1079
             },
             "mrr": {
               "high": 0.8069,
@@ -1386,17 +1635,100 @@
             }
           }
         },
+        "after interview questions": {
+          "motive_opportunity_rule": {
+            "brier": {
+              "high": 0.7096,
+              "low": 0.6164,
+              "mean": 0.6626
+            },
+            "log_loss": {
+              "high": 1.3753,
+              "low": 1.1933,
+              "mean": 1.28
+            },
+            "mrr": {
+              "high": 0.7258,
+              "low": 0.6414,
+              "mean": 0.6836
+            },
+            "top1": {
+              "high": 0.5546,
+              "low": 0.4264,
+              "mean": 0.4912
+            },
+            "top2": {
+              "high": 0.7742,
+              "low": 0.6699,
+              "mean": 0.723
+            }
+          },
+          "timeline_solver": {
+            "brier": {
+              "high": 0.7667,
+              "low": 0.7456,
+              "mean": 0.756
+            },
+            "log_loss": {
+              "high": 1.4969,
+              "low": 1.4129,
+              "mean": 1.4543
+            },
+            "mrr": {
+              "high": 0.5173,
+              "low": 0.4926,
+              "mean": 0.5052
+            },
+            "top1": {
+              "high": 0.2544,
+              "low": 0.2333,
+              "mean": 0.244
+            },
+            "top2": {
+              "high": 0.5088,
+              "low": 0.4666,
+              "mean": 0.488
+            }
+          },
+          "uniform": {
+            "brier": {
+              "high": 0.772,
+              "low": 0.7522,
+              "mean": 0.7621
+            },
+            "log_loss": {
+              "high": 1.5158,
+              "low": 1.4345,
+              "mean": 1.4752
+            },
+            "mrr": {
+              "high": 0.5106,
+              "low": 0.4867,
+              "mean": 0.4987
+            },
+            "top1": {
+              "high": 0.2478,
+              "low": 0.228,
+              "mean": 0.2379
+            },
+            "top2": {
+              "high": 0.4955,
+              "low": 0.4559,
+              "mean": 0.4758
+            }
+          }
+        },
         "all evidence": {
           "motive_opportunity_rule": {
             "brier": {
-              "high": 0.6375,
-              "low": 0.4714,
-              "mean": 0.5513
+              "high": 0.6151,
+              "low": 0.4798,
+              "mean": 0.5449
             },
             "log_loss": {
-              "high": 1.1718,
-              "low": 0.8725,
-              "mean": 1.0155
+              "high": 1.1215,
+              "low": 0.8896,
+              "mean": 1.0015
             },
             "mrr": {
               "high": 0.8616,
@@ -1471,60 +1803,60 @@
         }
       },
       "cases": 171,
-      "evidence_states": 855,
+      "evidence_states": 1881,
       "overall": {
         "motive_opportunity_rule": {
           "brier": {
-            "high": 0.6699,
-            "low": 0.5436,
-            "mean": 0.6048
+            "high": 0.6834,
+            "low": 0.5912,
+            "mean": 0.6363
           },
           "log_loss": {
-            "high": 1.2656,
-            "low": 1.0316,
-            "mean": 1.143
+            "high": 1.3118,
+            "low": 1.1359,
+            "mean": 1.2187
           },
           "mrr": {
-            "high": 0.7904,
-            "low": 0.7175,
-            "mean": 0.7548
+            "high": 0.7525,
+            "low": 0.6778,
+            "mean": 0.716
           },
           "top1": {
-            "high": 0.645,
-            "low": 0.5251,
-            "mean": 0.5854
+            "high": 0.5928,
+            "low": 0.4763,
+            "mean": 0.534
           },
           "top2": {
-            "high": 0.8571,
-            "low": 0.7758,
-            "mean": 0.8185
+            "high": 0.8095,
+            "low": 0.7235,
+            "mean": 0.7664
           }
         },
         "timeline_solver": {
           "brier": {
-            "high": 0.7645,
-            "low": 0.7437,
-            "mean": 0.7541
+            "high": 0.7657,
+            "low": 0.7446,
+            "mean": 0.7551
           },
           "log_loss": {
-            "high": 1.4866,
-            "low": 1.4041,
-            "mean": 1.4454
+            "high": 1.492,
+            "low": 1.4089,
+            "mean": 1.4503
           },
           "mrr": {
-            "high": 0.5199,
-            "low": 0.4953,
-            "mean": 0.5077
+            "high": 0.5185,
+            "low": 0.4939,
+            "mean": 0.5063
           },
           "top1": {
-            "high": 0.2563,
-            "low": 0.2355,
-            "mean": 0.2459
+            "high": 0.2554,
+            "low": 0.2343,
+            "mean": 0.2449
           },
           "top2": {
-            "high": 0.5126,
-            "low": 0.471,
-            "mean": 0.4918
+            "high": 0.5107,
+            "low": 0.4686,
+            "mean": 0.4898
           }
         },
         "uniform": {
@@ -1569,56 +1901,56 @@
       "vs_uniform": {
         "motive_opportunity_rule": {
           "brier": {
-            "high": -0.0955,
-            "low": -0.217,
-            "mean": -0.1573
+            "high": -0.0806,
+            "low": -0.1685,
+            "mean": -0.1257
           },
           "log_loss": {
-            "high": -0.2185,
-            "low": -0.4362,
-            "mean": -0.3321
+            "high": -0.178,
+            "low": -0.3316,
+            "mean": -0.2564
           },
           "mrr": {
-            "high": 0.2916,
-            "low": 0.2204,
-            "mean": 0.2561
+            "high": 0.2532,
+            "low": 0.178,
+            "mean": 0.2173
           },
           "top1": {
-            "high": 0.4055,
-            "low": 0.288,
-            "mean": 0.3475
+            "high": 0.3528,
+            "low": 0.2385,
+            "mean": 0.2961
           },
           "top2": {
-            "high": 0.3813,
-            "low": 0.3018,
-            "mean": 0.3427
+            "high": 0.3331,
+            "low": 0.2474,
+            "mean": 0.2906
           }
         },
         "timeline_solver": {
           "brier": {
-            "high": -0.0056,
-            "low": -0.0105,
-            "mean": -0.008
+            "high": -0.0048,
+            "low": -0.0094,
+            "mean": -0.007
           },
           "log_loss": {
-            "high": -0.0216,
-            "low": -0.0389,
-            "mean": -0.0298
+            "high": -0.0177,
+            "low": -0.0326,
+            "mean": -0.0249
           },
           "mrr": {
-            "high": 0.0117,
-            "low": 0.0065,
-            "mean": 0.0089
+            "high": 0.0101,
+            "low": 0.0053,
+            "mean": 0.0076
           },
           "top1": {
-            "high": 0.0105,
-            "low": 0.0056,
-            "mean": 0.008
+            "high": 0.0094,
+            "low": 0.0048,
+            "mean": 0.007
           },
           "top2": {
-            "high": 0.0211,
-            "low": 0.0112,
-            "mean": 0.016
+            "high": 0.0189,
+            "low": 0.0097,
+            "mean": 0.0139
           }
         }
       }

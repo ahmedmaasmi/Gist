@@ -32,10 +32,14 @@ from app.ml.baselines import FEATURE_NAMES, load_states, uniform
 from app.ml.data import MODEL_FEATURE_NAMES, build_table, matrix_from_features
 from app.ml.experiments import columns_for, fit_predict
 from app.ml.metrics import evaluate, paired_difference
-from app.ml.models import distributions, fit_temperature, make_model, positive_scores
+from app.ml.models import distributions, fit_model, fit_temperature, positive_scores
 from app.provenance import git_commit
 
 SHUFFLED_MAX_GAIN = 0.03
+# Amendment (D-029, made AFTER a failed run, documented as such): the bound is unchanged, but the control
+# now pools SHUFFLE_REPEATS independent shuffles (per-case results averaged), so one random draw's model
+# noise does not decide the check. More evidence, same bar.
+SHUFFLE_REPEATS = 5
 NEAR_SHORTCUT_MARGIN = 0.05
 DOMINANCE_MARGIN = 0.05
 BRIEFING_TOLERANCE = 0.10
@@ -72,17 +76,22 @@ def run_audit(dataset_dir: Path, models_report: Path, n_boot: int = 1000, seed: 
     full_eval = evaluate(val.states, full, n_boot, seed)
     full_top1 = full_eval["top1"]["mean"]
 
-    # 2. Shuffled-label control: give every train state a random culprit
-    y_shuffled = np.zeros_like(train.y)
-    for i in range(len(train.states)):
-        rows = np.flatnonzero(train.state_idx == i)
-        y_shuffled[rng.choice(rows)] = 1
-    shuffled = fit_predict(train, val, [val], family, params, all_cols, y_train=y_shuffled)[0]
+    # 2. Shuffled-label control: give every train state a random culprit; repeat and pool per-state results
+    runs = []
+    for _ in range(SHUFFLE_REPEATS):
+        y_shuffled = np.zeros_like(train.y)
+        for i in range(len(train.states)):
+            rows = np.flatnonzero(train.state_idx == i)
+            y_shuffled[rng.choice(rows)] = 1
+        runs.append(fit_predict(train, val, [val], family, params, all_cols, y_train=y_shuffled)[0])
+    # Average the distributions state by state: the pooled predictor's metrics average the runs' noise away
+    shuffled = [{s: float(np.mean([run[k][s] for run in runs])) for s in runs[0][k]} for k in range(len(runs[0]))]
     diff = paired_difference(val.states, shuffled, uniform_val, n_boot, seed)
     checks["shuffled_labels"] = _check(
         diff["top1"]["high"] <= SHUFFLED_MAX_GAIN,
         val_top1=evaluate(val.states, shuffled, n_boot, seed)["top1"],
         top1_minus_uniform=diff["top1"],
+        repeats=SHUFFLE_REPEATS,
     )
 
     # 3. Single-feature models
@@ -95,7 +104,7 @@ def run_audit(dataset_dir: Path, models_report: Path, n_boot: int = 1000, seed: 
                                        near_shortcuts=near)
 
     # 4. Permutation importance (selected model, val): shuffle one feature (and its twin) across val rows
-    model = make_model(family, params).fit(train.X, train.y)
+    model = fit_model(family, params, train.X, train.y, train)
     temperature = fit_temperature(val, positive_scores(model, val.X))
     base_dists = distributions(val, positive_scores(model, val.X), temperature)
     base_top1 = evaluate(val.states, base_dists, 100, seed)["top1"]["mean"]

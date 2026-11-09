@@ -1,5 +1,5 @@
 # CaseMind — one entry point per task. Python tooling runs through uv inside backend/.
-.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset baselines models audit-leakage e1 final-eval e3
+.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset baselines models audit-leakage e1 final-eval e3 e3b
 
 install:  ## Install locked dependencies (incl. dev tools) into backend/.venv
 	cd backend && uv sync
@@ -48,3 +48,6 @@ final-eval:  ## ONE-TIME test evaluation of the selected model (needs a passed l
 
 e3:  ## E3 question policies (PRD 9.3; pre-registered in docs/EXPERIMENTS.md) -> reports/e3.{json,md}
 	cd backend && uv run python -m app.evaluation.e3_policies
+
+e3b:  ## E3b: E3 re-run with the interview-trained ranker (pre-registered) -> reports/e3b.{json,md}
+	cd backend && uv run python -m app.evaluation.e3_policies --tag b

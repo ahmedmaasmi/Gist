@@ -33,9 +33,9 @@ from app.ml.models import (
     LR_GRID,
     SEED,
     distributions,
+    fit_model,
     fit_temperature,
     lr_coefficients,
-    make_model,
     positive_scores,
     tune,
 )
@@ -70,7 +70,7 @@ def train_and_report(dataset_dir: Path, artifacts_dir: Path = ARTIFACTS_DIR, n_b
     fitted = {}
     for family, grid in FAMILIES.items():
         tuning = tune(train, family, grid, progress=print if verbose else (lambda _: None))
-        model = make_model(family, tuning.best_params).fit(train.X, train.y)
+        model = fit_model(family, tuning.best_params, train.X, train.y, train)
         val_scores = positive_scores(model, val.X)
         temperature = fit_temperature(val, val_scores)
         predictions[family] = distributions(val, val_scores, temperature)

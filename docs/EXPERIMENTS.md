@@ -142,3 +142,22 @@ The secondary 35% start shows the same pattern: entropy 0.853 vs random 0.747 af
 - **The cause is the same as E1's refuted H2.** A lie is only caught when a record contradicts it, and the ranker already counts that record as presence at the scene. Also, the ranker was trained on states with a single statement per suspect.
 - **That's why evasiveness doesn't matter (H5):** if answers barely move the model, refusing to answer barely matters either.
 - **Product consequence for Mode 1:** the player is the suspect being questioned, so at present their answers barely influence the Machine Detective. Possible fixes are listed in `docs/STATUS.md` (open questions).
+
+---
+
+## E3b: do interview answers matter after interview training? (re-run of E3)
+
+**Why.** E3 found that answers barely moved the ranker: a questions-only script gained nothing. In response, D-029 added interview evidence states to the training data (dataset 0.4.0), added interview features (group D, spec 1.1.0), and fixed a case-size confound found by the leakage audit (per-state balanced training). The ranker is now `lightgbm-0a9d150890`.
+
+**Design.** Identical to E3: same 300 fresh held-out-map cases (seeds 6,000,000+), same outcome-model cases, 15% start, same populations and policies, paired CIs. One added metric: each policy's paired gain after 8 actions over its own start. Command: `make e3b` → `reports/e3b.{json,md}`.
+
+### Hypotheses (written 2026-11-09, before running)
+
+- **H1.** The questions-only fixed_order script now improves top-1 over its start by 8 actions (paired gain CI excludes 0), for honest innocents. This is the point of D-029.
+- **H2.** Entropy still beats random after 5 actions, for every population.
+- **H3.** With fixed_order, evasive innocents now give lower top-1 after 8 actions than honest innocents (answers matter, so dodging matters).
+- **H4.** Entropy's top-1 after 8 actions is at least as high as in E3 (0.85) for honest innocents.
+
+### Results
+
+*(added after running; the hypotheses above are not edited)*

@@ -64,3 +64,13 @@ def test_training_and_report_are_reproducible(tiny_dataset, tmp_path, monkeypatc
     assert (tmp_path / "a" / "SELECTED").read_text().strip() == selected
     card = json.loads((tmp_path / "a" / selected / "model_card.json").read_text())
     assert card["feature_names"] == MODEL_FEATURE_NAMES and card["calibrated_on"] == "val split"
+
+
+def test_state_balanced_weights_give_each_state_equal_positive_and_negative_mass(tiny_dataset):
+    from app.ml.models import state_balanced_weights
+
+    table = build_table(load_states(tiny_dataset / "features.csv", ["train"]))
+    w = state_balanced_weights(table, table.y)
+    for i in range(len(table.states)):
+        rows = table.state_idx == i
+        assert w[rows & (table.y == 1)].sum() == w[rows & (table.y == 0)].sum()

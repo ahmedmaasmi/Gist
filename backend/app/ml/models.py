@@ -40,6 +40,27 @@ def make_model(family: str, params: dict):
     raise ValueError(family)
 
 
+def state_balanced_weights(table: Table, y: np.ndarray) -> np.ndarray:
+    """
+    Per-state balanced sample weights (D-029): the one positive row of a state with n suspects gets weight
+    n - 1, each negative row weight 1, so every evidence state carries equal positive and negative mass.
+    Without this, the base rate 1/n differs by case size, and features that correlate with case size
+    (smaller casts accumulate more evidence per suspect) leak a guilt-like signal: the shuffled-label
+    control caught it (+0.106 top-1 with RANDOM labels).
+    """
+    n = np.bincount(table.state_idx)[table.state_idx]
+    return np.where(y == 1, n - 1, 1).astype(float)
+
+
+def fit_model(family: str, params: dict, X: np.ndarray, y: np.ndarray, table: Table):
+    """The single place models are trained: always with per-state balanced weights."""
+    weights = state_balanced_weights(table, y)
+    model = make_model(family, params)
+    if family == "logistic_regression":
+        return model.fit(X, y, logisticregression__sample_weight=weights)
+    return model.fit(X, y, sample_weight=weights)
+
+
 def positive_scores(model, X: np.ndarray) -> np.ndarray:
     return model.predict_proba(X)[:, 1]
 
@@ -82,7 +103,7 @@ def grouped_cv_log_loss(train: Table, family: str, params: dict) -> float:
     for fold in sorted(set(state_folds.tolist())):
         fit_part = train.subset(state_folds != fold)
         held = train.subset(state_folds == fold)
-        model = make_model(family, params).fit(fit_part.X, fit_part.y)
+        model = fit_model(family, params, fit_part.X, fit_part.y, fit_part)
         losses.append(mean_log_loss(held, distributions(held, positive_scores(model, held.X))))
     return float(np.mean(losses))
 
