@@ -42,3 +42,15 @@ def test_name_check_catches_planted_identifiers_and_labels():
     assert leakage_audit.name_violations(clean) == ([], [])
     bad, keys = leakage_audit.name_violations([*clean, "suspect_id_rel", "label"])
     assert bad == ["suspect_id_rel", "label"] and keys == ["label"]
+
+
+@pytest.mark.parametrize("runner", ["e1", "final"])
+def test_test_splits_stay_sealed_until_the_audit_passes(tmp_path, runner):
+    """PRD 8.8: E1 and the final evaluation must refuse to run without a passed leakage audit."""
+    from app.evaluation import e1_ablation, final_eval
+
+    audit = tmp_path / "leakage_audit.json"
+    audit.write_text(json.dumps({"passed": False}))
+    run = e1_ablation.run_e1 if runner == "e1" else final_eval.run_final
+    with pytest.raises(SystemExit, match="sealed"):
+        run(tmp_path, audit)
