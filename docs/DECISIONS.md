@@ -66,3 +66,10 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **Alternatives considered:** An `is_lie` flag on Claim; keeping raw `RelationshipEdge` in T1; judging lies by the last location in the window (the old behaviour).
 - **Reason:** A flag on the Claim would travel with it to the UI and to features, which is label leakage. Raw edge numbers in T1 were a real leak of T3 data. The "last location" rule missed every culprit who returned to their alibi room after the murder.
 - **What I should learn from this:** Label leakage often hides in convenient fields. If an attribute is only knowable from the ground truth, it belongs with the ground truth, not with the observation.
+
+## D-009 (2026-11-09): Inaccurate claims by honest innocents are intended "honest confusion"
+
+- **Decision:** When an innocent, non-lying suspect moves during the murder window and then claims a single location for the whole window, the inaccuracy is intended. It is **not** a `LieAnnotation`. It is an accidental inconsistency, which the consistency engine may still flag.
+- **Alternatives considered:** Treat it as a generator bug and make honest claims exactly match the true timeline.
+- **Reason:** PRD 6.1 says lying, evasion *and honest confusion* must all be possible, and 6.4.B says a contradiction is evidence of inconsistency, not of guilt. Honest confusion produces innocent contradictions, which stop the ranker from learning "any contradiction means guilty".
+- **What I should learn from this:** Noise that looks like signal is what makes a synthetic task non-trivial. If innocents never contradicted themselves, the conflict features would be a near-perfect shortcut to the label, and the leakage audit (step 8) should catch exactly that kind of shortcut.

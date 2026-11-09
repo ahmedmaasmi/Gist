@@ -44,7 +44,7 @@ Audit the simulation engine (step 2): read `simulator.py` and `observation.py` a
 ## Step 2 audit items (found during step 1)
 
 - **Culprit lie rate.** 24 of 24 sampled culprits lie, but `guilty_lie_rate` = 0.85. Is the solvability re-roll in `generate_valid_case` filtering out honest culprits? That would bias the E2 deception experiment.
-- **Claim generation uses the last location in the window.** `true_murder_window_loc` drives claims for honest innocents, so an innocent who moved during the window makes an inaccurate claim. Is that an intended "honest confusion" or a bug?
+- **Honest confusion (decided, D-009).** Innocents who moved during the window make inaccurate claims; this is intended. In step 2: add a test that pins this behaviour and measure how often it happens, so the rate is a documented generator parameter rather than an accident.
 - **Red-herring evasion location.** In manor seed 42, an evasive innocent claims to have been at the crime location (`loc_study`). Is that intended?
 - **COVER_FOR is always mutual.** Every case has exactly 2 COVER_FOR lies. Is the rule too easy to trigger?
 - **OOD trait range.** `CharacterTraits.check_ood` uses 0.1–0.9; PRD 8.2 wants the full editor range for both training sampling and OOD checks.
