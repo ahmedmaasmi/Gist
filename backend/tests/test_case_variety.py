@@ -76,3 +76,14 @@ def test_names_are_drawn_from_the_pool_and_do_not_predict_guilt():
     for name, n in appearances.items():
         if n >= 20:
             assert guilty[name] / n < overall + 0.25, (name, guilty[name], n)
+
+
+def test_every_name_has_a_portrait_entry():
+    """docs/art/portraits.csv must list exactly the names in data/names.json (one portrait each)."""
+    import csv
+
+    portraits = NAMES_PATH.parents[1] / "docs" / "art" / "portraits.csv"
+    with portraits.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert {r["name"] for r in rows} == set(load_name_pool())
+    assert len({r["file_name"] for r in rows}) == len(rows)
