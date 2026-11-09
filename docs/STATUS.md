@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 4. Feature spec v1 (in progress)
+- **Current step:** 5. Dataset and splits (not started; waiting for the user's OK)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -11,7 +11,7 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
 - [x] **1. Repo, tooling and core schemas.** uv, ruff, Makefile, Docker image and Compose stack; tier tags; per-field T3 canaries; ModelInference/Hypothesis; RevealedRelationship; T3 LieAnnotations; tier contract tests. *(Done 2026-11-09.)*
 - [x] **2. Simulation engine.** Role-free sampler, noisy culprit choice, no culprit-only clues, coherent timelines, role-neutral wording, determinism (CH-03), reason strings (CH-02), full OOD range, 20 manor seeds hand-checked; `make audit-generator`. *(Done 2026-11-09.)*
 - [x] **3. Structured contradiction checks.** Audited against PRD 6.4.B; "seen at some moment" semantics for observed people; `linked_source_ids`; point-in-time traces; travel-feasible schedules; `make audit-contradictions` (false-positive rate 0%, precision 100%, recall 52%). *(Done 2026-11-09.)*
-- [ ] **4. Feature spec v1.** Written spec (`docs/FEATURES.md`) plus deterministic, versioned functions over T1 only; exclusion list enforced in code.
+- [x] **4. Feature spec v1.** 12 features in E1 groups A/B/C plus context; `docs/FEATURES.md` kept in sync with `app/features/spec.py`; T1-only signature guarantee; hand-computed test. *(Done 2026-11-09, spec v1.0.0.)*
 - [ ] **5. Dataset and splits.** Reveal orderings and evidence states; splits by case and by held-out template; grouped CV folds (group = template); at least 3 hand-authored OOD cases frozen before model work; dataset versioning; report the number of cases and the number of templates. *(Generator exists, unaudited.)*
 - [ ] **6. Baselines and evaluation harness.** Random/prior, motive-plus-opportunity rule, symbolic timeline solver; top-1, top-2, MRR, log loss, Brier; 95% bootstrap CIs over cases; one command builds the table. *(Solver exists, unaudited.)*
 - [ ] **7. Models.** Logistic Regression and LightGBM, within-case normalisation, calibration on validation, per-suspect explanations linked to evidence IDs (MD-08), heuristic fallback (MD-09), simple abstention rule (MD-06).
@@ -50,10 +50,11 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
   - **New evaluation.** `make audit-contradictions` reports precision, recall and false-positive rate with CIs.
   - **Tests.** 99 → 101.
 - 2026-11-09, **step 3 follow-up:** cross-speaker disagreements (D-016); tests 101 → 104. The PRD PDF stays out of git (`docs/*.pdf` ignored).
+- 2026-11-09, **step 4 done:** feature spec v1.0.0 (12 features, E1 groups); `docs/FEATURES.md`; T1-only signature guarantee; tests 104 → 110.
 
 ## Next action
 
-Write feature spec v1 (step 4): the written spec in `docs/FEATURES.md` plus deterministic, versioned feature functions over T1 only, with the exclusion list enforced in code.
+Audit and finish the dataset builder (step 5): reveal orderings and evidence states, splits by case and template, grouped CV folds, dataset versioning; reserve the hand-authored OOD cases.
 
 ## Generator audit (current numbers, `make audit-generator`, 400 cases)
 
@@ -91,14 +92,11 @@ These were all 1.00 before the step 2 redesign.
 
 **Disagreements (D-016):** 1.25 per case; 100% involve a false claim. False claims caught by a flag *or* a disagreement: **81%** (COVER_FOR lies 77%). 37% of accurate innocents are involved in a disagreement (the honest counterpart), so it is never treated as blame.
 
-## Step 4 notes (feature spec)
-
-- **Corroboration flag.** Lying culprits never claim corroboration, while honest innocents often do. That is plausible behaviour, but it is a likely strong feature; watch for it in the leakage audit (step 8).
-- **Weighting flags by reliability.** Contradiction features can weight each flag by the reliability of its linked records (`linked_source_ids`).
-
 ## Step 5 audit items
 
 - **Artificial hard cases.** `DatasetGenerator._make_under_determined_variant` deletes only the culprit's scene traces to manufacture hard cases. Hard cases now occur naturally (D-010), and the deletion is itself a culprit-specific artefact. Likely remove it.
+- **Split design.** Template `split_group` values in `data/templates/*.json`: train = clinic, gallery, manor, office; val = yacht, warehouse; held-out test = train, lodge. Check this against PRD 8.4: train/val/test split by case, plus a separate template-held-out test, plus grouped CV over training templates.
+- **Feature watch-list** (see `docs/FEATURES.md`): `claimed_corroboration_share` is a possible near-shortcut; `claim_claim_conflicts` is constant in generated data.
 
 ## Open questions / blockers
 

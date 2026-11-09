@@ -127,3 +127,17 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **Alternatives considered:** Treat it as CLAIM_CLAIM blamed on the later speaker; flag both speakers as contradicted; leave it out.
 - **Reason:** 72% of COVER_FOR lies went undetected, because the engine never compared two people's statements. Blaming either side would wrongly accuse the honest party. Results (`make audit-contradictions`): 1.25 disagreements per case, 100% involve at least one false claim, and the share of false claims caught by a flag *or* a disagreement rose from 52% to 81% (COVER_FOR from 28% to 77%). The cost is that 37% of accurate innocents are involved in some disagreement, which is why it stays a separate, unblamed signal.
 - **What I should learn from this:** Some evidence is symmetric. It tells you *that* something is wrong, not *who* is wrong. Modelling it as symmetric, and letting the learner weigh it, is more honest than forcing an attribution that a rule cannot justify.
+
+## D-017 (2026-11-09): Feature spec v1.0.0
+
+- **Decision:**
+  - 12 features in 4 groups matching the E1 ablation: A motive and opportunity (4), B timeline and alibi (3), C reliability and contradictions (4), context (1). They are defined in `backend/app/features/spec.py` and documented in `docs/FEATURES.md`, and a test keeps the two in sync.
+  - `compute_suspect_features(t0, t1, setting)` takes only T0, T1 and the setting, so T2/T3 cannot reach a feature, and a test asserts the signature.
+  - `unverified_claim_share` is computed as "no established fact supports the claim" rather than read from claim status. Claims are never auto-verified (MD-04), so the status would always be UNVERIFIED and the feature would be constant.
+  - `disagreement_count` (D-016) goes in group C.
+- **Alternatives considered:**
+  - Text features from claim free text: no; the PRD's v0.1 is structured-only, and the wording is now role-neutral anyway.
+  - Within-case z-scores: deferred to model work (step 7), where they can be compared.
+  - Reading `unverified_claim_share` from status: rejected, because it would be constant.
+- **Reason:** The PRD lists illustrative features and makes the full spec a required deliverable. Grouping by E1 variant now means the ablation needs no feature re-engineering later. The signature guarantee is stronger than a review rule, because it's checked by a test rather than by memory.
+- **What I should learn from this:** Leakage prevention is best done by construction (what a function *can* see), not by convention (what it *promises* not to use). And a feature that is constant by design (status-based "unverified") is a spec bug worth catching before training, not after.
