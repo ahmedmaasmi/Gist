@@ -1,5 +1,5 @@
 # CaseMind — one entry point per task. Python tooling runs through uv inside backend/.
-.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset baselines models audit-leakage e1
+.PHONY: install test lint fmt up down logs audit-generator audit-contradictions dataset baselines models audit-leakage e1 final-eval
 
 install:  ## Install locked dependencies (incl. dev tools) into backend/.venv
 	cd backend && uv sync
@@ -42,3 +42,6 @@ audit-leakage:  ## Leakage and shortcut audit (PRD 8.8) on train/val -> reports/
 
 e1:  ## E1 feature ablation (PRD 9.1; pre-registered in docs/EXPERIMENTS.md) -> reports/e1.{json,md}
 	cd backend && uv run python -m app.evaluation.e1_ablation
+
+final-eval:  ## ONE-TIME test evaluation of the selected model (needs a passed leakage audit) -> reports/final_test.{json,md}
+	cd backend && uv run python -m app.evaluation.final_eval
