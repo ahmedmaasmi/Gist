@@ -7,6 +7,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from app.domain.character import (
+    TRAIT_TRAINING_RANGE,
     Character,
     CharacterGoal,
     CharacterSecret,
@@ -209,30 +210,66 @@ def get_templates_by_split(
     )
 
 
-def _sample_trait_value(
+TRAIT_NAMES = ("temper", "greed", "loyalty", "honesty", "composure", "secrecy")
+MOTIVE_GOAL_TYPES = (GoalType.REVENGE, GoalType.INHERITANCE, GoalType.MONEY, GoalType.HIDE_SECRET)
+VICTIM_SECRET_TOPICS = (
+    "fraudulent accounts",
+    "a forged signature on a contract",
+    "an affair",
+    "embezzled funds",
+    "a hidden gambling debt",
+)
+PRIVATE_SECRET_TOPICS = (
+    "an unrelated regulatory infraction",
+    "a private meeting with a rival firm",
+    "unauthorized side business",
+    "a past criminal conviction",
+    "a family scandal",
+)
+
+# Sampling probabilities for the role-free cast. Documented here because they shape how hard
+# the generated cases are (PRD 8.2: the generator is documented with its parameters).
+P_MOTIVE_GOAL = 0.5        # suspect has a grievance against the victim
+P_PROTECT_GOAL = 0.3       # suspect wants to protect another suspect
+P_VICTIM_SECRET = 0.5      # suspect has a secret the victim could expose (potential motive)
+P_PRIVATE_SECRET = 0.6     # suspect has an unrelated secret (potential red herring)
+P_EDGE = 0.6               # a directed relationship edge exists between two characters
+P_SCENE_SLOT = 0.15        # a schedule slot is planned at the crime location
+CULPRIT_TEMPERATURE = 0.5  # softmax temperature for culprit selection (see SimulationConfig)
+
+
+def _sample_traits(rng: random.Random) -> CharacterTraits:
+    """Every trait uniform over the full editor range (PRD 8.2 implementation note, CH-04)."""
+    low, high = TRAIT_TRAINING_RANGE
+    return CharacterTraits(**{name: round(rng.uniform(low, high), 2) for name in TRAIT_NAMES})
+
+
+def _sample_schedule(
     rng: random.Random,
-    low: float,
-    high: float,
-    ood_mode: bool = False,
-) -> float:
-    """
-    Samples a trait value inside [low, high] subset of [0.1, 0.9] when ood_mode=False,
-    or intentionally outside [0.1, 0.9] when ood_mode=True to test CH-04 / CL-05.
-    """
-    if ood_mode:
-        if rng.random() < 0.5:
-            return round(rng.uniform(0.0, 0.08), 2)
-        return round(rng.uniform(0.92, 1.0), 2)
-    clamped_low = max(0.10, min(0.90, low))
-    clamped_high = max(clamped_low, min(0.90, high))
-    return round(rng.uniform(clamped_low, clamped_high), 2)
+    locations: list[str],
+    crime_location_id: str,
+    start_min: int = 1080,
+    end_min: int = 1440,
+) -> list[ScheduleSlot]:
+    """3 to 5 consecutive slots at random 10-minute boundaries; occasionally at the crime scene."""
+    n_slots = rng.randint(3, 5)
+    cuts = sorted(rng.sample(range(start_min + 30, end_min - 30, 10), n_slots - 1))
+    bounds = [start_min, *cuts, end_min]
+    return [
+        ScheduleSlot(
+            time_interval=TimeInterval(start_min=a, end_min=b),
+            planned_location_id=(
+                crime_location_id if rng.random() < P_SCENE_SLOT else rng.choice(locations)
+            ),
+        )
+        for a, b in zip(bounds, bounds[1:], strict=False)
+    ]
 
 
 def sample_case_setup_from_template(
     template: SettingTemplate,
     seed: int,
     num_suspects: int = 4,
-    ood_mode: bool = False,
 ) -> SampledCaseSetup:
     """
     PRD Section 7B.2, 7B.4 (CL-06), 8.2, and CH-03/CH-04:
@@ -270,18 +307,6 @@ def sample_case_setup_from_template(
         key=lambda lid: (tpl.get_travel_time(lid, crime_location_id), lid),
     )
     social_hub_loc = unrestricted_by_proximity[0]
-    secondary_hub_loc = (
-        unrestricted_by_proximity[1]
-        if len(unrestricted_by_proximity) > 1
-        else social_hub_loc
-    )
-    distant_unrestricted_loc = unrestricted_by_proximity[-1]
-
-    other_restricted_locs = [
-        loc.location_id
-        for loc in tpl.locations
-        if loc.is_restricted and loc.location_id != crime_location_id
-    ]
 
     # 2. Sample distinct names and occupations for (1 victim + num_suspects suspects)
     first_pool = list(FIRST_NAMES)
@@ -304,14 +329,7 @@ def sample_case_setup_from_template(
     victim_name = f"{first_pool[0]} {last_pool[0]}"
     victim_occupation = occupations[0]
 
-    victim_traits = CharacterTraits(
-        temper=_sample_trait_value(rng, 0.45, 0.75, ood_mode=ood_mode),
-        greed=_sample_trait_value(rng, 0.50, 0.85, ood_mode=ood_mode),
-        loyalty=_sample_trait_value(rng, 0.30, 0.65, ood_mode=ood_mode),
-        honesty=_sample_trait_value(rng, 0.40, 0.75, ood_mode=ood_mode),
-        composure=_sample_trait_value(rng, 0.45, 0.80, ood_mode=ood_mode),
-        secrecy=_sample_trait_value(rng, 0.55, 0.85, ood_mode=ood_mode),
-    )
+    victim_traits = _sample_traits(rng)
 
     victim_schedule = [
         ScheduleSlot(
@@ -335,198 +353,65 @@ def sample_case_setup_from_template(
         schedule=victim_schedule,
     )
 
-    # Choose role archetypes among suspects so every seed produces rich social dynamics
-    primary_idx = rng.randrange(num_suspects)
-    red_herring_idx = (primary_idx + 1) % num_suspects
-    ally_idx = (primary_idx + 2) % num_suspects
+    # Role-free cast (PRD 8.2): every suspect is drawn from the same distribution, so there is
+    # no scripted "primary". Motive, opportunity and temperament vary independently; the
+    # simulator later picks the culprit from them with noise (culprit_temperature).
+    non_crime_locs = [
+        loc.location_id for loc in tpl.locations if loc.location_id != crime_location_id
+    ]
+    suspect_ids = [f"suspect_{idx + 1:02d}" for idx in range(num_suspects)]
 
     suspect_chars: list[Character] = []
-    for idx in range(num_suspects):
-        suspect_id = f"suspect_{idx + 1:02d}"
+    for idx, suspect_id in enumerate(suspect_ids):
         full_name = f"{first_pool[(idx + 1) % len(first_pool)]} {last_pool[(idx + 1) % len(last_pool)]}"
         occ = occupations[(idx + 1) % len(occupations)]
         voice = VOICE_NOTES_POOL[(idx + 1) % len(VOICE_NOTES_POOL)]
 
-        if idx == primary_idx:
-            # Primary culprit candidate: high temper, low composure, strong motive & opportunity
-            traits = CharacterTraits(
-                temper=_sample_trait_value(rng, 0.72, 0.88, ood_mode=ood_mode),
-                greed=_sample_trait_value(rng, 0.62, 0.88, ood_mode=ood_mode),
-                loyalty=_sample_trait_value(rng, 0.15, 0.45, ood_mode=ood_mode),
-                honesty=_sample_trait_value(rng, 0.15, 0.40, ood_mode=ood_mode),
-                composure=_sample_trait_value(rng, 0.12, 0.28, ood_mode=ood_mode),
-                secrecy=_sample_trait_value(rng, 0.55, 0.85, ood_mode=ood_mode),
-            )
-            motive_goal_type = rng.choice(
-                [GoalType.REVENGE, GoalType.INHERITANCE, GoalType.HIDE_SECRET]
-            )
-            goals = [
+        goals: list[CharacterGoal] = []
+        if rng.random() < P_MOTIVE_GOAL:
+            goal_type = rng.choice(MOTIVE_GOAL_TYPES)
+            goals.append(
                 CharacterGoal(
-                    goal_type=motive_goal_type,
+                    goal_type=goal_type,
                     target_character_id=victim_id,
                     description=(
-                        f"{full_name} seeks {motive_goal_type.value.lower()} against "
-                        f"{victim_name} over a critical dispute at {tpl.name}."
+                        f"{full_name} has a {goal_type.value.lower()} grievance against {victim_name}."
                     ),
                 )
-            ]
-            secrets = [
-                CharacterSecret(
-                    secret_id=f"sec_{suspect_id}_crime",
-                    description=(
-                        f"{full_name} was about to be exposed by {victim_name} for "
-                        f"fraudulent dealings at {tpl.name}."
-                    ),
-                    severity=round(rng.uniform(0.78, 0.90), 2),
-                    is_crime_linked=True,
-                )
-            ]
-            schedule = [
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1080, end_min=1250),
-                    planned_location_id=social_hub_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1250, end_min=1310),
-                    planned_location_id=social_hub_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1310, end_min=1440),
-                    planned_location_id=secondary_hub_loc,
-                ),
-            ]
-        elif idx == red_herring_idx:
-            # Innocent red-herring suspect: has an unrelated secret + secondary motive
-            traits = CharacterTraits(
-                temper=_sample_trait_value(rng, 0.50, 0.68, ood_mode=ood_mode),
-                greed=_sample_trait_value(rng, 0.40, 0.75, ood_mode=ood_mode),
-                loyalty=_sample_trait_value(rng, 0.55, 0.85, ood_mode=ood_mode),
-                honesty=_sample_trait_value(rng, 0.45, 0.78, ood_mode=ood_mode),
-                composure=_sample_trait_value(rng, 0.60, 0.86, ood_mode=ood_mode),
-                secrecy=_sample_trait_value(rng, 0.15, 0.35, ood_mode=ood_mode),
             )
-            goals = [
-                CharacterGoal(
-                    goal_type=GoalType.MONEY,
-                    target_character_id=victim_id,
-                    description=(
-                        f"{full_name} had an unresolved contract negotiation with {victim_name}."
-                    ),
-                )
-            ]
-            secrets = [
-                CharacterSecret(
-                    secret_id=f"sec_{suspect_id}_red_herring",
-                    description=(
-                        f"{full_name} is concealing an unrelated regulatory infraction and "
-                        f"private meeting at {secondary_hub_loc}."
-                    ),
-                    severity=round(rng.uniform(0.50, 0.70), 2),
-                    is_crime_linked=False,
-                )
-            ]
-            pre_loc = other_restricted_locs[0] if other_restricted_locs else secondary_hub_loc
-            schedule = [
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1080, end_min=1160),
-                    planned_location_id=pre_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1160, end_min=1250),
-                    planned_location_id=secondary_hub_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1250, end_min=1320),
-                    planned_location_id=secondary_hub_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1320, end_min=1440),
-                    planned_location_id=distant_unrestricted_loc,
-                ),
-            ]
-        elif idx == ally_idx:
-            # Bystander witness to the pre-murder argument & confidant/alibi-cover for red herring
-            traits = CharacterTraits(
-                temper=_sample_trait_value(rng, 0.20, 0.48, ood_mode=ood_mode),
-                greed=_sample_trait_value(rng, 0.20, 0.55, ood_mode=ood_mode),
-                loyalty=_sample_trait_value(rng, 0.65, 0.88, ood_mode=ood_mode),
-                honesty=_sample_trait_value(rng, 0.55, 0.85, ood_mode=ood_mode),
-                composure=_sample_trait_value(rng, 0.62, 0.88, ood_mode=ood_mode),
-                secrecy=_sample_trait_value(rng, 0.30, 0.65, ood_mode=ood_mode),
-            )
-            goals = [
+        if rng.random() < P_PROTECT_GOAL:
+            protected = rng.choice([s for s in suspect_ids if s != suspect_id])
+            goals.append(
                 CharacterGoal(
                     goal_type=GoalType.PROTECT_SOMEONE,
-                    target_character_id=f"suspect_{red_herring_idx + 1:02d}",
-                    description=(
-                        f"{full_name} wants to shield suspect_{red_herring_idx + 1:02d} "
-                        f"from professional scandal."
-                    ),
+                    target_character_id=protected,
+                    description=f"{full_name} wants to shield {protected} from scrutiny.",
                 )
-            ]
-            secrets = []
-            schedule = [
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1080, end_min=1160),
-                    planned_location_id=social_hub_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1160, end_min=1250),
-                    planned_location_id=secondary_hub_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1250, end_min=1320),
-                    planned_location_id=distant_unrestricted_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1320, end_min=1440),
-                    planned_location_id=social_hub_loc,
-                ),
-            ]
-        else:
-            # Additional innocent suspects (for 4, 5, or 6 suspect casts)
-            traits = CharacterTraits(
-                temper=_sample_trait_value(rng, 0.18, 0.55, ood_mode=ood_mode),
-                greed=_sample_trait_value(rng, 0.20, 0.65, ood_mode=ood_mode),
-                loyalty=_sample_trait_value(rng, 0.30, 0.75, ood_mode=ood_mode),
-                honesty=_sample_trait_value(rng, 0.50, 0.88, ood_mode=ood_mode),
-                composure=_sample_trait_value(rng, 0.58, 0.88, ood_mode=ood_mode),
-                secrecy=_sample_trait_value(rng, 0.25, 0.70, ood_mode=ood_mode),
             )
-            goals = [
-                CharacterGoal(
-                    goal_type=GoalType.HIDE_SECRET,
-                    target_character_id=None,
-                    description=f"{full_name} wants to avoid scrutiny during the investigation.",
-                )
-            ]
-            secrets = [
+
+        secrets: list[CharacterSecret] = []
+        if rng.random() < P_VICTIM_SECRET:
+            secrets.append(
                 CharacterSecret(
-                    secret_id=f"sec_{suspect_id}_minor",
-                    description=f"{full_name} was conducting unauthorized side business.",
-                    severity=round(rng.uniform(0.30, 0.55), 2),
+                    secret_id=f"sec_{suspect_id}_{len(secrets) + 1}",
+                    description=(
+                        f"{full_name} was about to be exposed by {victim_name} over "
+                        f"{rng.choice(VICTIM_SECRET_TOPICS)}."
+                    ),
+                    severity=round(rng.uniform(0.30, 0.95), 2),
+                    is_crime_linked=False,  # set by the simulator if this suspect becomes the culprit
+                    involves_character_id=victim_id,
+                )
+            )
+        if rng.random() < P_PRIVATE_SECRET:
+            secrets.append(
+                CharacterSecret(
+                    secret_id=f"sec_{suspect_id}_{len(secrets) + 1}",
+                    description=f"{full_name} is hiding {rng.choice(PRIVATE_SECRET_TOPICS)}.",
+                    severity=round(rng.uniform(0.20, 0.80), 2),
                     is_crime_linked=False,
                 )
-            ]
-            alt_loc = (
-                other_restricted_locs[idx % len(other_restricted_locs)]
-                if other_restricted_locs and idx % 2 == 1
-                else distant_unrestricted_loc
             )
-            schedule = [
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1080, end_min=1180),
-                    planned_location_id=distant_unrestricted_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1180, end_min=1300),
-                    planned_location_id=alt_loc,
-                ),
-                ScheduleSlot(
-                    time_interval=TimeInterval(start_min=1300, end_min=1440),
-                    planned_location_id=secondary_hub_loc,
-                ),
-            ]
 
         suspect_chars.append(
             Character(
@@ -534,99 +419,45 @@ def sample_case_setup_from_template(
                 name=full_name,
                 occupation=occ,
                 voice_notes=voice,
-                traits=traits,
+                traits=_sample_traits(rng),
                 goals=goals,
                 secrets=secrets,
-                schedule=schedule,
+                schedule=_sample_schedule(rng, non_crime_locs, crime_location_id),
             )
         )
 
     characters: list[Character] = [victim_char, *suspect_chars]
 
-    # 3. Build asymmetric RelationshipGraph
-    primary_id = f"suspect_{primary_idx + 1:02d}"
-    red_herring_id = f"suspect_{red_herring_idx + 1:02d}"
-    ally_id = f"suspect_{ally_idx + 1:02d}"
-
-    edges: list[RelationshipEdge] = [
-        # Primary suspect <-> Victim: strong hostility (asymmetric)
-        RelationshipEdge(
-            source_id=primary_id,
-            target_id=victim_id,
-            affinity=round(rng.uniform(-0.85, -0.55), 2),
-            trust=round(rng.uniform(0.05, 0.25), 2),
-            loyalty=0.10,
-            obligation=round(rng.uniform(0.55, 0.85), 2),
-            tags=[RelationshipTag.RIVAL],
-            is_revealed_to_player=False,
-        ),
-        RelationshipEdge(
-            source_id=victim_id,
-            target_id=primary_id,
-            affinity=round(rng.uniform(-0.45, -0.20), 2),
-            trust=round(rng.uniform(0.15, 0.35), 2),
-            loyalty=0.15,
-            obligation=0.10,
-            tags=[RelationshipTag.BUSINESS_PARTNER],
-            is_revealed_to_player=False,
-        ),
-        # Red herring <-> Ally: high trust & loyalty/obligation (triggers CONFIDE and COVER_FOR)
-        RelationshipEdge(
-            source_id=red_herring_id,
-            target_id=ally_id,
-            affinity=round(rng.uniform(0.55, 0.85), 2),
-            trust=round(rng.uniform(0.72, 0.90), 2),
-            loyalty=round(rng.uniform(0.70, 0.88), 2),
-            obligation=round(rng.uniform(0.65, 0.85), 2),
-            tags=[RelationshipTag.SECRET_AFFAIR],
-            is_revealed_to_player=False,
-        ),
-        RelationshipEdge(
-            source_id=ally_id,
-            target_id=red_herring_id,
-            affinity=round(rng.uniform(0.45, 0.78), 2),
-            trust=round(rng.uniform(0.68, 0.88), 2),
-            loyalty=round(rng.uniform(0.68, 0.86), 2),
-            obligation=round(rng.uniform(0.60, 0.80), 2),
-            tags=[RelationshipTag.SECRET_AFFAIR],
-            is_revealed_to_player=False,
-        ),
-        # Red herring -> Victim: mild tension
-        RelationshipEdge(
-            source_id=red_herring_id,
-            target_id=victim_id,
-            affinity=round(rng.uniform(-0.35, -0.10), 2),
-            trust=round(rng.uniform(0.25, 0.50), 2),
-            loyalty=0.25,
-            obligation=round(rng.uniform(0.30, 0.55), 2),
-            tags=[RelationshipTag.EMPLOYER_EMPLOYEE],
-            is_revealed_to_player=False,
-        ),
-    ]
-
-    # Add asymmetric background edges for remaining characters
-    existing_pairs = {(e.source_id, e.target_id) for e in edges}
+    # Random asymmetric relationship graph over all characters (PRD 7A.2).
+    grievance_ids = {
+        c.character_id
+        for c in suspect_chars
+        if any(g.target_character_id == victim_id for g in c.goals)
+    }
+    edges: list[RelationshipEdge] = []
     for char_a in characters:
         for char_b in characters:
-            if char_a.character_id == char_b.character_id:
+            if char_a.character_id == char_b.character_id or rng.random() >= P_EDGE:
                 continue
-            pair = (char_a.character_id, char_b.character_id)
-            if pair in existing_pairs:
-                continue
-            if rng.random() < 0.45:
-                edges.append(
-                    RelationshipEdge(
-                        source_id=char_a.character_id,
-                        target_id=char_b.character_id,
-                        affinity=round(rng.uniform(-0.25, 0.55), 2),
-                        trust=round(rng.uniform(0.20, 0.55), 2),
-                        loyalty=round(rng.uniform(0.15, 0.50), 2),
-                        obligation=round(rng.uniform(0.05, 0.40), 2),
-                        tags=[rng.choice(list(RelationshipTag))],
-                        is_revealed_to_player=False,
-                    )
+            # A grievance against the victim makes hostility toward them more likely, not certain.
+            max_affinity = (
+                0.2
+                if char_a.character_id in grievance_ids and char_b.character_id == victim_id
+                else 1.0
+            )
+            edges.append(
+                RelationshipEdge(
+                    source_id=char_a.character_id,
+                    target_id=char_b.character_id,
+                    affinity=round(rng.uniform(-1.0, max_affinity), 2),
+                    trust=round(rng.uniform(0.0, 1.0), 2),
+                    loyalty=round(rng.uniform(0.0, 1.0), 2),
+                    # Squared so strong debts/favours are rarer than weak ones.
+                    obligation=round(rng.uniform(0.0, 1.0) ** 2, 2),
+                    tags=[rng.choice(list(RelationshipTag))],
+                    is_revealed_to_player=False,
                 )
-                existing_pairs.add(pair)
+            )
 
     relationship_graph = RelationshipGraph(edges=edges)
 
@@ -643,6 +474,7 @@ def sample_case_setup_from_template(
         record_drop_rate=0.20,
         guilty_lie_rate=0.90,
         innocent_lie_rate=0.25,
+        culprit_temperature=CULPRIT_TEMPERATURE,
     )
 
     return SampledCaseSetup(
@@ -658,10 +490,15 @@ def generate_valid_case(
     base_seed: int = 42,
     num_suspects: int = 4,
     max_attempts: int = 20,
+    allow_hard_cases: bool = True,
 ) -> tuple[SampledCaseSetup, SimulatedCaseBundle, CaseValidationReport]:
     """
     Samples a case setup starting from `base_seed` (re-trying incremental seeds up to
     `max_attempts` if needed) and verifies `CaseSolvabilityValidator.validate_case` passes.
+
+    By default only checks 1-3 (culprit possible, not trivial, red herring exists) gate the case;
+    check 4 (culprit has the top hand-weighted score) only sets the difficulty label. Gating on
+    check 4 would keep only cases a simple rule solves and bias the lie rate (D-010).
     """
     last_setup: SampledCaseSetup | None = None
     last_bundle: SimulatedCaseBundle | None = None
@@ -673,13 +510,12 @@ def generate_valid_case(
             template=template,
             seed=candidate_seed,
             num_suspects=num_suspects,
-            ood_mode=False,
         )
         bundle = setup.simulate()
         report = CaseSolvabilityValidator.validate_case(
             bundle=bundle,
             setting=template,
-            allow_hard_cases=False,
+            allow_hard_cases=allow_hard_cases,
         )
         last_setup, last_bundle, last_report = setup, bundle, report
         if report.is_valid:

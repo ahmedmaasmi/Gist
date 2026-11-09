@@ -1,7 +1,7 @@
 # CaseMind status
 
 - **Current version:** v0.1 (Machine Detective MVP)
-- **Current step:** 2. Simulation engine audit (not started; waiting for the user's OK)
+- **Current step:** 3. Structured contradiction checks audit (not started; waiting for the user's OK)
 - **Last updated:** 2026-11-09
 
 ## v0.1 checklist
@@ -9,7 +9,7 @@
 The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code from before this protocol that has not yet been checked against the PRD.
 
 - [x] **1. Repo, tooling and core schemas.** uv, ruff, Makefile, Docker image and Compose stack; tier tags; per-field T3 canaries; ModelInference/Hypothesis; RevealedRelationship; T3 LieAnnotations; tier contract tests. *(Done 2026-11-09.)*
-- [ ] **2. Simulation engine.** Manor template with 4 characters; ARGUE, CONFIDE and COVER_FOR with reason strings; observation model (T1 facts, T2 knowledge); determinism test (CH-03); solvability check; hand-check 20 seeds; fix the OOD trait range. *(Largely exists, unaudited. See the step 2 audit items below.)*
+- [x] **2. Simulation engine.** Role-free sampler, noisy culprit choice, no culprit-only clues, coherent timelines, role-neutral wording, determinism (CH-03), reason strings (CH-02), full OOD range, 20 manor seeds hand-checked; `make audit-generator`. *(Done 2026-11-09.)*
 - [ ] **3. Structured contradiction checks.** Time overlap, location exclusivity, travel feasibility, record mismatch; CLAIM_FACT and CLAIM_CLAIM flags with linked sources and explanations. *(Exists, unaudited. Moved before features because the conflict features depend on it.)*
 - [ ] **4. Feature spec v1.** Written spec (`docs/FEATURES.md`) plus deterministic, versioned functions over T1 only; exclusion list enforced in code.
 - [ ] **5. Dataset and splits.** Reveal orderings and evidence states; splits by case and by held-out template; grouped CV folds (group = template); at least 3 hand-authored OOD cases frozen before model work; dataset versioning; report the number of cases and the number of templates. *(Generator exists, unaudited.)*
@@ -36,18 +36,48 @@ The build order follows PRD Sections 14 and 9. "Exists, unaudited" means code fr
   - **Bug fixed.** Culprit lies were never detectable as lies: a culprit who returned to their alibi location counted as truthful.
   - **Tests.** 45 → 83, all passing; Docker stack verified healthy; Postgres role isolation checked.
   - **Housekeeping.** `.env.exemple` renamed to `.env.example`; the `datasets` notes moved to `docs/notes/` (marked out of scope); typo directory removed.
+- 2026-11-09, **step 2 done:** found and fixed a generator in which trivial rules recovered the culprit 100% of the time.
+  - **Sampler.** Role-free sampler; culprit chosen by softmax (temperature 0.5) among suspects with a motive and a possible route.
+  - **No culprit-only clues.** Records can be missing for anyone, including the culprit; forensic traces exist for any visitor to the scene.
+  - **Neutral evidence.** Same motive wording for culprit and innocents; one shared alibi phrase pool.
+  - **Bug fixes.** COVER_FOR used the wrong edge direction and was forced; evasive innocents claimed the crime scene; culprits teleported (records are now points in time).
+  - **Check 4** labels difficulty instead of filtering.
+  - **Audit and tests.** Generator audit script plus report; tests 84 → 99.
 
 ## Next action
 
-Audit the simulation engine (step 2): read `simulator.py` and `observation.py` against PRD 7A, investigate the step 2 audit items below, and hand-check 20 manor seeds.
+Audit the structured consistency engine (step 3) against PRD 6.4.B, starting with the interval-semantics items below.
 
-## Step 2 audit items (found during step 1)
+## Generator audit (current numbers, `make audit-generator`, 400 cases)
 
-- **Culprit lie rate.** 24 of 24 sampled culprits lie, but `guilty_lie_rate` = 0.85. Is the solvability re-roll in `generate_valid_case` filtering out honest culprits? That would bias the E2 deception experiment.
-- **Honest confusion (decided, D-009).** Innocents who moved during the window make inaccurate claims; this is intended. In step 2: add a test that pins this behaviour and measure how often it happens, so the rate is a documented generator parameter rather than an accident.
-- **Red-herring evasion location.** In manor seed 42, an evasive innocent claims to have been at the crime location (`loc_study`). Is that intended?
-- **COVER_FOR is always mutual.** Every case has exactly 2 COVER_FOR lies. Is the rule too easy to trigger?
-- **OOD trait range.** `CharacterTraits.check_ood` uses 0.1–0.9; PRD 8.2 wants the full editor range for both training sampling and OOD checks.
+Scores measure recovery of the generator's logic, not real-world skill.
+
+**Best single trivial rule (top-1):** chance is 0.25.
+
+| Rule | Top-1 |
+|---|---|
+| Crime-scene presence in the window | 0.64 |
+| Motive evidence | 0.42 |
+| Has a forensic trace | 0.42 |
+| Validator's hand-weighted score | 0.39 |
+
+These were all 1.00 before the step 2 redesign.
+
+**Generator statistics:**
+- Culprit lie rate 0.905 (configured 0.90).
+- Honest-confusion rate 0.23.
+- Checks 1–3 pass in 398 of 400 cases.
+- 8.7% of cases have only one eligible culprit (known limitation).
+
+## Step 3 audit items (found during steps 1–2)
+
+- **Touching intervals overlap.** `TimeInterval.overlaps` treats intervals that only touch (e.g. [1250,1260] and [1260,1280]) as overlapping. Check whether the consistency engine and the observation window logic should use a positive overlap instead.
+- **Point-in-time records.** Movement records are now `[t, t]` (D-012). Check every consistency rule against zero-length intervals.
+- **Corroboration flag.** Lying culprits never claim corroboration, while honest innocents often do. That is plausible behaviour, but note it for the feature spec (step 4) as a likely strong feature.
+
+## Step 5 audit items
+
+- **Artificial hard cases.** `DatasetGenerator._make_under_determined_variant` deletes only the culprit's scene traces to manufacture hard cases. Hard cases now occur naturally (D-010), and the deletion is itself a culprit-specific artefact. Likely remove it.
 
 ## Open questions / blockers
 

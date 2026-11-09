@@ -37,6 +37,7 @@ d. When a step is done: run tests, update `docs/STATUS.md`, append decisions to 
 - Python project: `backend/` (package `app`: `domain/`, `engine/`), managed by **uv** (`backend/uv.lock`, Python 3.12).
   Templates in `data/templates/`.
 - `make install` · `make test` · `make lint` · `make fmt` (from the repo root).
+- `make audit-generator`: shortcut audit of the case generator → `reports/generator_audit.json`.
 - `make up` / `make down`: Postgres + backend in Docker Compose; API on http://localhost:8000/health.
 - Storage is **PostgreSQL in Docker** (user decision D-005, deviates from PRD's JSON/SQLite):
   role `casemind_gameplay` has no access to schema `t3_canonical`; only `casemind_vault` does.

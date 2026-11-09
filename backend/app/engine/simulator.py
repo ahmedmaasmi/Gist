@@ -1,6 +1,7 @@
 # backend/app/engine/simulator.py
 import hashlib
 import json
+import math
 import random
 
 from app.domain.character import (
@@ -105,14 +106,17 @@ class SocialSimulator:
     ) -> tuple[float, float, float, float]:
         """
         PRD 7A.4: Scores a non-victim suspect by:
-        - motive_score: crime-linked secrets, goals targeting victim, negative affinity toward victim, ARGUE events with victim
+        - motive_score: secrets involving the victim, goals targeting victim, negative affinity toward victim,
+          ARGUE events with victim
         - opportunity_score: share of murder_window where suspect is in or within travel time of crime_location_id
         - low_composure_score: (1.0 - traits.composure) + traits.temper * 0.5
         Returns (total_score, motive_score, opportunity_score, low_composure_score).
         """
         # 1. Motive score
         crime_secret_score = sum(
-            s.severity for s in suspect.secrets if s.is_crime_linked
+            s.severity
+            for s in suspect.secrets
+            if s.is_crime_linked or s.involves_character_id == config.victim_id
         )
         victim_goal_score = sum(
             0.45
@@ -168,6 +172,53 @@ class SocialSimulator:
 
         total_score = motive_score + opportunity_score + low_composure_score
         return total_score, motive_score, opportunity_score, low_composure_score
+
+    @classmethod
+    def _can_commit(
+        cls,
+        suspect: Character,
+        config: SimulationConfig,
+        setting: SettingTemplate,
+        murder_tick: int,
+        default_loc_id: str,
+    ) -> bool:
+        """
+        Physical possibility: the suspect can walk from where they are one tick before the murder
+        to the scene, and from the scene to where they are one tick after, each within one tick.
+        Without this the simulator would "teleport" the culprit and the timeline solver would
+        (correctly) rule them out.
+        """
+        before = cls._get_planned_location(suspect, murder_tick - config.tick_size_min, default_loc_id)
+        after = cls._get_planned_location(suspect, murder_tick + config.tick_size_min, default_loc_id)
+        return (
+            setting.get_travel_time(before, config.crime_location_id) <= config.tick_size_min
+            and setting.get_travel_time(config.crime_location_id, after) <= config.tick_size_min
+        )
+
+    @staticmethod
+    def _sample_culprit(
+        scores: dict[str, tuple[float, float, float, float]],
+        temperature: float,
+        rng: random.Random,
+        eligible_ids: list[str] | None = None,
+    ) -> tuple[str, float]:
+        """
+        PRD 8.2 (latent truth with noise): samples the culprit from softmax(total_score / temperature)
+        over eligible suspects (default: anyone with opportunity > 0).
+        Returns (culprit_id, probability the culprit had of being chosen).
+        """
+        ids = sorted(scores)
+        eligible = sorted(eligible_ids or []) or [s for s in ids if scores[s][2] > 0.0] or ids
+        top = max(scores[s][0] for s in eligible)
+        weights = [math.exp((scores[s][0] - top) / temperature) for s in eligible]
+        total = sum(weights)
+        roll = rng.random() * total
+        cumulative = 0.0
+        for sid, weight in zip(eligible, weights, strict=True):
+            cumulative += weight
+            if roll < cumulative:
+                return sid, weight / total
+        return eligible[-1], weights[-1] / total
 
     def simulate(
         self,
@@ -245,7 +296,7 @@ class SocialSimulator:
         last_location: dict[str, str] = {}
         argued_pairs: set[tuple[str, str]] = set()
         confided_secrets: set[tuple[str, str, str]] = set()  # (actor_id, target_id, secret_id)
-        cover_pledged_pairs: set[tuple[str, str]] = set()
+        cover_considered_pairs: set[tuple[str, str]] = set()
 
         # Precompute last pre-murder co-located tick for each ordered pair (char_a, char_b)
         pre_murder_ticks = [t for t in all_ticks if t < murder_tick]
@@ -483,19 +534,25 @@ class SocialSimulator:
                                             )
                                         )
 
-                                # 3. COVER_FOR (PRD 7A.3)
+                                # 3. COVER_FOR (PRD 7A.3): char_b covers for char_a, so it is
+                                # char_b's loyalty/obligation toward char_a that matters. Each pair
+                                # is considered once, so long co-location does not make it certain.
+                                cover_edge = graph.get_edge(char_b.character_id, char_a.character_id)
                                 if (
-                                    pair_key not in cover_pledged_pairs
+                                    pair_key not in cover_considered_pairs
                                     and char_b.character_id != cfg.victim_id
+                                    and char_a.character_id != cfg.victim_id
+                                    and cover_edge is not None
                                     and (
-                                        edge.loyalty_or_trust >= 0.65
-                                        or edge.obligation >= 0.6
+                                        cover_edge.loyalty_or_trust >= 0.65
+                                        or cover_edge.obligation >= 0.6
                                     )
                                 ):
-                                    prob = max(edge.loyalty_or_trust, edge.obligation)
+                                    cover_considered_pairs.add(pair_key)
+                                    strength = max(cover_edge.loyalty_or_trust, cover_edge.obligation)
+                                    prob = strength**2
                                     roll = rng.random()
-                                    if roll < prob or is_last_opportunity:
-                                        cover_pledged_pairs.add(pair_key)
+                                    if roll < prob:
                                         canonical_events.append(
                                             CanonicalEvent(
                                                 event_id=next_event_id(
@@ -512,9 +569,9 @@ class SocialSimulator:
                                                     f"target={char_b.character_id} pledged "
                                                     f"INTENTIONAL_LIE alibi cover for "
                                                     f"actor={char_a.character_id} "
-                                                    f"(loyalty_or_trust={edge.loyalty_or_trust:.2f}, "
-                                                    f"trust={edge.trust:.2f}, "
-                                                    f"obligation={edge.obligation:.2f}, "
+                                                    f"(loyalty_or_trust={cover_edge.loyalty_or_trust:.2f}, "
+                                                    f"trust={cover_edge.trust:.2f}, "
+                                                    f"obligation={cover_edge.obligation:.2f}, "
                                                     f"prob={prob:.2f}, roll={roll:.4f})."
                                                 ),
                                                 witness_ids=bystanders,
@@ -524,9 +581,9 @@ class SocialSimulator:
                                                     "covered_character_id": char_a.character_id,
                                                     "covering_character_id": char_b.character_id,
                                                     "loyalty_or_trust": round(
-                                                        edge.loyalty_or_trust, 4
+                                                        cover_edge.loyalty_or_trust, 4
                                                     ),
-                                                    "obligation": round(edge.obligation, 4),
+                                                    "obligation": round(cover_edge.obligation, 4),
                                                     "rng_roll": round(roll, 6),
                                                 },
                                             )
@@ -546,8 +603,20 @@ class SocialSimulator:
                         default_loc_id=default_loc_id,
                     )
 
+                culprit_probability = 1.0
                 if cfg.forced_culprit_id is not None:
                     culprit_id = cfg.forced_culprit_id
+                elif cfg.culprit_temperature > 0.0:
+                    # A murderer needs a reason (motive > 0) and a physically possible route.
+                    eligible_ids = [
+                        s.character_id
+                        for s in suspects
+                        if culprit_scores[s.character_id][1] > 0.0
+                        and self._can_commit(s, cfg, tpl, murder_tick, default_loc_id)
+                    ]
+                    culprit_id, culprit_probability = self._sample_culprit(
+                        culprit_scores, cfg.culprit_temperature, rng, eligible_ids
+                    )
                 else:
                     # Pick suspect with highest combined score (deterministic tie-break by character_id)
                     best_suspect = max(
@@ -563,6 +632,11 @@ class SocialSimulator:
                     c for c in chars if c.character_id == culprit_id
                 )
                 tot_sc, mot_sc, opp_sc, comp_sc = culprit_scores[culprit_id]
+
+                # T3 truth: the culprit's secrets about the victim are what the murder was about.
+                for sec in culprit_char.secrets:
+                    if sec.involves_character_id == cfg.victim_id:
+                        sec.is_crime_linked = True
 
                 # Ensure at least one innocent suspect has a red-herring secret or suspicious movement (PRD 8.2)
                 innocent_suspects = [
@@ -662,6 +736,7 @@ class SocialSimulator:
                             f"opportunity_score={opp_sc:.3f}, low_composure_score={comp_sc:.3f}, "
                             f"temper={culprit_char.traits.temper:.2f}, "
                             f"composure={culprit_char.traits.composure:.2f}, "
+                            f"selection_probability={culprit_probability:.3f}, "
                             f"forced={cfg.forced_culprit_id is not None}]."
                         ),
                         witness_ids=[],
@@ -673,6 +748,7 @@ class SocialSimulator:
                             "temper": round(culprit_char.traits.temper, 4),
                             "composure": round(culprit_char.traits.composure, 4),
                             "forced": cfg.forced_culprit_id is not None,
+                            "selection_probability": round(culprit_probability, 4),
                             "rng_roll": round(murder_roll, 6),
                         },
                     )

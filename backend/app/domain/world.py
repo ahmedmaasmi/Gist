@@ -149,6 +149,21 @@ class SimulationConfig(BaseModel):
         le=1.0,
         description="Innocent suspects lying about unrelated red herring secrets",
     )
+    culprit_temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        description=(
+            "0 = the highest motive+opportunity+low-composure score is always the culprit (PRD 7A.4). "
+            ">0 = culprit sampled from softmax(score / temperature), so the most suspicious-looking "
+            "suspect is usually but not always guilty (PRD 8.2 latent truth with noise)."
+        ),
+    )
+    forensic_trace_rate: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=1.0,
+        description="Chance the culprit leaves a physical trace at the scene; innocent visitors get 40% of it",
+    )
 
 
 class CanonicalEvent(BaseModel):

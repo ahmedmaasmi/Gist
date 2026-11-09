@@ -104,7 +104,6 @@ class DatasetGenerator:
                 template=template,
                 seed=sub_seed,
                 num_suspects=num_suspects,
-                ood_mode=False,
             )
             setup.config.case_id = case_id
             bundle = setup.simulate()
@@ -120,10 +119,12 @@ class DatasetGenerator:
                 if hard_report.is_valid and hard_report.is_under_determined_hard_case:
                     return hard_bundle, hard_report
 
+            # Check 4 labels difficulty but never filters (D-010): filtering on it would keep only
+            # cases a hand-weighted rule solves and would skew the culprit lie rate.
             report = CaseSolvabilityValidator.validate_case(
                 bundle=bundle,
                 setting=template,
-                allow_hard_cases=target_hard_case,
+                allow_hard_cases=True,
             )
             last_bundle, last_report = bundle, report
             if report.is_valid:

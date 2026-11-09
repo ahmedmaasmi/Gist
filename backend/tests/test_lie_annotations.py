@@ -26,3 +26,21 @@ def test_lie_annotations_point_at_recorded_claims_and_stay_out_of_t1():
     t1_json = bundle.t1_session.model_dump_json()
     assert "INTENTIONAL_LIE" not in t1_json
     assert "lie_annotations" not in t1_json
+
+
+def test_red_herring_evasion_never_claims_the_crime_scene():
+    """Regression: evasive innocents used to 'hide' by claiming the murder room."""
+    from app.engine.templates import load_all_templates, sample_case_setup_from_template
+
+    checked = 0
+    for template_id in sorted(load_all_templates()):
+        tpl = get_template(template_id)
+        for seed in range(15):
+            bundle = sample_case_setup_from_template(template=tpl, seed=seed).simulate()
+            t3 = bundle.t3_canonical
+            claims = {c.claim_id: c for c in bundle.t1_session.recorded_claims}
+            for lie in t3.lie_annotations:
+                if lie.kind == LieKind.RED_HERRING_EVASION:
+                    checked += 1
+                    assert claims[lie.claim_id].claimed_location_id != t3.crime_location_id
+    assert checked > 0

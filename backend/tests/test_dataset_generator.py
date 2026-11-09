@@ -183,7 +183,9 @@ def test_determinism_and_manifest_honesty(tmp_path: Path) -> None:
     assert manifest_a.master_seed == 123
     assert manifest_a.num_templates_total == 8
     assert manifest_a.num_cases_total == 24
-    assert manifest_a.hard_cases_count == round(24 * 0.10)
+    # Hard (under-determined) cases now also occur naturally, because solvability check 4 labels
+    # difficulty instead of filtering (D-010); the requested slice is a lower bound.
+    assert manifest_a.hard_cases_count >= round(24 * 0.10)
 
     # Exact snapshot list determinism
     assert [s.snapshot_id for s in snapshots_a] == [s.snapshot_id for s in snapshots_b]

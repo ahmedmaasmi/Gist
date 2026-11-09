@@ -5,6 +5,10 @@ from pydantic import BaseModel, Field, model_validator
 from app.domain.enums import GoalType, RelationshipTag
 from app.domain.world import TimeInterval
 
+# PRD 8.2 / CH-04: the case sampler draws traits over the full range the editor allows,
+# and out-of-distribution checks use this same range.
+TRAIT_TRAINING_RANGE: tuple[float, float] = (0.0, 1.0)
+
 
 class CharacterTraits(BaseModel):
     """
@@ -18,10 +22,16 @@ class CharacterTraits(BaseModel):
     composure: float = Field(..., ge=0.0, le=1.0)
     secrecy: float = Field(..., ge=0.0, le=1.0)
 
-    def check_ood(self, min_train: float = 0.1, max_train: float = 0.9) -> list[str]:
+    def check_ood(
+        self,
+        min_train: float = TRAIT_TRAINING_RANGE[0],
+        max_train: float = TRAIT_TRAINING_RANGE[1],
+    ) -> list[str]:
         """
         PRD Section 7A.6 (CH-04): Out-of-distribution check warning when any trait
         falls outside the synthetic training distribution [min_train, max_train].
+        With the default full range no valid trait is OOD; the check matters if the
+        training range is ever narrowed.
         """
         warnings: list[str] = []
         trait_names = ("temper", "greed", "loyalty", "honesty", "composure", "secrecy")
@@ -54,7 +64,14 @@ class CharacterSecret(BaseModel):
     severity: float = Field(..., ge=0.0, le=1.0)
     is_crime_linked: bool = Field(
         ...,
-        description="True if linked to the murder; False if it is an unrelated red herring (PRD 7A.1)",
+        description=(
+            "True if linked to the murder; False if it is an unrelated red herring (PRD 7A.1). "
+            "Solution data: for sampled cases the simulator sets it only after choosing the culprit."
+        ),
+    )
+    involves_character_id: str | None = Field(
+        default=None,
+        description="Who the secret concerns. A secret involving the victim is a potential motive.",
     )
 
 

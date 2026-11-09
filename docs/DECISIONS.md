@@ -73,3 +73,36 @@ Append-only. Never edit or delete an old entry; if a decision changes, add a new
 - **Alternatives considered:** Treat it as a generator bug and make honest claims exactly match the true timeline.
 - **Reason:** PRD 6.1 says lying, evasion *and honest confusion* must all be possible, and 6.4.B says a contradiction is evidence of inconsistency, not of guilt. Honest confusion produces innocent contradictions, which stop the ranker from learning "any contradiction means guilty".
 - **What I should learn from this:** Noise that looks like signal is what makes a synthetic task non-trivial. If innocents never contradicted themselves, the conflict features would be a near-perfect shortcut to the label, and the leakage audit (step 8) should catch exactly that kind of shortcut.
+
+## D-010 (2026-11-09): Solvability check 4 labels difficulty; it no longer filters generated cases
+
+- **Decision:** For generated data, only checks 1–3 decide whether a case is kept: the culprit is not ruled out by the timeline, at least 2 plausible suspects remain, and a red herring exists. Check 4 ("the culprit has the strictly highest hand-weighted evidence score") only sets EASY/MEDIUM/HARD. This applies in `generate_valid_case` and in the dataset generator. Player-built Case Lab cases (v0.2) can still use it as a gate.
+- **Alternatives considered:** Keep filtering on check 4; filter on a softer margin.
+- **Reason:** Filtering kept only cases that a hand-written rule solves. That guarantees the rule baseline wins and skews the data: honest culprits passed 11 of 48 times, liars 332 of 352, so the kept data had 97% lying culprits against a configured 90%. The PRD (8.2) explicitly wants genuinely under-determined hard cases.
+- **What I should learn from this:** A quality filter on training data is itself a model of the label. If the filter uses the same signals as your baseline, it hands the baseline the answer and biases every other statistic (here the lie rate that E2 varies).
+
+## D-011 (2026-11-09): Role-free case sampler, with the culprit chosen by softmax over the PRD 7A.4 score
+
+- **Decision:**
+  - Every suspect is drawn from one distribution: traits uniform on [0, 1], and motive goals, victim-related secrets, private secrets, schedules and relationship edges at documented probabilities (`templates.py`, P_* constants).
+  - The culprit is sampled from softmax(score / 0.5), where score = motive + opportunity + low composure (PRD 7A.4), among suspects with a motive and a physically possible route.
+  - `is_crime_linked` is set only after the culprit is chosen.
+  - Evidence wording is identical for culprit and innocents.
+  - The trait OOD range is now the full [0, 1] (CH-04).
+- **Alternatives considered:** Keep scripted roles and add noise to the evidence; pure argmax culprit choice (the PRD's literal wording); a fully random culprit.
+- **Reason:** With scripted roles, the "primary" suspect was the culprit in 400 of 400 cases, and one fact containing the words "crime-linked" named them every time (PRD 8.2 violation). Pure argmax makes the label a deterministic function of latent variables; a fully random culprit makes the evidence meaningless. Softmax keeps motive, opportunity and temperament *informative but not decisive*. Results (`make audit-generator`, 400 cases): the best single rule is 64% top-1 against 25% chance, down from 100%; the culprit lie rate is 90.5% against 90% configured.
+- **What I should learn from this:** A synthetic task is only a test of learning if the label is a *noisy* function of what the model can observe. The temperature is the knob between "trivial" (argmax) and "impossible" (uniform), and it must be chosen and documented before seeing model results, not tuned to make the model look good.
+
+## D-012 (2026-11-09): Movement records are points in time; a culprit must be able to reach the scene
+
+- **Decision:** Access and movement facts get `TimeInterval(tick, tick)` instead of `[tick, tick + 10]`. A suspect can only be the culprit if the scene is within one tick's travel of where they are one tick before and one tick after the murder.
+- **Alternatives considered:** Change the solver's interval arithmetic instead (step 3); keep teleporting and rely on the validator to reject those cases.
+- **Reason:** The hand-check found 4 of 20 manor culprits "teleporting" to the scene: the 10-minute interval said they were still elsewhere at the murder minute, so the solver eliminated them. Rejecting such cases would make the data quietly depend on the bug. Validity rose from 369/400 to 398/400.
+- **What I should learn from this:** Keep the time model consistent end to end. If the simulator thinks in instants (ticks), records must be instants too; mixing instants and intervals creates contradictions nobody intended.
+
+## D-013 (2026-11-09): Alibi free text is drawn from one role-neutral phrase pool
+
+- **Decision:** Every alibi's `free_text` is a random phrase from a shared pool, filled only with the claim's own place, time and companions.
+- **Alternatives considered:** Keep role-specific phrasings; drop free text entirely.
+- **Reason:** Lying culprits always said "I remained at X … per my schedule", which is a perfect text shortcut for any NLP feature and an easy tell for a player.
+- **What I should learn from this:** Leakage isn't only in numeric columns. Generated *text* carries the generator's branch structure unless you deliberately decouple wording from the hidden state.

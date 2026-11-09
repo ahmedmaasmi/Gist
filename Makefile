@@ -1,5 +1,5 @@
 # CaseMind — one entry point per task. Python tooling runs through uv inside backend/.
-.PHONY: install test lint fmt up down logs
+.PHONY: install test lint fmt up down logs audit-generator
 
 install:  ## Install locked dependencies (incl. dev tools) into backend/.venv
 	cd backend && uv sync
@@ -21,3 +21,6 @@ down:     ## Stop the Docker stack (data volume is kept)
 
 logs:     ## Follow backend logs
 	docker compose logs -f backend
+
+audit-generator:  ## Shortcut audit of the case generator (PRD 8.2); writes reports/generator_audit.json
+	cd backend && uv run python -m app.evaluation.generator_audit --out ../reports/generator_audit.json

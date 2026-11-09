@@ -81,12 +81,18 @@ def test_relationship_edge_apply_delta_clamping():
 
 
 def test_ch04_ood_trait_warning_detection():
-    """PRD 7A.6 (CH-04): Traits outside [0.1, 0.9] emit OOD warnings; in-distribution traits do not."""
-    in_dist_traits = _make_default_traits(temper=0.50)
-    assert in_dist_traits.check_ood() == []
+    """
+    PRD 7A.6 (CH-04): Traits outside the training range emit OOD warnings.
+    Training now covers the full editor range [0, 1], so no valid trait is OOD by default;
+    the mechanism is checked with an explicitly narrowed range.
+    """
+    extreme_traits = _make_default_traits(temper=0.98, honesty=0.05)
+    assert extreme_traits.check_ood() == []
 
-    ood_traits = _make_default_traits(temper=0.98, honesty=0.05)
-    warnings = ood_traits.check_ood()
+    in_dist_traits = _make_default_traits(temper=0.50)
+    assert in_dist_traits.check_ood(min_train=0.1, max_train=0.9) == []
+
+    warnings = extreme_traits.check_ood(min_train=0.1, max_train=0.9)
     assert len(warnings) == 2
     assert any("temper" in w and "0.98" in w for w in warnings)
     assert any("honesty" in w and "0.05" in w for w in warnings)

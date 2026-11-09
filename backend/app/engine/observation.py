@@ -14,6 +14,17 @@ from app.domain.setting import SettingTemplate
 from app.domain.tiers import T1Session, T2CharacterKnowledge, T3Canonical
 from app.domain.world import CanonicalEvent, Claim, Fact, LieAnnotation, SimulationConfig, TimeInterval
 
+ALIBI_PHRASES_ALONE = (
+    "I was at {loc} from {start} to {end}.",
+    "I stayed in {loc} between {start} and {end}.",
+    "From {start} to {end} I was in {loc}.",
+)
+ALIBI_PHRASES_WITH = (
+    "I was at {loc} with {others} from {start} to {end}.",
+    "Between {start} and {end} I was in {loc}; {others} can confirm it.",
+    "From {start} to {end} I was in {loc} together with {others}.",
+)
+
 
 class ObservationModel:
     """
@@ -44,16 +55,40 @@ class ObservationModel:
         return "loc_default"
 
     @staticmethod
+    def _alibi_text(
+        rng: random.Random,
+        claimed_loc: str,
+        observed_ids: list[str],
+        window: TimeInterval,
+    ) -> str:
+        """
+        Role-neutral free text for an alibi claim. Phrasing is drawn from a shared pool so that
+        the words never reveal whether the speaker is the culprit, covering, evading or honest.
+        """
+        pool = ALIBI_PHRASES_WITH if observed_ids else ALIBI_PHRASES_ALONE
+        return rng.choice(pool).format(
+            loc=claimed_loc,
+            others=", ".join(observed_ids),
+            start=window.start_min,
+            end=window.end_min,
+        )
+
+    @staticmethod
     def _non_crime_location(
         preferred_loc: str,
         crime_location_id: str,
         setting: SettingTemplate,
+        also_avoid: tuple[str, ...] = (),
     ) -> str:
-        """Ensures a false alibi location is distinct from the crime scene when possible."""
-        if preferred_loc != crime_location_id:
+        """
+        Ensures a false alibi location is distinct from the crime scene (and from any
+        `also_avoid` locations, e.g. where the speaker really was) when possible.
+        """
+        avoid = {crime_location_id, *also_avoid}
+        if preferred_loc not in avoid:
             return preferred_loc
         for loc in setting.locations:
-            if loc.location_id != crime_location_id:
+            if loc.location_id not in avoid:
                 return loc.location_id
         return preferred_loc
 
@@ -90,10 +125,12 @@ class ObservationModel:
             fact_counter += 1
             return f"fact_{config.case_id}_{prefix}_{fact_counter:03d}"
 
-        # 1a. Movement / Access facts at restricted locations or crime_location_id
-        crime_trace_emitted_for_culprit = False
+        # 1a. Movement / Access facts at restricted locations or crime_location_id.
+        # PRD 8.2 noise: every record, including the culprit's, can be missing (record_drop_rate),
+        # and anyone who was at the scene can leave a physical trace. Nothing here exists only
+        # for the culprit, so no single evidence type identifies them.
         for event in canonical_events:
-            if event.event_kind != "MOVEMENT":
+            if event.event_kind != "MOVEMENT" or event.actor_id == config.victim_id:
                 continue
 
             is_crime_loc = event.location_id == config.crime_location_id
@@ -106,17 +143,11 @@ class ObservationModel:
                 end_min=event.tick_min + config.tick_size_min,
             )
             in_murder_window = config.murder_window.overlaps(event_interval)
-            is_culprit_crime_move = (
-                event.actor_id == culprit_id and is_crime_loc and in_murder_window
-            )
 
-            # Always preserve key crime-window trace for culprit; apply record_drop_rate to others
-            if is_culprit_crime_move:
-                should_emit = True
-            else:
-                should_emit = local_rng.random() >= config.record_drop_rate
-
-            if should_emit:
+            if local_rng.random() >= config.record_drop_rate:
+                # A badge swipe / sighting is a point in time, not a 10-minute stay. Recording it
+                # as [tick, tick + 10] would claim presence until the next tick and make a real
+                # 10-minute walk to the crime scene look impossible to the timeline solver.
                 prov = ProvenanceClass.RECORD if is_restricted else ProvenanceClass.PHYSICAL
                 cat = EvidenceCategory.ACCESS if is_restricted else EvidenceCategory.TIMELINE
                 rel = round(
@@ -133,16 +164,18 @@ class ObservationModel:
                         ),
                         subject_id=event.actor_id,
                         location_id=event.location_id,
-                        time_interval=event_interval,
+                        time_interval=TimeInterval(start_min=event.tick_min, end_min=event.tick_min),
                         category=cat,
                         provenance=prov,
                         reliability=rel,
                         status=VerificationStatus.ESTABLISHED,
                     )
                 )
-                if is_culprit_crime_move:
-                    crime_trace_emitted_for_culprit = True
-                    # Also emit a forensic physical trace at the crime scene
+
+            if is_crime_loc:
+                committed_murder = event.actor_id == culprit_id and in_murder_window
+                trace_rate = config.forensic_trace_rate * (1.0 if committed_murder else 0.4)
+                if local_rng.random() < trace_rate:
                     t1_facts.append(
                         Fact(
                             fact_id=next_t1_fact_id("forensic"),
@@ -161,26 +194,6 @@ class ObservationModel:
                             status=VerificationStatus.ESTABLISHED,
                         )
                     )
-
-        # Fallback guarantee: ensure at least one key crime-window trace exists for culprit
-        if not crime_trace_emitted_for_culprit:
-            t1_facts.append(
-                Fact(
-                    fact_id=next_t1_fact_id("crime_trace"),
-                    case_id=config.case_id,
-                    description=(
-                        f"Crime-scene log records {culprit_id} entering "
-                        f"{config.crime_location_id} during the murder window."
-                    ),
-                    subject_id=culprit_id,
-                    location_id=config.crime_location_id,
-                    time_interval=config.murder_window,
-                    category=EvidenceCategory.TIMELINE,
-                    provenance=ProvenanceClass.RECORD,
-                    reliability=0.92,
-                    status=VerificationStatus.ESTABLISHED,
-                )
-            )
 
         # 1b. Witness facts from ARGUE events with bystanders
         for event in canonical_events:
@@ -250,14 +263,17 @@ class ObservationModel:
                         )
                     )
             for secret in char.secrets:
-                if secret.is_crime_linked:
+                # Any secret involving the victim is a *potential* motive. The wording is identical
+                # for culprit and innocents: whether it caused the murder is T3 knowledge.
+                involves_victim = secret.involves_character_id == config.victim_id or secret.is_crime_linked
+                if involves_victim and local_rng.random() >= config.record_drop_rate:
                     t1_facts.append(
                         Fact(
                             fact_id=next_t1_fact_id("secret_motive"),
                             case_id=config.case_id,
                             description=(
                                 f"Financial/personal record indicates {char.character_id} had a "
-                                f"crime-linked dispute ({secret.secret_id}) involving {config.victim_id}."
+                                f"serious private dispute involving {config.victim_id}."
                             ),
                             subject_id=char.character_id,
                             target_id=config.victim_id,
@@ -479,18 +495,10 @@ class ObservationModel:
                         lie_kind = LieKind.CULPRIT_COVER_STORY
                         observed_ids: list[str] = []
                         corroborated = False
-                        text = (
-                            f"I remained at {claimed_loc} from {config.murder_window.start_min} "
-                            f"to {config.murder_window.end_min} per my schedule."
-                        )
                     else:
                         claimed_loc = config.crime_location_id
                         observed_ids = []
                         corroborated = False
-                        text = (
-                            f"I briefly passed through {claimed_loc} during "
-                            f"[{config.murder_window.start_min}, {config.murder_window.end_min}]."
-                        )
                 else:
                     # Innocent suspect alibi generation
                     covered_partner = cover_pledges.get(cid)
@@ -502,31 +510,24 @@ class ObservationModel:
                         lie_kind = LieKind.COVER_FOR
                         observed_ids = [covered_partner]
                         corroborated = True
-                        text = (
-                            f"I was at {claimed_loc} with {covered_partner} throughout "
-                            f"[{config.murder_window.start_min}, {config.murder_window.end_min}]."
-                        )
                     elif has_red_herring and lie_roll < config.innocent_lie_rate:
                         # Evasive claim hiding red-herring secret
+                        # An innocent hiding an unrelated secret avoids both the place they
+                        # really were and the murder scene (placing yourself there makes no sense).
                         evasive_loc = cls._non_crime_location(
-                            safe_alibi_loc, true_loc, setting
+                            safe_alibi_loc, config.crime_location_id, setting, also_avoid=(true_loc,)
                         )
                         claimed_loc = evasive_loc
                         lie_kind = LieKind.RED_HERRING_EVASION
                         observed_ids = []
                         corroborated = False
-                        text = (
-                            f"I was alone at {claimed_loc} between "
-                            f"{config.murder_window.start_min} and {config.murder_window.end_min}."
-                        )
                     else:
                         claimed_loc = true_loc
                         observed_ids = sorted(set(true_murder_window_observed.get(cid, [])))
                         corroborated = len(observed_ids) > 0
-                        text = (
-                            f"I was at {claimed_loc} from {config.murder_window.start_min} "
-                            f"to {config.murder_window.end_min}."
-                        )
+
+                # Wording depends only on the claim's content, never on who is lying.
+                text = cls._alibi_text(local_rng, claimed_loc, observed_ids, config.murder_window)
 
                 alibi_claim = Claim(
                     claim_id=f"claim_{config.case_id}_{cid}_alibi_0",
